@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5188babdc5eff3a4fa18b48d9663ccfd, type: 3}
   m_Name: Item_Test_Big
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
-  itemName: "\uD14C\uC2A4\uD2B8 (\uC911\uAC04)"
+  itemName: "\uD14C\uC2A4\uD2B8 (\uD070)"
   price: 10
+  id: 1
   attack: 5
   weight: 10

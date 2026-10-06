@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
   itemName: "\uD14C\uC2A4\uD2B8 (\uBB34\uAC70\uC6C0)"
   price: 10
+  id: 2
   attack: 5
   weight: 20
