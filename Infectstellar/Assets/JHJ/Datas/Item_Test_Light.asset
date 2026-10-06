@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5188babdc5eff3a4fa18b48d9663ccfd, type: 3}
-  m_Name: Item_Test_3
+  m_Name: Item_Test_Light
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
   itemName: "\uD14C\uC2A4\uD2B8 (\uAC00\uBCBC\uC6C0)"
   price: 10
