@@ -2,13 +2,14 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// 외부에서 받은 상황을 HFSM에 전달하고 최종 상태의 변경을 알립니다.
+/// 입력·물리 상황을 HFSM에 전달하고 한 번 이동한 뒤 최종 상태의 변경을 알립니다.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class PlayerStateMachine : MonoBehaviour
 {
     private PlayerStates states;
     private PlayerState currentState = PlayerState.Idle;
+    private PlayerMotor motor;
 
     /// <summary>
     /// 마지막으로 확정한 최종 상태를 반환합니다. 초기 상태는 Idle입니다.
@@ -44,17 +45,30 @@ public sealed class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// 외부 입력·이동 시스템이 판단한 상황을 반영합니다. 사망 중에는 무시합니다.
+    /// Controller가 사용할 Motor와 이동 설정을 연결합니다.
     /// </summary>
-    /// <param name="isMoving">이동 중인지 나타냅니다.</param>
-    /// <param name="wantsToRun">달리기 의도입니다. 서서 이동 중일 때 반영합니다.</param>
-    /// <param name="wantsToCrouch">웅크리기 의도입니다. 공중에서는 착지할 때 반영합니다.</param>
-    /// <param name="isGrounded">접지 여부입니다. 물리 판정은 호출자가 담당합니다.</param>
-    /// <param name="verticalVelocity">위쪽이 양수인 수직 속도입니다. 비접지 상태에서 양수는 Jump, 0 이하는 Fall로 판단합니다.</param>
-    public void UpdateMovementContext(bool isMoving, bool wantsToRun, bool wantsToCrouch, bool isGrounded, float verticalVelocity)
+    internal void Initialize(PlayerMotor motor, PlayerMovementSettings settings)
     {
         InitializeIfNeeded();
-        states.UpdateMovementContext(isMoving, wantsToRun, wantsToCrouch, isGrounded, verticalVelocity);
+        this.motor = motor;
+        states.Configure(settings);
+    }
+
+    /// <summary>
+    /// 이동 전 명령 생성, 한 번의 물리 실행, 이동 후 상태 보정을 순서대로 진행합니다.
+    /// </summary>
+    internal void Tick(PlayerInputFrame input, float deltaTime)
+    {
+        if (deltaTime <= 0f)
+        {
+            return;
+        }
+
+        motor.RefreshGrounded();
+        PlayerMovementCommand command = states.Prepare(input, motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
+        motor.Simulate(command, deltaTime);
+        states.Complete(motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
+        motor.SetCrouching(states.WantsCrouch);
         PublishStateChange();
     }
 

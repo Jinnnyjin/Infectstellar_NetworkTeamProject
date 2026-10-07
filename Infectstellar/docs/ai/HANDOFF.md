@@ -1,45 +1,34 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-06 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이며, 검증 결과는 아래에 적힌 당시 확인 결과이다.
-
-2026-10-07 하네스 적용 시 확인: 아래 플레이어 HFSM 설명과 검증은 2026-10-06의 과거 기록이다. 현재 작업 폴더에는 표의 세 코드 파일이 없고 Git에서 삭제 상태이므로 현재 구현 완료로 해석하지 않는다. 이번 하네스 적용에서는 게임 파일을 복원하거나 수정하지 않았다.
+최종 갱신일: 2026-10-07 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
 ## 현재 구현 상태
 
-플레이어의 HFSM 상태 관리 코드 구현을 완료했다. UnityHFSM 2.3.0을 사용하며 입력·실제 이동·물리·애니메이션·Photon 연결은 포함하지 않는다.
+PlayerScene의 Player에 기본 이동 코드를 연결했다. UnityHFSM 2.3.0과 Input System 1.18.0을 사용한다.
 
-| 파일 | 역할 |
-|---|---|
-| `Assets/Scripts/Player/PlayerStateMachine.cs` | 외부 상황 전달, 사망·부활, 현재 상태 조회와 최종 상태 변경 이벤트를 제공하는 컴포넌트 |
-| `Assets/Scripts/Player/PlayerStates.cs` | 중첩 HFSM 상태 그래프와 전환 규칙 |
-| `Assets/Scripts/Enum/PlayerState.cs` | 외부에서 조회하는 최종 상태 enum |
+- PlayerController: 입력 자산 복제·수명 관리와 프레임 시작.
+- PlayerStateMachine / PlayerStates: Alive → Grounded(Idle/Walk/Run/CrouchIdle/CrouchWalk), Airborne(Jump/Fall), 별도 Dead 상태와 행동 정책.
+- PlayerMotor: CharacterController 이동·중력·접지·천장 판정·웅크림 캡슐.
+- PlayerMovementSettings SO: 걷기/달리기/웅크리기 3/5/1.5m/s, 점프 높이 1.2m, 중력 20m/s², 웅크린 높이 60%.
 
-Root의 Alive 아래 Grounded(Idle/Walk/Run/CrouchIdle/CrouchWalk)와 Airborne(Jump/Fall)을 두며, Root의 Dead로 즉시 사망한다. 씬·프리팹은 변경하지 않았고 플레이어 객체에 컴포넌트를 부착하거나 이동 시스템과 연결하지 않았다.
+코드는 Assets/SJT/2_Scripts 아래 Player·SO·Struct·Enum에 있다. 설정 자산은 Assets/SJT/5_Data/PlayerMovementSettings.asset, 연결 씬은 Assets/SJT/4_Scenes/PlayerScene.unity다. 현재 Player 인스턴스에만 컴포넌트를 추가했으며 Player.prefab 원본은 수정하지 않았다. Animator Root Motion은 껐다.
 
-## 주요 API와 결정
+## 주요 연결과 남은 범위
 
-- 외부 이동 시스템이 UpdateMovementContext(isMoving, wantsToRun, wantsToCrouch, isGrounded, verticalVelocity)를 호출하면 같은 호출 안에서 최종 상태를 결정한다. 접지 여부와 수직 속도는 호출자가 판단한다.
-- 접지 중 웅크리기가 달리기보다 우선한다. 비접지 중 수직 속도가 양수면 Jump, 0 이하면 Fall이다. 착지 시 최신 웅크리기 의도를 전달한다.
-- Die는 즉시 Dead로 전환하고 사망 중 이동 상황은 무시한다. Revive는 사망 중에만 이전 상황을 초기화하고 Idle로 복귀한다.
-- CurrentState와 IsAlive는 읽기 전용이다. StateChanged(previousState, currentState)는 초기화 알림 없이 최종 상태가 실제로 바뀔 때만 발행한다.
-- 그래프는 한 번 생성하고 비활성화·재활성화로 초기화하지 않는다. 이벤트 구독자는 자신의 수명에 맞춰 등록·해제한다.
+- 기존 Assets/InputSystem_Actions.inputactions의 Player/Move·Sprint·Crouch·Jump를 사용한다. Shift/C 홀드, 서 있는 지상에서만 Space 신규 입력으로 점프한다.
+- 상태 콜백은 명령만 만들고 Motor가 프레임당 한 번 이동한다. 이동 후 상태·착지 웅크림을 보정한 다음 StateChanged를 발행한다.
+- CurrentState·IsAlive·StateChanged·Die·Revive는 유지했다. 이전 UpdateMovementContext는 Controller 내부 Tick 흐름으로 대체했다.
+- 공중 방향 조절은 이륙 시 속도 기준을 유지한다. 사망 중에는 수평 입력과 새 점프를 차단하고 중력은 유지한다. 부활 다음 갱신에 실제 접지를 반영한다.
+- 카메라 회전·추적, 모델 애니메이션, Photon 권한·동기화는 미구현이다. 모델은 T 포즈이며 웅크리기는 충돌 캡슐만 변경한다.
+- 사용자 SJT 폴더 이동·삭제 및 SampleScene 기존 변경은 보존한다. 게임 저장소 커밋·푸시는 하지 않았다.
 
-## 확인한 검증과 한계
+## 검증과 다음 확인
 
-2026-10-06 당시 독립 코드 검토에서 확정 오류·회귀 위험이 발견되지 않았다. Unity 6000.3.6f1에서 최종 컴파일이 완료됐고, 순수 관리 코드 실행으로 생존 7개 상태의 336개 전환 조합, 사망 중 상황 무시, 사망·부활·반복 호출과 계층 종료를 확인했다. 5,470개 assertion에서 실패는 없었다.
+독립 리뷰의 활성화 시 Sprint/Crouch 홀드 누락과 천장 검사 여유 문제를 보완했고 최종 재검토에서 추가 확정 오류는 없었다. 2026-10-07 17:54:44 KST 최종 Unity 컴파일은 완료·성공했으며 새 오류 0건이었다. 씬/설정/스크립트 참조도 확인했다. 검증 근거와 한계는 [기본 이동 작업 계획](plans/2026-10-07-player-movement.md)의 최신 기록을 따른다. 씬 연결은 저장했으며 이후 다시 표시된 Editor의 미저장 상태는 임의 저장·리로드하지 않고 보호했다.
 
-MonoBehaviour의 공개 이벤트 발행·구독 해제와 활성화 수명에 대한 실행 검증, PlayMode·게임 실행·빌드는 수행하지 않았다. 당시 기존 Collections 테스트 DLL 경로 누락과 Pipeline 통신 오류는 별도 문제로 남았으며, 새 플레이어 코드의 컴파일 오류는 없었다. 이번 인수인계 분리 작업에서는 Unity 검증을 재실행하지 않았다.
+PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획의 수동 확인 목록에 따라 입력·점프·천장·낙하·착지·사망·부활·재활성화를 확인한다. 이후 카메라/애니메이션/네트워크는 요구사항을 정한 뒤 연결한다.
 
-설계·당시 검증 근거·남은 범위는 [플레이어 HFSM 작업 계획](plans/2026-10-06-player-hfsm.md)에 둔다.
-
-## 다음 작업
-
-1. 실제 연결 대상 플레이어 객체·씬·프리팹과 이동 시스템을 확인한다.
-2. PlayerStateMachine을 부착하고 외부 이동 시스템에서 최신 이동 상황을 전달한다.
-3. 이벤트 구독 수명과 컴포넌트 활성화·비활성화 동작을 확인한다.
-4. 감정표현 이동 제한과 Photon 네트워크 권한·동기화 정책은 후속 구현 전에 확정한다.
-
-재개 시 실제 코드와 Git 상태를 대조한다. 이 기록은 상태 관리 코드의 완료를 뜻하며 실제 플레이어 이동·네트워크 플레이 검증 완료를 뜻하지 않는다.
+2026-10-06의 상태 관리 전용 구현과 과거 5,470 assertion 결과는 [이전 HFSM 계획](plans/2026-10-06-player-hfsm.md)에 남아 있다. 해당 결과를 이번 이동 코드의 런타임 검증으로 사용하지 않는다.
 
 <!-- harness:status:start -->
 ## 하네스 적용 상태
