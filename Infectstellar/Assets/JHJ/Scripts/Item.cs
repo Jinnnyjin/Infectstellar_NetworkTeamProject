@@ -10,6 +10,8 @@ public class Item : MonoBehaviour, IInteractable
     [SerializeField] private ItemDataSO data;
 
     private Rigidbody rb;
+    private Collider[] colliders;
+    private float uprightBottomOffset;
 
 
     private void Awake()
@@ -21,6 +23,17 @@ public class Item : MonoBehaviour, IInteractable
             gameObject.SetActive(false);
             return;
         }
+
+        // 자식 콜라이더 전부 저장 
+        colliders = GetComponentsInChildren<Collider>();
+
+        if(!ColliderBoundsUtil.TryGetUprightBottomOffset(transform, colliders, out uprightBottomOffset))
+        {
+            Debug.LogError($"{gameObject.name} 최하단 오프셋 구하기 실패", this);
+            gameObject.SetActive(false);
+            return;
+        }
+
         rb.mass = data.Weight;
         CurrentState = State.Placed;
     }
@@ -45,6 +58,7 @@ public class Item : MonoBehaviour, IInteractable
             Debug.LogWarning($"[Item] Grab 불가 :{data.ItemName}, 상태 {CurrentState}", this);
             return;
         }
+
         Debug.Log($"[Item] Grab: {data.ItemName}, 상태 {CurrentState}", this);
     }
 }
