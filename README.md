@@ -28,7 +28,7 @@
 | --- | --- |
 | **팀명** | 미정 |
 | **게임명** | InfectStellar |
-| **한 줄 정의** | 협동, 리썰류 |
+| **한 줄 정의** | 리썰컴퍼니 + 어몽어스 |
 | **조작 방법** | 키보드 & 마우스 |
 | **링크** | [팀 Notion 보드](https://app.notion.com/p/3ed8b10bccf68007ab72fe4cadc1f07e?source=copy_link) \| [GitHub Repository](https://github.com/Jinnnyjin/Infectstellar_NetworkTeamProject) 
 
