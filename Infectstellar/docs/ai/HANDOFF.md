@@ -2,15 +2,17 @@
 
 최종 갱신일: 2026-10-06 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이며, 검증 결과는 아래에 적힌 당시 확인 결과이다.
 
+2026-10-07 하네스 적용 시 확인: 아래 플레이어 HFSM 설명과 검증은 2026-10-06의 과거 기록이다. 현재 작업 폴더에는 표의 세 코드 파일이 없고 Git에서 삭제 상태이므로 현재 구현 완료로 해석하지 않는다. 이번 하네스 적용에서는 게임 파일을 복원하거나 수정하지 않았다.
+
 ## 현재 구현 상태
 
 플레이어의 HFSM 상태 관리 코드 구현을 완료했다. UnityHFSM 2.3.0을 사용하며 입력·실제 이동·물리·애니메이션·Photon 연결은 포함하지 않는다.
 
 | 파일 | 역할 |
 |---|---|
-| [PlayerStateMachine.cs](../../Assets/Scripts/Player/PlayerStateMachine.cs) | 외부 상황 전달, 사망·부활, 현재 상태 조회와 최종 상태 변경 이벤트를 제공하는 컴포넌트 |
-| [PlayerStates.cs](../../Assets/Scripts/Player/PlayerStates.cs) | 중첩 HFSM 상태 그래프와 전환 규칙 |
-| [PlayerState.cs](../../Assets/Scripts/Enum/PlayerState.cs) | 외부에서 조회하는 최종 상태 enum |
+| `Assets/Scripts/Player/PlayerStateMachine.cs` | 외부 상황 전달, 사망·부활, 현재 상태 조회와 최종 상태 변경 이벤트를 제공하는 컴포넌트 |
+| `Assets/Scripts/Player/PlayerStates.cs` | 중첩 HFSM 상태 그래프와 전환 규칙 |
+| `Assets/Scripts/Enum/PlayerState.cs` | 외부에서 조회하는 최종 상태 enum |
 
 Root의 Alive 아래 Grounded(Idle/Walk/Run/CrouchIdle/CrouchWalk)와 Airborne(Jump/Fall)을 두며, Root의 Dead로 즉시 사망한다. 씬·프리팹은 변경하지 않았고 플레이어 객체에 컴포넌트를 부착하거나 이동 시스템과 연결하지 않았다.
 
@@ -38,3 +40,11 @@ MonoBehaviour의 공개 이벤트 발행·구독 해제와 활성화 수명에 �
 4. 감정표현 이동 제한과 Photon 네트워크 권한·동기화 정책은 후속 구현 전에 확정한다.
 
 재개 시 실제 코드와 Git 상태를 대조한다. 이 기록은 상태 관리 코드의 완료를 뜻하며 실제 플레이어 이동·네트워크 플레이 검증 완료를 뜻하지 않는다.
+
+<!-- harness:status:start -->
+## 하네스 적용 상태
+- 적용한 원본 버전: `1.1.1`
+- 기본 경로·버전·직접 패키지·주요 폴더를 확인했다.
+- 파일 배치·구조 검사와 실제 훅 신뢰·새 세션 스킬/역할 로딩은 구분한다.
+- 게임 컴파일·실행은 이 적용 작업의 확인 대상이 아니다.
+<!-- harness:status:end -->

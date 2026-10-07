@@ -168,6 +168,7 @@ internal sealed class PlayerStates
         airborne.AddState(PlayerState.Jump);
         airborne.AddState(PlayerState.Fall);
         airborne.SetStartState(PlayerState.Fall);
+
         airborne.AddTransitionFromAny(PlayerState.Jump, transition => verticalVelocity > 0f);
         airborne.AddTransitionFromAny(PlayerState.Fall, transition => verticalVelocity <= 0f);
     }
