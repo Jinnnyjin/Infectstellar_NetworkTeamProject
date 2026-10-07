@@ -1,10 +1,11 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class Item : MonoBehaviour
+public class Item : MonoBehaviour, IInteractable
 {
     public enum State { Placed, Grabbed, Thrown }
     public State CurrentState { get; private set; }
+    public ItemDataSO ItemData => data;
 
     [SerializeField] private ItemDataSO data;
 
@@ -22,5 +23,28 @@ public class Item : MonoBehaviour
         }
         rb.mass = data.Weight;
         CurrentState = State.Placed;
+    }
+
+    // =============================================================
+    // 인터페이스
+
+    public InteractableInfo GetInfo()
+    {
+        return new InteractableInfo(data.ItemName, data.Price);
+    }
+
+    public bool CanGrab()
+    {
+        return CurrentState == State.Placed;
+    }
+
+    public void Grab()
+    {
+        if (!CanGrab())
+        {
+            Debug.LogWarning($"[Item] Grab 불가 :{data.ItemName}, 상태 {CurrentState}", this);
+            return;
+        }
+        Debug.Log($"[Item] Grab: {data.ItemName}, 상태 {CurrentState}", this);
     }
 }
