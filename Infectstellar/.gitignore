@@ -110,3 +110,22 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+#심지태 개인 코덱스 세팅
+/AGENTS.md
+/.codex/
+/.agents/
+/[Ss]cripts/ai/
+
+# docs는 기본 제외하고 ai 폴더 탐색만 허용
+/[Dd]ocs/*
+!/[Dd]ocs/ai/
+
+# 공유 게임 인수인계와 plans 폴더 탐색 허용
+/[Dd]ocs/ai/*
+!/[Dd]ocs/ai/HANDOFF.md
+!/[Dd]ocs/ai/plans/
+
+# 공유할 게임 작업 계획만 허용
+/[Dd]ocs/ai/plans/*
+!/[Dd]ocs/ai/plans/2026-10-06-player-hfsm.md
