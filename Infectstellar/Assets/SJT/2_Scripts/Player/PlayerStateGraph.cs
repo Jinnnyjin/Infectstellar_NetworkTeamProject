@@ -36,7 +36,7 @@ sealed class PlayerStateGraph
     private readonly StateMachine<MovementState, PlayerState, LifeEvent> grounded;
     private readonly StateMachine<MovementState, PlayerState, LifeEvent> airborne;
     private PlayerMovementSettings settings; // 플레이어가 이동, 점프 할 때의 설정값
-    private PlayerInputFrame input;
+    private PlayerInputFrame input; // 이번 프레임에 전달받은 입력을 저장해서, 상태 전환 조건과 행동 메서드에서 함께 사용하기 위한 필드
     #region 웅크리기 관련 필드
     private bool shouldCrouch; // 입력과 일어서기 가능 여부를 고려해 웅크려야 하는지 나타냄
     private bool bodyCrouching; // Motor의 실제 충돌 캡슐이 웅크린 상태인지 나타냄
@@ -77,8 +77,13 @@ sealed class PlayerStateGraph
         ConfigureGroundedStates();
         ConfigureAirborneStates();
 
-        // AddState 첫 번째 인자 : 해당 FSM 안에서 사용할 이름표
-        // grounded : 그 이름표로 등록할 FSM 객체
+        // AddState 첫 번째 인자(name): 해당 FSM 안에서 사용할 상태 이름
+        // AddState 두 번째 인자(onEnter): 상태에 들어갈 때 실행할 함수
+        // AddState 세 번째 인자(onLogic): 활성 상태에서 OnLogic()이 호출될 때 실행할 함수
+        // AddState 네 번째 인자(onExit): 상태에서 나갈 때 실행할 함수
+        // AddState 다섯 번째 인자(canExit): 종료 대기 중, true이면 나가도 된다고 판단하는 함수
+        // AddState 여섯 번째 인자(needsExitTime): true이면 상태를 나가기 전에 종료 가능 여부를 기다린다.
+        // AddState 일곱 번째 인자(isGhostState): true이면 상태에 진입하자마자 다음 전환 조건을 확인한다.
         alive.AddState(MovementState.Grounded, grounded);
         alive.AddState(MovementState.Airborne, airborne);
         alive.SetStartState(MovementState.Grounded);
