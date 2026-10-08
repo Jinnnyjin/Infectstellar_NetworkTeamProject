@@ -1,5 +1,7 @@
 /Assets/[Ii]mport
 /Assets/[Pp]lugins
+/Assets/[Ff]irebase
+/Assets/[Ss]treamingAssets
 .vscode/
 
 # This .gitignore file should be placed at the root of your Unity project directory
