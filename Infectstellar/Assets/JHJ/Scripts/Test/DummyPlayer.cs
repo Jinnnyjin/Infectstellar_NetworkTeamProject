@@ -159,7 +159,7 @@ public class DummyPlayer : MonoBehaviour
             Debug.Log($"[DummyPlayer] E: Grab 불가 - {currentTarget.GetInfo().ItemName}");
             return;
         }
-        currentTarget.Grab();
+        currentTarget.OnGrab();
     }
 
     // =============================================================

@@ -22,7 +22,8 @@ public interface IInteractable
     public bool CanGrab();
 
     /// <summary>
-    /// 로컬플레이어 IsMine에서만, CanGrab으로 미리 확인
+    /// 플레이어가 Grab 처리 중 호출
+    /// 아이템은 상태전환
     /// </summary>
-    public void Grab(); // 소켓 매개변수 들어갈 예정 
+    public void OnGrab();
 }

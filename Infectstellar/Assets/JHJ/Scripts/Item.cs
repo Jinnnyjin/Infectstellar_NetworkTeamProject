@@ -51,7 +51,7 @@ public class Item : MonoBehaviour, IInteractable
         return CurrentState == State.Placed;
     }
 
-    public void Grab()
+    public void OnGrab()
     {
         if (!CanGrab())
         {
