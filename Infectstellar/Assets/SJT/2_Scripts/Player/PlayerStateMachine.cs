@@ -7,7 +7,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerStateMachine : MonoBehaviour
 {
-    private PlayerStates states;
+    private PlayerStateGraph states;
     private PlayerState currentState = PlayerState.Idle;
     private PlayerMotor motor;
 
@@ -65,9 +65,9 @@ public sealed class PlayerStateMachine : MonoBehaviour
         }
 
         motor.RefreshGrounded();
-        PlayerMovementCommand command = states.Prepare(input, motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
+        PlayerMovementCommand command = states.CreateMovementCommand(input, motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
         motor.Simulate(command, deltaTime);
-        states.Complete(motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
+        states.UpdateStateAfterMovement(motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
         motor.SetCrouching(states.WantsCrouch);
         PublishStateChange();
     }
@@ -102,7 +102,7 @@ public sealed class PlayerStateMachine : MonoBehaviour
             return;
         }
 
-        states = new PlayerStates();
+        states = new PlayerStateGraph();
     }
 
     /// <summary>
