@@ -1,4 +1,3 @@
-using DamageNumbersPro.Demo;
 using UnityEngine;
 using UnityHFSM;
 using StateMachine = UnityHFSM.StateMachine;

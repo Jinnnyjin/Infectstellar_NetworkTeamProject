@@ -191,6 +191,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6898316853566473651, guid: f6264e1f111f65547850514f318f34e9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 192514841}
+    - targetCorrespondingSourceObject: {fileID: 6898316853566473651, guid: f6264e1f111f65547850514f318f34e9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 192514845}
   m_SourcePrefab: {fileID: 100100000, guid: f6264e1f111f65547850514f318f34e9, type: 3}
 --- !u!1 &192514840 stripped
 GameObject:
@@ -210,9 +213,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  movementSettings: {fileID: 11400000, guid: bb50a461b8f5a6f41a3625a2f4b1d172, type: 2}
   stateMachine: {fileID: 192514842}
-  motor: {fileID: 192514843}
+  motor: {fileID: 192514845}
 --- !u!114 &192514842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237,6 +239,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48f0697bc5ea50b429778f3cc733ce7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMotor
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!143 &192514844
 CharacterController:
   m_ObjectHideFlags: 0
@@ -262,6 +267,21 @@ CharacterController:
   m_SkinWidth: 0.03596149
   m_MinMoveDistance: 0
   m_Center: {x: 0.18077564, y: 11.449706, z: -1.9945784}
+--- !u!114 &192514845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192514840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f397094b021dae4fa5d42b8e941cfa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMotor
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &1206761432
 GameObject:
   m_ObjectHideFlags: 0
