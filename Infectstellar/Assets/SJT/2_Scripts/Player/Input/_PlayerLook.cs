@@ -4,36 +4,32 @@ using UnityEngine;
 /// 마우스의 좌우 입력은 몸에, 상하 입력은 독립 시점 축에 적용합니다.
 /// </summary>
 [DisallowMultipleComponent]
-public class PlayerLook : MonoBehaviour
+public sealed class _PlayerLook : MonoBehaviour
 {
-    #region 인스펙터 설정값
-    [SerializeField, Tooltip("Player 루트의 직계 자식인 시점 축. 몸과 다른 Transform을 연결")]
+    [SerializeField, Tooltip("Player 루트의 직계 자식인 시점 축입니다. 몸과 다른 Transform을 연결합니다.")]
     private Transform viewPivot;
-    [SerializeField, Min(0f), Tooltip("마우스 X 이동 민감도")]
+    [SerializeField, Min(0f), Tooltip("마우스 X 이동 1픽셀당 몸의 회전 각도입니다.")]
     private float horizontalSensitivity = 0.1f;
-    [SerializeField, Min(0f), Tooltip("마우스 Y 이동 민감도")]
+    [SerializeField, Min(0f), Tooltip("마우스 Y 이동 1픽셀당 시점의 회전 각도입니다.")]
     private float verticalSensitivity = 0.1f;
-    [SerializeField, Range(-89f, 0), Tooltip("위 쪽을 볼 때 허용하는 각도")]
+    [SerializeField, Range(-89f, 0f), Tooltip("위쪽을 볼 때 허용하는 pitch의 최솟값입니다. 단위: 도.")]
     private float minPitch = -80f;
-    [SerializeField, Range(89f, 0), Tooltip("위 쪽을 볼 때 허용하는 각도")]
+    [SerializeField, Range(0f, 89f), Tooltip("아래쪽을 볼 때 허용하는 pitch의 최댓값입니다. 단위: 도.")]
     private float maxPitch = 80f;
-    #endregion
 
     private Transform body;
     private float yaw;
     private float pitch;
 
-    // 마우스로 확정한 상하 시선 각도. 위쪽은 음수, 아래쪽은 양수이며 단위는 도.
-    public float PitchDegrees => pitch;
-
+    /// <summary>
+    /// 별도의 시점 축을 확인하고 현재 배치의 시작 각도를 보관합니다.
+    /// </summary>
     private void Awake()
     {
         body = transform;
         if (viewPivot == null || viewPivot.parent != body)
         {
-#if UNITY_EDITOR
             Debug.LogError("[PlayerLook] Player 루트의 직계 자식인 ViewPivot을 연결해야 합니다.", this);
-#endif
             enabled = false;
             return;
         }
@@ -42,6 +38,9 @@ public class PlayerLook : MonoBehaviour
         pitch = Mathf.Clamp(Mathf.DeltaAngle(0f, viewPivot.localEulerAngles.x), minPitch, maxPitch);
     }
 
+    /// <summary>
+    /// 프레임당 마우스 이동량을 보간 없이 적용합니다. deltaTime은 곱하지 않습니다.
+    /// </summary>
     public void Rotate(Vector2 lookDelta)
     {
         if (!isActiveAndEnabled || viewPivot == null)

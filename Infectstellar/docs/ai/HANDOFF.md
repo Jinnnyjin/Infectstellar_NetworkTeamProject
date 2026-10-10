@@ -1,8 +1,18 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-10 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-11 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: Player 입력·회전 분리와 임시 1인칭 카메라
+## 현재 상태: HFSM·SO·Animator 애니메이션 단순화
+
+- 승인한 [단순화 계획](plans/2026-10-11-player-animation-refactor.md)에 따라 애니메이션 관련 런타임 스크립트를 SO와 연결 컴포넌트 두 개로 줄였다. HFSM 이벤트로 상태를 재생하고, Animator의 세 방향 Blend Tree가 이동 입력을 혼합한다.
+- PlayerAnimation.controller의 8개 상태·17개 고유 슬롯 클립을 구성하고 기존 Player 프리팹/SO를 연결했다. 공통 0.15초를 상태 전환과 방향 완화에 사용한다. Landing·수동 Playables·개별 배율·보행 위상은 제거했다.
+- Idle.fbx를 Humanoid/반복으로 임포트해 SO Idle에 등록했다. 나머지 16개 슬롯은 비어 있고 Idle로 대체된다. 현재 이동/공중/사망에서 다른 동작이 보이지 않는 것은 이 빈 슬롯 구성 때문이다.
+- 독립 리뷰에서 확정 오류/회귀 없음. 최종 Unity 컴파일과 Editor 격리 검사 43개가 통과했다. 실제 완료 근거와 검사 한계는 [단순화 계획](plans/2026-10-11-player-animation-refactor.md)에 기록했다. 실제 조작·발 타이밍·PlayMode·빌드·네트워크는 검증 범위 밖이다.
+- 다음 단계는 SO에 호환 Humanoid 클립을 등록하는 것이다. Idle/이동의 Loop Time을 켜고 Jump/Fall/Dead는 끈다. 실행 중 클립 참조를 교체했다면 재활성화한다. 구성과 역할은 [PROJECT.md](PROJECT.md)의 전신 애니메이션 절을 참고한다.
+- [이전 애니메이션 계획](plans/2026-10-10-player-animation.md)은 제거된 구현의 과거 기록이다. 그 검증 결과를 현재 Animator 구현의 검증으로 사용하지 않는다.
+- 마무리 때 별도로 추가된 DoubleL 에셋 팩에서 .meta 파일 쓰기 오류가 발견됐다. 이번 애니메이션 검사 이후의 임포트 문제로 수정하지 않았으며 Console에 오류가 남아 있다. 상세 시점은 단순화 계획에 기록했다.
+
+## 이전 작업: Player 입력·회전 분리와 임시 1인칭 카메라
 
 사용자가 승인한 [입력·회전 계획](plans/2026-10-10-player-input-look.md)에 따라 PlayerScene 인스턴스의 Unity PlayerInput, PlayerInputReader, PlayerLook과 Cinemachine 카메라를 연결했다. Controller는 입력 적재 → 회전 → 기존 상태머신 Tick을 시작한다. 상세 구조는 [PROJECT.md](PROJECT.md)의 PlayerScene 절을 참고한다.
 
@@ -10,7 +20,7 @@
 - 새 코드 학습 시 PlayerInputReader의 CurrentFrame/LookDelta → PlayerLook.Rotate → PlayerController.Update → 기존 Tick 흐름을 연결해서 설명한다. 예전 Controller의 입력 자산 복제·액션 수명 설명은 현재 구조에 적용하지 않는다.
 - 독립 리뷰에서 재잠금 직후 새 점프 누락을 발견해 실제 버튼 홀드 스냅샷으로 수정했다. 수정본 재검토에서 추가 확정 오류는 없었다.
 - 최종 Unity 컴파일 성공, PlayMode 임시 검사 40/40 통과, 신규 Console 오류 0. 입력 이벤트/포커스 콜백 시뮬레이션을 사용했으므로 실제 조작감·OS 창 전환은 수동 확인이 남는다. 세부 근거와 확인 절차는 위 계획에 있다. Play는 정지했고 임시 설정을 복구했다. 저장 후 Editor에 생긴 dirty 상태는 보존했다.
-- 남은 기능은 웅크림 시점 높이, 모델 애니메이션, 네트워크 소유권/동기화다. 이번에는 고정 머리 높이, 자기 모델 표시, 로컬 키보드·마우스 조작이다.
+- 당시 남은 기능은 웅크림 시점 높이, 모델 애니메이션, 네트워크 소유권/동기화였다. 애니메이션 기반의 현재 상태는 위 절을 참고한다. 카메라는 고정 머리 높이와 자기 모델 표시를 유지한다.
 
 ## 이전 학습 기록 (2026-10-08): Player 이동 코드 수동 재작성
 
@@ -26,10 +36,10 @@
 | 2 | [PlayerMovementSettings.cs](../../Assets/SJT/2_Scripts/SO/PlayerMovementSettings.cs) | 이동 속도·점프 높이·중력·웅크린 높이 비율, 필드와 프로퍼티 | Motor와 상태 판단에서 읽는 공통 설정을 먼저 이해한다. |
 | 3 | [PlayerInputFrame.cs](../../Assets/SJT/2_Scripts/Struct/PlayerInputFrame.cs) | 한 프레임의 Move·RunHeld·CrouchHeld·JumpPressed | 입력을 어떤 자료형으로 모아서 전달하는지 이해한다. 입력 수집 자체는 마지막 Controller에서 다룬다. |
 | 4 | [PlayerMovementCommand.cs](../../Assets/SJT/2_Scripts/Struct/PlayerMovementCommand.cs) | 상태 판단 결과인 이동 방향·속도·점프·웅크림 명령 | 입력과 실행 명령의 차이, HFSM이 결정하고 Motor가 실행하는 경계를 익힌다. |
-| 5 | [PlayerMotor.cs](../../Assets/SJT/2_Scripts/Player/PlayerMotor.cs) | 명령을 받아 CharacterController 이동·중력·점프·충돌·캡슐 변경 | 상태 정책을 공부하기 전에 명령이 실제 몸에 어떤 영향을 주는지와 접지·수직 속도 등 결과를 이해한다. |
-| 6 | [PlayerStateGraph.cs](../../Assets/SJT/2_Scripts/Player/PlayerStateGraph.cs) — 최초 안내명 `PlayerStates.cs` | HFSM 계층·상태 등록·전환 조건·상태별 이동 명령 | 앞의 입력·설정·명령과 몸 정보를 바탕으로 무엇을 결정하는지 이해한다. 가장 복잡한 단계이므로 작은 메서드 단위로 설명한다. |
-| 7 | [PlayerStateMachine.cs](../../Assets/SJT/2_Scripts/Player/PlayerStateMachine.cs) | 그래프와 Motor 연결, 외부 API·상태 변경 이벤트 | 두 구성 요소의 역할을 안 뒤 명령 생성 → 실제 이동 → 이동 후 상태 갱신의 실행 순서를 배운다. |
-| 8 | [PlayerController.cs](../../Assets/SJT/2_Scripts/Player/PlayerController.cs) | 입력 수집·런타임 입력 인스턴스 수명·컴포넌트 초기화·프레임 시작 | 마지막에 입력이 전체 흐름을 어떻게 시작하는지 연결한다. 처음부터 보면 입력·초기화·상태·물리를 동시에 따라가야 해서 어렵다. |
+| 5 | [PlayerMotor.cs](../../Assets/SJT/2_Scripts/Player/HFSM,MOVE/PlayerMotor.cs) | 명령을 받아 CharacterController 이동·중력·점프·충돌·캡슐 변경 | 상태 정책을 공부하기 전에 명령이 실제 몸에 어떤 영향을 주는지와 접지·수직 속도 등 결과를 이해한다. |
+| 6 | [PlayerStateGraph.cs](../../Assets/SJT/2_Scripts/Player/HFSM,MOVE/PlayerStateGraph.cs) — 최초 안내명 `PlayerStates.cs` | HFSM 계층·상태 등록·전환 조건·상태별 이동 명령 | 앞의 입력·설정·명령과 몸 정보를 바탕으로 무엇을 결정하는지 이해한다. 가장 복잡한 단계이므로 작은 메서드 단위로 설명한다. |
+| 7 | [PlayerStateMachine.cs](../../Assets/SJT/2_Scripts/Player/HFSM,MOVE/PlayerStateMachine.cs) | 그래프와 Motor 연결, 외부 API·상태 변경 이벤트 | 두 구성 요소의 역할을 안 뒤 명령 생성 → 실제 이동 → 이동 후 상태 갱신의 실행 순서를 배운다. |
+| 8 | [PlayerController.cs](../../Assets/SJT/2_Scripts/Player/HFSM,MOVE/PlayerController.cs) | 입력 적재 요청·회전·컴포넌트 초기화·프레임 시작 | 마지막에 입력이 전체 흐름을 어떻게 시작하는지 연결한다. 처음부터 보면 입력·초기화·상태·물리를 동시에 따라가야 해서 어렵다. |
 
 2026-10-08 파일 확인: 현재 그래프 클래스/파일은 `PlayerStateGraph`이며 `PlayerStates.cs`는 없다. `_PlayerStates.cs`도 별도로 존재하지만 현재 `PlayerStateMachine`이 생성하는 것은 `PlayerStateGraph`다. `_PlayerMovementSettings.cs`, `_PlayerInputFrame.cs` 등 별도 파일과 사용자 재작성 파일을 임의 삭제·이동·원복하지 않는다. 이 학습 순서만으로 앞 단계 작성 완료를 추정하지 않는다.
 
@@ -106,3 +116,7 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 
 - csharp-refactor 스킬·한국어 UI·참고 문서 4개와 AGENTS 연결을 이 프로젝트와 공통 원본에 추가했다. 공통 원본 main의 v1.1.5, 커밋 c6d091b7421a01ff9bacb3d916fe792a92f268c8로 게시했다.
 - 검증 결과·기존 HANDOFF 경로 오류 4개·PyYAML 부재·실제 자동 선택 미검증 및 설치 기준 유지 사항은 [반영 계획](plans/2026-10-10-csharp-refactor.md)에 기록했다. 게임 코드·자산과 다른 프로젝트는 변경하지 않았다.
+
+## 로컬 디버그 가드 지침 동기화 (2026-10-11)
+
+공통 원본의 디버그 가드 기준을 로컬 코딩 컨벤션·예시·Unity 보호 문서에 반영했다. 모든 개발용 로그·진단 전용 계산과 호출은 UNITY_EDITOR로 제외하고, 런타임 안전 검사·실패 처리는 유지한다. 게임 코드·자산은 이번 작업에서 변경하지 않았다.
