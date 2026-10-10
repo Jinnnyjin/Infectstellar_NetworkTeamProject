@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fe055f7ac8a21e4e901b2b3bf20a2eb, type: 3}
+  m_Script: {fileID: 11500000, guid: 96d8cbda5ca094744a78ae597b5c84eb, type: 3}
   m_Name: PlayerMovementSettings
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementSettings
   walkSpeed: 3

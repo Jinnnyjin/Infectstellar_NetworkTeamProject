@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "PlayerMovementSettings", menuName = "Infectstellar/Player Movement Settings")]
-public sealed class PlayerMovementSettings
+public sealed class PlayerMovementSettings : ScriptableObject
 {
     [SerializeField, Min(0f)] private float walkSpeed = 3f;
     [SerializeField, Min(0f)] private float runSpeed = 5f;
