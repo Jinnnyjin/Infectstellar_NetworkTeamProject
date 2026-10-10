@@ -183,8 +183,9 @@ public sealed class PlayerMotor : MonoBehaviour
         float queryRadius = Mathf.Max(radius - probeDistance, radius * 0.5f); // 원래 구에서 여유 거리만큼 반지름을 줄이되, 검사용 구가 너무 작아지지 않도록(probeDistance가 c_minProbeDistance로 설정된 경우) 원래 반지름의 절반은 유지합니다.
         Vector3 castOrigin = bottomSphereCenter + Vector3.up * probeDistance;
 
-        // 검사 구를 내려 보낼 거리. 위로 띄우고 작게 만든 검사 구가 원래 발밑까지 내려갈 거리에, 작은 틈 아래의 바닥도 찾도록 1cm를 더합니다.
-        float castDistance = probeDistance * 2f + c_minProbeDistance;
+        // 검사 구를 내려 보낼 거리. 위로 띄우고 작게 만든 구가 원래 발밑에 도달한 뒤, CharacterController의 접촉 여유까지 바닥을 찾습니다.
+        float groundTolerance = Mathf.Max(characterController.skinWidth, c_minProbeDistance);
+        float castDistance = probeDistance * 2f + groundTolerance;
 
         // SphereCast는 광선 대신 일정한 반지름을 가진 구체를 이동시키면서 충돌을 검사, 구체가 이동하는 경로에 장애물이 닿으면 충돌이 감지됨
         // SphereCastNonAlloc은 동일한 구체 이동 검사를 수행하지만, 결과를 사용자가 미리 생성해 놓은 배열에 저장함. 불필요한 메모리 할당을 줄일 수 있음

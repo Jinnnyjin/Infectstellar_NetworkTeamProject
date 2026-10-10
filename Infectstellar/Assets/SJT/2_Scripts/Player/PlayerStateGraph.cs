@@ -105,6 +105,7 @@ sealed class PlayerStateGraph
 
         root.AddTriggerTransition(LifeEvent.Die, LifeState.Alive, LifeState.Dead, forceInstantly: true);
         root.AddTriggerTransition(LifeEvent.Revive, LifeState.Dead, LifeState.Alive, forceInstantly: true);
+        root.Init(); // 등록한 시작 상태 Alive/Grounded/Idle에 실제로 진입합니다.
     }
 
     /// <summary>
@@ -118,7 +119,7 @@ sealed class PlayerStateGraph
     /// <returns></returns>
     /// 
     /// StateMachine.OnLogic()
-    /// 상태 전환 조건을 확인하고, 현재 활성 상태에 등록된 행동을 실행한다.
+    /// 상태 전환 조건을 확인하고, 현재 활성 상태에 등록된 행동(onEnter, onLogic, onExit)을 실행한다.
     public PlayerMovementCommand CreateMovementCommand(PlayerInputFrame _input, bool isGrounded, float verticalVelocity, bool isCrouching, bool canStand)
     {
         input = _input;

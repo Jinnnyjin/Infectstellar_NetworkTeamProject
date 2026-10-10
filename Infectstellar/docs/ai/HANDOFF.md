@@ -1,8 +1,18 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-08 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-10 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 이어갈 작업: Player 이동 코드 학습·수동 재작성
+## 현재 상태: Player 입력·회전 분리와 임시 1인칭 카메라
+
+사용자가 승인한 [입력·회전 계획](plans/2026-10-10-player-input-look.md)에 따라 PlayerScene 인스턴스의 Unity PlayerInput, PlayerInputReader, PlayerLook과 Cinemachine 카메라를 연결했다. Controller는 입력 적재 → 회전 → 기존 상태머신 Tick을 시작한다. 상세 구조는 [PROJECT.md](PROJECT.md)의 PlayerScene 절을 참고한다.
+
+- 기존 이동 정책·수치와 사용자 재작성본/비교 파일을 보존했다. Settings 상속, HFSM root.Init(), 씬의 타입/설정 연결과 과거 Motor 참조를 최소 복구했다. 실행에서 발견한 기존 점프 차단은 Motor의 바닥 검사에 CharacterController 접촉 여유를 포함해 보완했다.
+- 새 코드 학습 시 PlayerInputReader의 CurrentFrame/LookDelta → PlayerLook.Rotate → PlayerController.Update → 기존 Tick 흐름을 연결해서 설명한다. 예전 Controller의 입력 자산 복제·액션 수명 설명은 현재 구조에 적용하지 않는다.
+- 독립 리뷰에서 재잠금 직후 새 점프 누락을 발견해 실제 버튼 홀드 스냅샷으로 수정했다. 수정본 재검토에서 추가 확정 오류는 없었다.
+- 최종 Unity 컴파일 성공, PlayMode 임시 검사 40/40 통과, 신규 Console 오류 0. 입력 이벤트/포커스 콜백 시뮬레이션을 사용했으므로 실제 조작감·OS 창 전환은 수동 확인이 남는다. 세부 근거와 확인 절차는 위 계획에 있다. Play는 정지했고 임시 설정을 복구했다. 저장 후 Editor에 생긴 dirty 상태는 보존했다.
+- 남은 기능은 웅크림 시점 높이, 모델 애니메이션, 네트워크 소유권/동기화다. 이번에는 고정 머리 높이, 자기 모델 표시, 로컬 키보드·마우스 조작이다.
+
+## 이전 학습 기록 (2026-10-08): Player 이동 코드 수동 재작성
 
 사용자는 기존 Player 이동 코드를 처음부터 직접 따라 치며 이해하는 중이다. 다음 채팅에서도 아래 학습 순서와 설명 방식을 유지한다. 이번 요청은 학습 인수인계 기록이며 게임 코드 수정·컴파일 요청이 아니다. 설명 질문에서는 파일을 수정하지 않고, 별도 실행 요청이 있을 때만 수정한다.
 
