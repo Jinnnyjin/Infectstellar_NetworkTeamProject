@@ -62,6 +62,7 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void OnEnable()
     {
+        // Awake에서 초기화에 실패한 경우, 컴포넌트의 활성화를 해제한다.
         if (!isInitialized)
         {
             enabled = false;

@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Controls;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerInput))]
-public sealed class PlayerInputReader : MonoBehaviour
+public sealed class _PlayerInputReader : MonoBehaviour
 {
     private const string c_playerMap = "Player";
     private const string c_keyboardMouseScheme = "Keyboard&Mouse";
