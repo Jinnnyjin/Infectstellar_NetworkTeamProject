@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// HFSM의 상태 변경과 이동 입력을 Animator에 전달합니다. 재생과 혼합은 Animator가 처리합니다.
+/// 외부에서 전달받은 상태와 이동 방향을 Animator에 적용합니다. 재생과 혼합은 Animator가 처리합니다.
 /// </summary>
 [DefaultExecutionOrder(100)]
 [DisallowMultipleComponent]
-[RequireComponent(typeof(Animator), typeof(PlayerStateMachine), typeof(PlayerInputReader))]
+[RequireComponent(typeof(Animator))]
 public sealed class PlayerAnimationController : MonoBehaviour
 {
     private static readonly int moveXHash = Animator.StringToHash("MoveX");
@@ -23,44 +23,29 @@ public sealed class PlayerAnimationController : MonoBehaviour
         Animator.StringToHash("Base Layer.Dead")
     };
 
-    [SerializeField, Tooltip("클립 교체는 시작 또는 재활성화 때 반영합니다.")] private PlayerAnimationSettings settings;
-    [SerializeField] private Animator animator;
-    [SerializeField] private PlayerStateMachine stateMachine;
-    [SerializeField] private PlayerInputReader inputReader;
+    [SerializeField, Tooltip("클립 교체는 시작 또는 재활성화 때 반영")]
+    private PlayerAnimationSettings settings;
+    [SerializeField, Tooltip("이 컴포넌트와 같은 모델 객체의 Animator를 연결")]
+    private Animator animator;
 
     private AnimatorOverrideController overrideController;
     private RuntimeAnimatorController previousController;
-    private PlayerStateMachine subscribedStateMachine;
     private PlayerState requestedState;
+    private Vector2 moveDirection;
     private bool previousRootMotion;
     private bool hasPlayedState;
     private bool shouldChangeState;
 
     /// <summary>
-    /// 플레이어별 클립 교체본을 준비하고 현재 HFSM 상태부터 재생하도록 예약합니다.
+    /// 플레이어별 클립 교체본을 준비하고 마지막으로 전달받은 상태부터 재생하도록 예약합니다.
     /// </summary>
     private void OnEnable()
     {
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-        }
-
-        if (stateMachine == null)
-        {
-            stateMachine = GetComponent<PlayerStateMachine>();
-        }
-
-        if (inputReader == null)
-        {
-            inputReader = GetComponent<PlayerInputReader>();
-        }
-
-        if (settings == null || animator == null || stateMachine == null || inputReader == null
+        if (settings == null || animator == null
             || settings.BaseController == null || animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman
-            || animator.gameObject != gameObject || stateMachine.gameObject != gameObject || inputReader.gameObject != gameObject)
+            || animator.gameObject != gameObject)
         {
-            Fail("같은 Player의 Settings, Animator, StateMachine, InputReader와 유효한 Humanoid Avatar, 기본 Controller가 필요합니다.");
+            Fail("Inspector에 Settings와 같은 모델 객체의 Animator를 연결해야 합니다. 유효한 Humanoid Avatar와 기본 Controller도 필요합니다.");
             return;
         }
 
@@ -113,9 +98,6 @@ public sealed class PlayerAnimationController : MonoBehaviour
         previousRootMotion = animator.applyRootMotion;
         animator.runtimeAnimatorController = overrideController;
         animator.applyRootMotion = false;
-        subscribedStateMachine = stateMachine;
-        subscribedStateMachine.StateChanged += HandleStateChanged;
-        requestedState = stateMachine.CurrentState;
         shouldChangeState = true;
         hasPlayedState = false;
     }
@@ -125,7 +107,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (animator == null || stateMachine == null || inputReader == null || settings == null)
+        if (animator == null || settings == null)
         {
             Fail("필수 애니메이션 참조가 사라졌습니다.");
             return;
@@ -136,10 +118,9 @@ public sealed class PlayerAnimationController : MonoBehaviour
             return;
         }
 
-        Vector2 move = inputReader.isActiveAndEnabled ? inputReader.CurrentFrame.Move : Vector2.zero;
         float damping = hasPlayedState ? settings.BlendDuration : 0f;
-        animator.SetFloat(moveXHash, move.x, damping, Time.deltaTime);
-        animator.SetFloat(moveYHash, move.y, damping, Time.deltaTime);
+        animator.SetFloat(moveXHash, moveDirection.x, damping, Time.deltaTime);
+        animator.SetFloat(moveYHash, moveDirection.y, damping, Time.deltaTime);
         if (!shouldChangeState)
         {
             return;
@@ -166,16 +147,10 @@ public sealed class PlayerAnimationController : MonoBehaviour
     }
 
     /// <summary>
-    /// 구독과 플레이어별 교체본을 정리하고 기존 Animator 설정을 복구합니다.
+    /// 플레이어별 교체본을 정리하고 기존 Animator 설정을 복구합니다. 전달받은 요청값은 유지합니다.
     /// </summary>
     private void OnDisable()
     {
-        if (subscribedStateMachine != null)
-        {
-            subscribedStateMachine.StateChanged -= HandleStateChanged;
-        }
-
-        subscribedStateMachine = null;
         if (overrideController != null)
         {
             if (animator != null && animator.runtimeAnimatorController == overrideController)
@@ -203,12 +178,25 @@ public sealed class PlayerAnimationController : MonoBehaviour
     }
 
     /// <summary>
-    /// 같은 프레임에 여러 번 변경되어도 최종 상태를 Animator 평가 전에 한 번 적용합니다.
+    /// 재생할 상태를 예약합니다. 같은 상태 요청은 재시작하지 않으며 비활성 중에도 최신 요청을 보관합니다.
     /// </summary>
-    private void HandleStateChanged(PlayerState previous, PlayerState current)
+    public void SetState(PlayerState state)
     {
-        requestedState = current;
+        if (requestedState == state)
+        {
+            return;
+        }
+
+        requestedState = state;
         shouldChangeState = true;
+    }
+
+    /// <summary>
+    /// 혼합할 이동 방향을 보관합니다. 상태 재진입 없이 MoveX/MoveY만 갱신합니다.
+    /// </summary>
+    public void SetMoveDirection(Vector2 direction)
+    {
+        moveDirection = direction;
     }
 
     /// <summary>

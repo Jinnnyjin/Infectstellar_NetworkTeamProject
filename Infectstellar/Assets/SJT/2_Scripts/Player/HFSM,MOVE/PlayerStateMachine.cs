@@ -7,6 +7,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerStateMachine : MonoBehaviour
 {
+    [SerializeField, Tooltip("이 Player의 모델에 있는 애니메이션 컨트롤러를 연결")]
+    private PlayerAnimationController animationController;
+
     private PlayerStateGraph stateGraph;
     private PlayerState currentState = PlayerState.Idle;
     private PlayerMotor motor;
@@ -39,6 +42,10 @@ public sealed class PlayerStateMachine : MonoBehaviour
 
         this.motor = motor;
         stateGraph.Configure(settings);
+        if (animationController != null)
+        {
+            animationController.SetState(currentState);
+        }
     }
 
     /// <summary>
@@ -95,6 +102,11 @@ public sealed class PlayerStateMachine : MonoBehaviour
 
         PlayerState previousState = currentState;
         currentState = nextState;
+        if (animationController != null)
+        {
+            animationController.SetState(nextState);
+        }
+
         StateChanged?.Invoke(previousState, nextState);
     }
 }

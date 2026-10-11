@@ -2,7 +2,41 @@
 
 최종 갱신일: 2026-10-11 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: HFSM·SO·Animator 애니메이션 단순화
+## 현재 상태: Player 클립 이름·독립 복제본·SO 연결
+
+- Player 폴더의 17개 FBX 임포트 클립 이름을 각 FBX 이름으로 바꾸고, 편집 가능한 독립 `.anim` 복제본 17개를 `Assets/SJT/1_Assets/Animations/Clips/`에 만들었다. SO의 17개 필드에 복제본을 지정해 이전 Missing/빈 슬롯을 교체했다.
+- 원본 FBX·리그·반복·프레임 구간·Controller·0.15초 전환 시간·씬·프리팹·코드는 유지했다. 실제 캐릭터 재생 자세와 발 미끄러짐은 미검증이다. 단계와 검증 결과는 [클립 복제·연결 계획](plans/2026-10-11-player-animation-clips.md)에 기록한다.
+- 독립 검토와 Unity 객체·곡선·설정·SO 참조 검사를 통과했다. 격리된 Editor PreviewScene에서 원본/복제본 17쌍을 4시점씩 비교한 68쌍의 자세 차이는 0이었다. 실제 PlayerScene에서 입력·HFSM 전환·발 미끄러짐을 보는 게임 실행 검증은 하지 않았다.
+
+## 이전 상태: Player FBX의 Humanoid·반복 설정
+
+- `Assets/SJT/1_Assets/Animations/Player/`의 17개 FBX를 Humanoid로 설정하고 원본 계층의 필수 뼈를 직접 매핑했다. 대기·이동 14개는 반복, Jumping_Up·Jumping_Down·Die 3개는 비반복이다. FBX 원본과 구간·클립 이름, SO·Controller·씬·프리팹은 이번 작업에서 수정하지 않았다.
+- 새 Crouch_Idle이 있어 현재 슬롯 기준 필요한 17개 동작이 모두 준비됐다. 교체한 Run_Backward/Crouch_Walk_Backward의 원본 수평 누적 이동이 해소됐다. Jumping_Down은 낙하 자세로 사용하며 착지·웅크리기/일어서기 전환·대각선 클립은 추가하지 않는 사용자 결정을 따르기로 했다.
+- 다음 연결 작업은 PlayerAnimationSettings.asset의 기존 전진 걷기 Missing 참조를 Walk_Forward로 교체하고, 비어 있는 15개 슬롯에 해당 클립을 지정하는 것이다. 현재 Idle만 새 폴더의 클립에 연결돼 있다. 이 작업에서는 슬롯 등록을 설명만 했으며 변경하지 않았다. 실제 캐릭터 재생·리타기팅 자세·발 미끄러짐은 미검증이다.
+- 최종 독립 검토와 Unity 임포트 객체 검사를 통과했다. 17개 모두 유효한 Humanoid Avatar와 단일 Humanoid 클립, 저장/실제 매핑 및 반복 설정이 일치했다. 기존 GUID·클립 fileID·프레임 구간·길이·60fps와 SO·씬·프리팹·FBX 원본을 보존했다. 초기 자동 매핑의 LeftFoot 오류는 각 FBX의 실제 스켈레톤을 유지하고 15개 뼈를 재지정해 해결했다. PlayMode·빌드·게임 코드 컴파일 검사는 수행하지 않았다.
+
+## 이전 상태: 독립 Health 시스템 추가
+
+- 독립 Health 컴포넌트와 DamageInfo를 추가했다. float 체력의 외부 초기화·피해·회복과 읽기 전용 상태, 현재 개인 컨벤션에 따른 D_ 접두사 C# 이벤트를 제공한다. 이벤트 구독 중 변경 요청은 현재 알림 묶음 종료 후 FIFO로 처리한다.
+- 최종 Unity 컴파일과 독립 리뷰, PreviewScene 격리 26개 시나리오/126개 assertions를 통과했다. 기존 PlayerScene의 미저장 상태를 보존했으며 PlayMode·게임 실행·빌드는 수행하지 않았다. 상세 계약과 검증 근거는 [Health 계획](plans/2026-10-11-health.md)에 기록했다.
+- 씬·프리팹에는 아직 연결하지 않았다. 사용할 개체에 Health를 붙이고 외부에서 Initialize를 호출한다. 부활 준비·사망 반응·Player/HFSM·네트워크 연결은 외부 작업이다.
+
+## 이전 상태: Player와 모델 분리
+
+- PlayerScene의 새 Player 루트에는 이동·입력·상태·시점을, 자식 Astronaut에는 Animator와 PlayerAnimationController를 구성했다. Inspector 참조·새 카메라 대상·머리 AimConstraint를 연결했다. 프리팹 원본과 FBX 설정은 변경하지 않았다.
+- 사용자 설정의 AstronautAvatar는 유효한 Humanoid로 확인했다. PlayerAnimationController만 Inspector 직접 참조와 분리 계층 검사로 최소 수정했다.
+- 추가 승인으로 기존 Controller의 잘못된 Idle/전진 걷기 슬롯을 복구하고 선택한 실제 클립은 SO에 연결했다. 현재 Walk.fbx는 비 Humanoid라 기존 정책대로 Idle로 대체한다.
+- 구성·Unity 컴파일·독립 리뷰와 실제 입력 경로의 이동·웅크림·점프·시점·카메라·머리 추적·모델 뼈 평가 검증을 완료했다. Play를 종료한 뒤 씬의 Player_Pre를 삭제하고 저장했다. 프리팹 원본은 유지하며 PlayerScene은 dirty=false다. 상세 근거는 [모델 분리 계획](plans/2026-10-11-player-model-separation.md)을 따른다.
+- 현재 모든 실제 재생 클립은 Idle로 대체된다. 이동/공중 Animator 상태 전환은 검증했지만, 별도 보행·점프 동작을 보려면 SO에 호환 Humanoid 클립을 등록해야 한다. 실제 Crouch 키는 현재 PlayerControls의 Ctrl이다.
+
+## 이전 상태: Astronaut 원본 리그 비교
+
+- PlayerScene의 Astronaut에 Player와 같은 컴포넌트·Inspector 연결을 적용했다. 자체 컴포넌트·시점·머리 제약 참조는 Astronaut 내부로 연결하고 충돌 캡슐은 스케일 차이를 환산했다. 기존 Player 활성 상태, 시네머신 카메라 설정과 추적 대상은 유지했다.
+- 모델의 Generic Avatar와 원본 임포트 설정을 유지했다. 편집 상태의 Animator와 PlayerAnimationController는 활성이다. 구성은 [프로젝트 구조](PROJECT.md#astronaut-원본-리그-비교-구성)에 기록한다.
+- PlayMode에서 프레임 진행을 확인했지만 정상 애니메이션 재생은 실패했다. Astronaut는 기존 코드의 Humanoid 검사에서 애니메이션 컴포넌트가 중지됐고 뼈 15개의 자세가 변하지 않았다. 기존 Player에서도 슬롯 이름 오류가 발생했다. 이번 요청은 원본 리그 비교이므로 코드·모델·공유 애니메이션 자산의 수정은 하지 않았다.
+- 검사를 마치고 PlayMode를 종료했다. 이동·점프·실제 입력 조작과 빌드는 이번 검사 범위 밖이다.
+
+## 기존 Player 구성: HFSM·SO·Animator 애니메이션 단순화
 
 - 승인한 [단순화 계획](plans/2026-10-11-player-animation-refactor.md)에 따라 애니메이션 관련 런타임 스크립트를 SO와 연결 컴포넌트 두 개로 줄였다. HFSM 이벤트로 상태를 재생하고, Animator의 세 방향 Blend Tree가 이동 입력을 혼합한다.
 - PlayerAnimation.controller의 8개 상태·17개 고유 슬롯 클립을 구성하고 기존 Player 프리팹/SO를 연결했다. 공통 0.15초를 상태 전환과 방향 완화에 사용한다. Landing·수동 Playables·개별 배율·보행 위상은 제거했다.
@@ -120,3 +154,9 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 ## 로컬 디버그 가드 지침 동기화 (2026-10-11)
 
 공통 원본의 디버그 가드 기준을 로컬 코딩 컨벤션·예시·Unity 보호 문서에 반영했다. 모든 개발용 로그·진단 전용 계산과 호출은 UNITY_EDITOR로 제외하고, 런타임 안전 검사·실패 처리는 유지한다. 게임 코드·자산은 이번 작업에서 변경하지 않았다.
+
+## 델리게이트 공개 범위·명명 기준 (2026-10-11)
+
+사용자 요청으로 델리게이트 멤버의 기본을 public event와 D_ + PascalCase로 정했다. 반드시 내부 전용이어야 할 때만 private/protected와 d_ + camelCase를 사용한다. 로컬 컨벤션 두 절과 예시를 맞췄으며 게임 코드·공통 원본은 변경하지 않았다.
+
+공통 원본에도 동일한 기준을 병합했으며 UnityHarness main의 v1.1.6, 커밋 a728a1d3b076570895aadd2be0b1f1bc702c905f로 게시했다. 게시 파일은 VERSION·공통 코딩 컨벤션·예시 3개이며 다른 프로젝트는 자동 갱신하지 않았다.
