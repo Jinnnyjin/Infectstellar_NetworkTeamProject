@@ -2,7 +2,19 @@
 
 최종 갱신일: 2026-10-11 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: Player 클립 이름·독립 복제본·SO 연결
+## 현재 상태: _Health 학습 원본 단순화
+
+- `Assets/SJT/2_Scripts/Entity/_Health.cs`에서 Queue<Action>·NotifyChange·드레인 플래그·캡처 람다를 제거했다. 각 변경 메서드가 이벤트를 직접 호출한다. 사용자가 작성 중인 같은 폴더의 Health.cs와 DamageInfo, 기존 GUID·Player·씬은 보존했다.
+- 초기화·피해·회복·이벤트 계약과 0 피해 피격 알림은 유지한다. 이벤트 중 같은 _Health를 변경하는 호출은 가드로 무시하며 대기 처리하지 않는다. 외부 부활 준비 후 초기화는 이벤트 알림이 끝난 뒤 호출한다.
+- 독립 리뷰와 최종 소스의 Unity 참조 인메모리 컴파일·PreviewScene 격리 16개 시나리오/65개 assertions 통과. 전체 프로젝트 컴파일은 학습 중 Health.cs의 기존 미정의 메서드 3건(CS0103)으로 실패했으며 해당 파일을 수정하지 않았다. 입력검사에서 예상 오류 로그 19건이 Console에 남았다. 최종 근거·한계는 [_Health 단순화 계획](plans/2026-10-11-health-refactor.md)을 따른다. 최초 FIFO/클로저 검증 결과는 현재 원본의 근거로 재사용하지 않는다.
+
+## 이전 작업: HFSM의 애니메이션 직접 호출
+
+- HFSM은 SetState, PlayerController는 SetMoveDirection을 호출한다. 애니메이션의 HFSM/InputReader 참조와 이벤트 구독을 제거하고 기존 Animator/17개 클립/0.15초 완화 구조를 유지했다.
+- 현재 Player.prefab의 두 호출자를 모델 애니메이션에 연결했다. PlayerScene은 이를 상속한다. 사용자 선택으로 Player_Pre와 _Recovery 백업은 수정하지 않았으며 재사용 시 새 참조 연결이 필요하다.
+- 독립 리뷰에서 취소된 같은 프레임 전환의 재시작 문제를 수정하고 재검토했다. 최종 Unity 컴파일과 격리 Editor 검사 37건이 통과했다. 실제 Animator 평가·조작·발 타이밍·PlayMode·빌드는 미검증이다. 상세 단계·결과·검사 한계는 [직접 호출 계획](plans/2026-10-11-player-animation-push.md)을 따른다.
+
+## 이전 작업: Player 클립 이름·독립 복제본·SO 연결
 
 - Player 폴더의 17개 FBX 임포트 클립 이름을 각 FBX 이름으로 바꾸고, 편집 가능한 독립 `.anim` 복제본 17개를 `Assets/SJT/1_Assets/Animations/Clips/`에 만들었다. SO의 17개 필드에 복제본을 지정해 이전 Missing/빈 슬롯을 교체했다.
 - 원본 FBX·리그·반복·프레임 구간·Controller·0.15초 전환 시간·씬·프리팹·코드는 유지했다. 실제 캐릭터 재생 자세와 발 미끄러짐은 미검증이다. 단계와 검증 결과는 [클립 복제·연결 계획](plans/2026-10-11-player-animation-clips.md)에 기록한다.
@@ -17,9 +29,9 @@
 
 ## 이전 상태: 독립 Health 시스템 추가
 
-- 독립 Health 컴포넌트와 DamageInfo를 추가했다. float 체력의 외부 초기화·피해·회복과 읽기 전용 상태, 현재 개인 컨벤션에 따른 D_ 접두사 C# 이벤트를 제공한다. 이벤트 구독 중 변경 요청은 현재 알림 묶음 종료 후 FIFO로 처리한다.
+- 최초 독립 Health 컴포넌트와 DamageInfo를 추가한 당시 기록이다. 당시 이벤트 중 변경 요청은 현재 알림 묶음 종료 후 FIFO로 처리했다. 사용자가 파일을 Entity로 이동하고 원본을 _Health로 구분한 후 큐를 제거했다. 최신 동작은 위 단순화 절을 따른다.
 - 최종 Unity 컴파일과 독립 리뷰, PreviewScene 격리 26개 시나리오/126개 assertions를 통과했다. 기존 PlayerScene의 미저장 상태를 보존했으며 PlayMode·게임 실행·빌드는 수행하지 않았다. 상세 계약과 검증 근거는 [Health 계획](plans/2026-10-11-health.md)에 기록했다.
-- 씬·프리팹에는 아직 연결하지 않았다. 사용할 개체에 Health를 붙이고 외부에서 Initialize를 호출한다. 부활 준비·사망 반응·Player/HFSM·네트워크 연결은 외부 작업이다.
+- 최초 작업에서는 씬·프리팹에 연결하지 않았다. 부활 준비·사망 반응·Player/HFSM·네트워크 연결은 외부 작업이다.
 
 ## 이전 상태: Player와 모델 분리
 

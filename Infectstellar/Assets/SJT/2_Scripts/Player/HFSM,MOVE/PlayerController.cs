@@ -11,7 +11,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private PlayerMovementSettings movementSettings;
     [SerializeField] private PlayerStateMachine stateMachine;
     [SerializeField] private PlayerMotor motor;
-    [SerializeField, Tooltip("StateMachineと同じモデルのアニメーションコントローラーを接続")]
+    [SerializeField, Tooltip("StateMachine과 같은 모델의 애니메이션 컨트롤러를 연결")]
     private PlayerAnimationController animationController;
 
     private PlayerInputReader inputReader;

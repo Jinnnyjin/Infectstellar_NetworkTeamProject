@@ -31,6 +31,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private AnimatorOverrideController overrideController;
     private RuntimeAnimatorController previousController;
     private PlayerState requestedState;
+    private PlayerState playedState;
     private Vector2 moveDirection;
     private bool previousRootMotion;
     private bool hasPlayedState;
@@ -126,6 +127,12 @@ public sealed class PlayerAnimationController : MonoBehaviour
             return;
         }
 
+        shouldChangeState = false;
+        if (hasPlayedState && requestedState == playedState)
+        {
+            return;
+        }
+
         int index = (int)requestedState;
         if (index < 0 || index >= stateHashes.Length || !animator.HasState(0, stateHashes[index]))
         {
@@ -142,8 +149,8 @@ public sealed class PlayerAnimationController : MonoBehaviour
             animator.Play(stateHashes[index], 0, 0f);
         }
 
+        playedState = requestedState;
         hasPlayedState = true;
-        shouldChangeState = false;
     }
 
     /// <summary>
