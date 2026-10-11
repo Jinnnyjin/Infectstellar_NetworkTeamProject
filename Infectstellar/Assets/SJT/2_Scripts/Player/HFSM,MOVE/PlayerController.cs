@@ -11,6 +11,8 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private PlayerMovementSettings movementSettings;
     [SerializeField] private PlayerStateMachine stateMachine;
     [SerializeField] private PlayerMotor motor;
+    [SerializeField, Tooltip("StateMachineと同じモデルのアニメーションコントローラーを接続")]
+    private PlayerAnimationController animationController;
 
     private PlayerInputReader inputReader;
     private PlayerLook playerLook;
@@ -70,6 +72,10 @@ public sealed class PlayerController : MonoBehaviour
         }
 
         inputReader.SetControlActive(true);
+        if (animationController != null)
+        {
+            animationController.SetMoveDirection(Vector2.zero);
+        }
     }
 
     /// <summary>
@@ -92,6 +98,10 @@ public sealed class PlayerController : MonoBehaviour
         }
 
         stateMachine.Tick(inputReader.CurrentFrame, Time.deltaTime);
+        if (animationController != null)
+        {
+            animationController.SetMoveDirection(inputReader.CurrentFrame.Move);
+        }
     }
 
     /// <summary>
@@ -99,6 +109,11 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void OnDisable()
     {
+        if (animationController != null)
+        {
+            animationController.SetMoveDirection(Vector2.zero);
+        }
+
         if (inputReader != null)
         {
             inputReader.SetControlActive(false);
