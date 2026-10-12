@@ -2,6 +2,11 @@
 
 최종 갱신일: 2026-10-12 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: PlayerScene 기본 손전등
+
+- Cookie 없는 흰색 기본 Spot Light와 약한 환경광·어두운 카메라 배경을 씬에 적용했다. 광원의 로컬 Z 0.2 이동으로 카메라 앞 Player 표면의 과한 근접 반사를 피한다. Player 프리팹·입력·모델·기존 사용자 변경은 보존했다.
+- 독립 리뷰와 최종 저장본 Play 검증 36개 assertions를 통과했다. 기존 Player 모델의 화면 하단 가림, 10~15m 벽/물체 식별과 Mobile/성능은 남은 확인이다. 단계·완료 근거·로그/병행 변경의 한계는 [손전등 계획](plans/2026-10-12-player-flashlight.md)에 둔다.
+
 ## 현재 상태: Animator 직접 관리 전환
 
 - PlayerAnimationController의 런타임 Override 생성·Controller 복원과 클립 대체를 제거하고 Animator에 연결된 Controller를 그대로 사용한다. 상태별 해시·HFSM 직접 호출·동일 상태 재시작 방지·0.15초 완화를 유지한다.

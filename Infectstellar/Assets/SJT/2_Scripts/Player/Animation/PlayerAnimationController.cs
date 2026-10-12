@@ -19,6 +19,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private static readonly int jumpHash = Animator.StringToHash("Base Layer.Jump");
     private static readonly int fallHash = Animator.StringToHash("Base Layer.Fall");
     private static readonly int deadHash = Animator.StringToHash("Base Layer.Dead");
+    private static readonly int handsUpHash = Animator.StringToHash("Arms.HandsUp");
     #endregion
 
     [SerializeField, Tooltip("상태 전환과 방향 입력 완화에 사용하는 시간 설정")]

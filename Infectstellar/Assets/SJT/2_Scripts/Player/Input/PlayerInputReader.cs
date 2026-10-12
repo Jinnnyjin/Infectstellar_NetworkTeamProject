@@ -16,6 +16,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     private const string c_sprintActionName = "Sprint";
     private const string c_crouchActionName = "Crouch";
     private const string c_jumpActionName = "Jump";
+    private const string c_flashActionName = "Flash";
 
     private PlayerInput playerInput;
     private InputActionAsset cachedActions; // 어느 액션 자산에서 참조를 찾아 두었는지
@@ -27,6 +28,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     private InputAction sprintAction;
     private InputAction crouchAction;
     private InputAction jumpAction;
+    private InputAction flashAction;
     #endregion
     #region 읽은 입력 결과와 조작 허용 상태를 저장하는 필드
     private PlayerInputFrame currentFrame; // 마지막으로 읽은 이동·달리기·웅크리기·점프 입력
@@ -238,11 +240,12 @@ public sealed class PlayerInputReader : MonoBehaviour
         sprintAction = playerMap?.FindAction(c_sprintActionName);
         crouchAction = playerMap?.FindAction(c_crouchActionName);
         jumpAction = playerMap?.FindAction(c_jumpActionName);
+        flashAction = playerMap?.FindAction(c_flashActionName);
 
         if (moveAction == null || lookAction == null || sprintAction == null || crouchAction == null || jumpAction == null)
         {
 #if UNITY_EDITOR
-            Debug.LogError("[PlayerInputReader] PlayerInput에 Player 맵의 Move, Look, Sprint, Crouch, Jump 액션을 연결해야 합니다.", this);
+            Debug.LogError("[PlayerInputReader] PlayerInput에 Player 맵의 Move, Look, Sprint, Crouch, Jump, Flash 액션을 연결해야 합니다.", this);
 #endif
             return false;
         }
