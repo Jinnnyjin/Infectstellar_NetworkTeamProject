@@ -17,6 +17,7 @@ public class Item : MonoBehaviour, IInteractable
     private float stopTimer; // 누적 시간 재는 용
     private float requiredStopDuration = 0.2f; // 기준
     private int shooterActorNumber;
+    private bool isLocalThrower;
 
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
 
@@ -105,7 +106,7 @@ public class Item : MonoBehaviour, IInteractable
             case State.Thrown:
                 physics.SetColliders(true); 
                 physics.SetPhysics(true);
-                hit.Activate(data.Attack, shooterActorNumber);
+                hit.Activate(data.Attack, shooterActorNumber,isLocalThrower);
                 stopTimer = 0;
                 break;
 
@@ -139,12 +140,13 @@ public class Item : MonoBehaviour, IInteractable
     /// <summary>
     /// ItemNetwork가 RPC 수신 시에만 호출 (Init으로 전달), 직접 호출 금지
     /// </summary>
-    private void ExecuteShoot(Vector3 startPos, Quaternion startRot, Vector3 force, int shooterActorNumber)
+    private void ExecuteShoot(Vector3 startPos, Quaternion startRot, Vector3 force, int shooterActorNumber, bool isLocalThrower)
     {
         this.shooterActorNumber = shooterActorNumber;
+        this.isLocalThrower = isLocalThrower;
+
         // 던진 사람 컴퓨터에서는 이미 같은 값. 다른 컴퓨터는 지연된 위치에 있으므로 받은 시작 위치로 맞춤
-        transform.position = startPos;
-        transform.rotation = startRot;
+        transform.SetPositionAndRotation(startPos, startRot);
 
         // Thrown으로 상태 바꿔야 물리 켜짐. 순서 : 상태전환 -> Launch
         ChangeState(State.Thrown);

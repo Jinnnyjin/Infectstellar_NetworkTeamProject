@@ -8,11 +8,13 @@ public class ItemHit : MonoBehaviour
     private bool isHit;
     private float damage;
     private int attackerActorNumber;
+    private bool isLocalThrower;
 
-    public void Activate(float damage, int attackerActorNumber)
+    public void Activate(float damage, int attackerActorNumber, bool isLocalThrower)
     {
         this.damage = damage;
         this.attackerActorNumber = attackerActorNumber;
+        this.isLocalThrower = isLocalThrower;
 
         isHit = false;
         isActive = true;
@@ -28,7 +30,9 @@ public class ItemHit : MonoBehaviour
         if (!isActive || isHit)
             return;
 
-        // [추가 필요] 던진 본인이면 return
+        // 던진사람 컴퓨터에서만 판정, 나머지 컴퓨터는 물리 반응만
+        if (!isLocalThrower)
+            return;
 
         isHit = true;
 

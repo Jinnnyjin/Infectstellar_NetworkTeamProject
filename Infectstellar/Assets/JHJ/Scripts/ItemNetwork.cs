@@ -7,9 +7,9 @@ using Photon.Pun;
 /// </summary>
 public class ItemNetwork : MonoBehaviourPun
 {
-    private Action<Vector3, Quaternion, Vector3, int> onShootReceived;
+    private Action<Vector3, Quaternion, Vector3, int, bool> onShootReceived;
 
-    public void Init(Action<Vector3, Quaternion, Vector3, int> OnShootReceived)
+    public void Init(Action<Vector3, Quaternion, Vector3, int, bool> OnShootReceived)
     {
         this.onShootReceived = OnShootReceived;   
     }
@@ -36,6 +36,6 @@ public class ItemNetwork : MonoBehaviourPun
             return;
         }
 
-        onShootReceived.Invoke(startPos, startRot, force, info.Sender.ActorNumber);
+        onShootReceived.Invoke(startPos, startRot, force, info.Sender.ActorNumber, info.Sender.IsLocal);
     }
 }
