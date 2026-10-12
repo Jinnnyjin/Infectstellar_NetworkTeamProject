@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "397136344639",
+    "firebase_url": "https://infectstellar-default-rtdb.firebaseio.com",
+    "project_id": "infectstellar",
+    "storage_bucket": "infectstellar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:397136344639:android:2901e19181b6c7f6c6aa8a",
+        "android_client_info": {
+          "package_name": "com.UnityTechnologies.com.unity.template.urpblank"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2oTB2NjbcIKGiDINZfTyGgNbg_uutKaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
