@@ -50,7 +50,7 @@ public class Item : MonoBehaviour, IInteractable
 
         // 네트워크
         network = GetComponent<ItemNetwork>();
-        network.Init(ExecuteShoot);
+        network.Init(ExecuteShoot, ApplyStopSync);
 
         // ItemHit
         hit = GetComponent<ItemHit>();
@@ -64,11 +64,18 @@ public class Item : MonoBehaviour, IInteractable
         if (CurrentState != State.Thrown)
             return;
 
-        if(physics.IsBelowStopThreshold())
+        if (physics.IsBelowStopThreshold())
         {
             stopTimer += Time.fixedDeltaTime;
-            if(stopTimer > requiredStopDuration)
+            if (stopTimer > requiredStopDuration)
+            {
                 ChangeState(State.Placed);
+                // 판정 컴퓨터만 최종 위치를 나머지에게 보냄 (자신은 이미 그 위치)
+                if (isLocalThrower)
+                {
+                    network.SendStop(transform.position, transform.rotation);
+                }
+            }
         }
         else
         {
@@ -157,6 +164,29 @@ public class Item : MonoBehaviour, IInteractable
 
         // 출발 시각 기록 ([임시] 측정용)
         shootStartTime = Time.time;
+    }
+
+    // =============================================================
+    // Stop
+    /// <summary>
+    /// ItemNetwork가 RPC 수신 시에만 호출 (Init으로 전달), 직접 호출 금지
+    /// </summary>
+    private void ApplyStopSync(Vector3 pos, Quaternion rot)
+    {
+        if (CurrentState == State.Grabbed)
+        {
+            Debug.Log($"[Item] {data.ItemName} 정지 보정 무시: 이미 누가 들고 있음", this);
+            return;
+        }
+
+        if (CurrentState == State.Thrown)
+            ChangeState(State.Placed);
+
+
+        float correction = Vector3.Distance(transform.position, pos);
+        Debug.Log($"[Item] {data.ItemName} 정지 보정: 이동 거리 {correction:F3}m", this);
+
+        transform.SetPositionAndRotation(pos, rot);
     }
 
     // =============================================================
