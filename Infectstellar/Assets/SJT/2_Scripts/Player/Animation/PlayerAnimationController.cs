@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 외부에서 전달받은 상태와 이동 방향을 Animator에 적용합니다. 재생과 혼합은 Animator가 처리합니다.
+/// 외부에서 전달받은 이동 상태와 방향, HandsUp 요청을 Animator에 적용합니다.
 /// </summary>
 [DefaultExecutionOrder(100)]
 [DisallowMultipleComponent]
@@ -22,7 +22,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private static readonly int handsUpHash = Animator.StringToHash("Arms.HandsUp");
     #endregion
 
-    [SerializeField, Tooltip("상태 전환과 방향 입력 완화에 사용하는 시간 설정")]
+    [SerializeField, Tooltip("이동 상태 전환, 방향 입력 완화와 HandsUp 전환에 사용하는 시간 설정")]
     private PlayerAnimationSettings settings;
     [SerializeField, Tooltip("이 컴포넌트와 같은 모델 객체의 Animator를 연결")]
     private Animator animator;
@@ -32,9 +32,14 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private Vector2 moveDirection; // 방향 애니메이션을 섞는 데 사용할 이동 입력. X는 좌우, Y는 앞뒤
     private bool hasPlayedState; // 이번 활성화에서 재생을 시작했는지 나타내며, 첫 재생은 혼합 없이 시작
     private bool shouldChangeState; // 다음 Update에서 처리할 상태 변경 요청이 대기 중인지 나타냄
+    private int armsLayerIndex = -1;
+    private bool isHandsUp;
+    private bool shouldPlayHandsUp; // 켜짐 요청을 Animator 평가 전에 한 번만 재생하도록 예약
+
+    public bool IsHandsUp => isHandsUp;
 
     /// <summary>
-    /// Animator의 연결을 확인하고 마지막으로 전달받은 상태부터 재생하도록 예약
+    /// Animator와 Arms 상태를 확인하고 이동 재생을 예약합니다. HandsUp은 꺼진 상태로 시작합니다.
     /// </summary>
     private void OnEnable()
     {
@@ -58,6 +63,19 @@ public sealed class PlayerAnimationController : MonoBehaviour
             return;
         }
 
+        armsLayerIndex = animator.GetLayerIndex("Arms");
+        if (armsLayerIndex < 0 || !animator.HasState(armsLayerIndex, handsUpHash))
+        {
+#if UNITY_EDITOR
+            Debug.LogError("[PlayerAnimationController] : Animator에 Arms 레이어와 HandsUp 상태가 필요합니다.", this);
+#endif
+            enabled = false;
+            return;
+        }
+
+        isHandsUp = false;
+        shouldPlayHandsUp = false;
+        animator.SetLayerWeight(armsLayerIndex, 0f);
         shouldChangeState = true;
         hasPlayedState = false;
     }
@@ -85,6 +103,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
         float damping = hasPlayedState ? settings.BlendDuration : 0f;
         animator.SetFloat(moveXHash, moveDirection.x, damping, Time.deltaTime);
         animator.SetFloat(moveYHash, moveDirection.y, damping, Time.deltaTime);
+        UpdateHandsUp();
         if (!shouldChangeState)
         {
             return;
@@ -131,7 +150,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
                 return;
         }
 
-        // HasState(int layerIndex, int stateID) : 플레이어는 baseLayer만 사용할 예정이므로, 0를 넣는다.
+        // 이동 상태는 Base Layer(0)에서만 재생하고 Arms 레이어는 별도로 제어합니다.
         if (!animator.HasState(0, stateHash))
         {
 #if UNITY_EDITOR
@@ -155,12 +174,20 @@ public sealed class PlayerAnimationController : MonoBehaviour
     }
 
     /// <summary>
-    /// 재생 예약을 초기화합니다. Animator 설정과 전달받은 요청값은 유지합니다.
+    /// 이동 재생 예약과 HandsUp 적용을 초기화합니다. 이동 상태와 방향 요청값은 유지합니다.
     /// </summary>
     private void OnDisable()
     {
         hasPlayedState = false;
         shouldChangeState = false;
+        isHandsUp = false;
+        shouldPlayHandsUp = false;
+        if (animator != null && animator.runtimeAnimatorController != null && armsLayerIndex >= 0 && armsLayerIndex < animator.layerCount)
+        {
+            animator.SetLayerWeight(armsLayerIndex, 0f);
+        }
+
+        armsLayerIndex = -1;
     }
 
     /// <summary>
@@ -183,5 +210,37 @@ public sealed class PlayerAnimationController : MonoBehaviour
     public void SetMoveDirection(Vector2 direction)
     {
         moveDirection = direction;
+    }
+
+    /// <summary>
+    /// HandsUp 적용을 요청합니다. 켜질 때만 처음부터 재생하고 같은 요청은 재시작하지 않습니다.
+    /// </summary>
+    public void SetHandsUp(bool value)
+    {
+        if (isHandsUp == value)
+        {
+            return;
+        }
+
+        isHandsUp = value;
+        shouldPlayHandsUp = value;
+    }
+
+    /// <summary>
+    /// 예약된 HandsUp을 재생하고 현재 Arms Weight에서 목표값까지 부드럽게 전환합니다.
+    /// </summary>
+    private void UpdateHandsUp()
+    {
+        if (shouldPlayHandsUp)
+        {
+            animator.Play(handsUpHash, armsLayerIndex, 0f);
+            shouldPlayHandsUp = false;
+        }
+
+        float targetWeight = isHandsUp ? 1f : 0f;
+        float duration = settings.BlendDuration;
+        float currentWeight = animator.GetLayerWeight(armsLayerIndex);
+        float nextWeight = duration > 0f ? Mathf.MoveTowards(currentWeight, targetWeight, Time.deltaTime / duration) : targetWeight;
+        animator.SetLayerWeight(armsLayerIndex, nextWeight);
     }
 }

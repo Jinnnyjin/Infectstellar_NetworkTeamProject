@@ -102,6 +102,14 @@ public sealed class PlayerController : MonoBehaviour
         {
             animationController.SetMoveDirection(inputReader.CurrentFrame.Move);
         }
+
+#if UNITY_EDITOR
+        // 잡기 테스트용 코드
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            animationController.SetHandsUp(!animationController.IsHandsUp);
+        }
+#endif
     }
 
     /// <summary>

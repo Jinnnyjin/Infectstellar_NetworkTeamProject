@@ -2,6 +2,11 @@
 
 최종 갱신일: 2026-10-12 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: HandsUp 호출 API 추가
+
+- PlayerAnimationController에 `SetHandsUp(true/false)`를 추가했다. Arms 레이어의 적용 Weight를 기존 BlendDuration으로 전환하고, 켜질 때만 HandsUp을 처음부터 재생한다. 활성화/비활성화 때 적용은 꺼진 상태로 초기화한다. 이동 Base Layer와 독립적이며 입력·사망·네트워크 호출은 별도 연결이 필요하다.
+- 사용자 구성 Animator·마스크·클립·씬·프리팹은 수정하지 않았다. 독립 코드 검토와 하네스 구조 검사는 통과했다. 전체 Unity 컴파일은 병행 작성 중인 `Assets/SJT/2_Scripts/Player/Input/FlashLightSetter.cs`의 Color 타입 충돌(CS0104, 6·7행)과 Action<> 미정의(CS0246, 11행)로 실패했으며 해당 파일은 수정하지 않았다. 최종 HandsUp의 실행 사례와 실제 이동 중 팔 자세·전환 느낌은 미검증이다.
+
 ## 현재 상태: PlayerScene 기본 손전등
 
 - Cookie 없는 흰색 기본 Spot Light와 약한 환경광·어두운 카메라 배경을 씬에 적용했다. 광원의 로컬 Z 0.2 이동으로 카메라 앞 Player 표면의 과한 근접 반사를 피한다. Player 프리팹·입력·모델·기존 사용자 변경은 보존했다.
