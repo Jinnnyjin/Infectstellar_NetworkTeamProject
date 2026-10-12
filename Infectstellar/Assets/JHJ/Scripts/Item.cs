@@ -8,6 +8,7 @@ public class Item : MonoBehaviour, IInteractable
     public ItemDataSO ItemData => data;
 
     [SerializeField] private ItemDataSO data;
+    [SerializeField] private float throwForce; // 테스트용
 
     private float uprightBottomOffset;
     private ItemPhysics physics;
@@ -78,6 +79,37 @@ public class Item : MonoBehaviour, IInteractable
         }
 
         Debug.Log($"[Item] {data.ItemName}: {prevState} → {newState}", this);
+    }
+
+    // =============================================================
+    // Shoot
+    public void Shoot(Vector3 direction)
+    {
+        if (CurrentState != State.Grabbed)
+        {
+            Debug.LogWarning($"[Item] Shoot 불가 : {data.ItemName} 상태 = {CurrentState}",this);
+            return;
+        }
+
+        // 시작위치 : 들려 있는 동안 소켓위치 = 자기 위치 = 시작 위치
+        Vector3 startPos = transform.position;
+
+        Vector3 force = direction.normalized * throwForce;
+
+        ExecuteShoot(startPos, force);
+        
+    }
+
+    private void ExecuteShoot(Vector3 startPos, Vector3 force)
+    {
+        // 로컬에서는 이미 같은 값. 추후 네트워크 때 맞추기위함
+        transform.position = startPos;
+
+        // Thrown으로 상태 바꿔야 물리 켜짐. 순서 : 상태전환 -> Launch
+        ChangeState(State.Thrown);
+
+        Debug.Log($"[Item] {data.ItemName} Shoot: 시작 {startPos}, 힘 {force}, 무게 {data.Weight}", this);
+        physics.Launch(force);
     }
 
     // =============================================================

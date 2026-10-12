@@ -53,6 +53,15 @@ public class ItemPhysics : MonoBehaviour
     }
 
     /// <summary>
+    /// 물리가 켜진 이후 호출필요
+    /// Kinematic이면 무시
+    /// </summary>
+    public void Launch(Vector3 force)
+    {
+        rb.AddForce(force,ForceMode.Impulse);
+    }
+
+    /// <summary>
     /// 자식콜라이더 전체 켜기/끄기 (콜라이더는 루트가 아닌 Model)
     /// </summary>
     public void SetColliders(bool isOn)
