@@ -12,6 +12,8 @@ public class Item : MonoBehaviour, IInteractable
 
     private float uprightBottomOffset;
     private ItemPhysics physics;
+    private float stopTimer; // 누적 시간 재는 용
+    private float requiredStopDuration = 0.2f; // 기준
 
 
     private void Awake()
@@ -43,6 +45,23 @@ public class Item : MonoBehaviour, IInteractable
         ChangeState(State.Placed);
     }
 
+    private void FixedUpdate()
+    {
+        if (CurrentState != State.Thrown)
+            return;
+
+        if(physics.IsBelowStopThreshold())
+        {
+            stopTimer += Time.fixedDeltaTime;
+            if(stopTimer > requiredStopDuration)
+                ChangeState(State.Placed);
+        }
+        else
+        {
+            stopTimer = 0f;
+        }
+    }
+
     // =============================================================
     // 상태 전환
     private void ChangeState(State newState)
@@ -71,6 +90,7 @@ public class Item : MonoBehaviour, IInteractable
             case State.Thrown:
                 physics.SetColliders(true); 
                 physics.SetPhysics(true);
+                stopTimer = 0;
                 break;
 
             default:
