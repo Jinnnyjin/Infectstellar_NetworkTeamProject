@@ -187,7 +187,8 @@ public sealed class PlayerMotor : MonoBehaviour
 
         // 검사 구를 내려 보낼 거리. 위로 띄우고 작게 만든 구가 원래 발밑에 도달한 뒤, CharacterController의 접촉 여유까지 바닥을 찾습니다.
         float groundTolerance = Mathf.Max(characterController.skinWidth, c_minProbeDistance);
-        float castDistance = probeDistance * 2f + groundTolerance;
+        // 미세한 위치 오차로 바닥을 놓치지 않도록 1mm의 여유를 추가합니다.
+        float castDistance = probeDistance * 2f + groundTolerance + 0.001f;
 
         // SphereCast는 광선 대신 일정한 반지름을 가진 구체를 이동시키면서 충돌을 검사, 구체가 이동하는 경로에 장애물이 닿으면 충돌이 감지됨
         // SphereCastNonAlloc은 동일한 구체 이동 검사를 수행하지만, 결과를 사용자가 미리 생성해 놓은 배열에 저장함. 불필요한 메모리 할당을 줄일 수 있음

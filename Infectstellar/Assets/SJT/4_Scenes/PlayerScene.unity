@@ -649,6 +649,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4103645362341345364, guid: 063754a5ac52da64bb551c8d4c09fdea, type: 3}
+      propertyPath: m_Center.y
+      value: 1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 4829846201286293482, guid: 063754a5ac52da64bb551c8d4c09fdea, type: 3}
       propertyPath: m_RotationOffset.x
       value: -22.521523
