@@ -8,7 +8,6 @@ namespace ENZEUN.Runtime
 {
     public class MenuController : MonoBehaviour
     {
-
         public enum MenuState
         {
             Waiting,
@@ -23,8 +22,9 @@ namespace ENZEUN.Runtime
             GameStart,
         }
 
-        [ShowInInspector]
-        public MMStateMachine<MenuState> menuFSM;
+        [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Waiting;
+
+        private MMStateMachine<MenuState> menuFSM;
 
         private void Awake()
         {
@@ -35,13 +35,24 @@ namespace ENZEUN.Runtime
         {
             menuFSM.ChangeState(MenuState.Waiting);
 
-            Wait();
+            FirebaseLinkManager.Instance.IsNewUserSetNickname += ChangeToNicknameMenu;
         }
 
-        public async void Wait()
+        private void OnDisable()
         {
-            await UniTask.Delay(2000);
-            menuFSM.ChangeState(MenuState.Title);
+            FirebaseLinkManager.Instance.IsNewUserSetNickname -= ChangeToNicknameMenu;
+
+        }
+
+
+        private void ChangeToNicknameMenu()
+        {
+            menuFSM.ChangeState(MenuState.SetNickname);
+        }
+
+        public void ChangeToMainMenu()
+        {
+            menuFSM.ChangeState(MenuState.SetNickname);
         }
 
 
