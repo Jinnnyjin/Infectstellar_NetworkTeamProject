@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(ItemPhysics), typeof(ItemHit))]
+[RequireComponent(typeof(ItemPhysics), typeof(ItemHit), typeof(ItemNetwork))]
 public class Item : MonoBehaviour, IInteractable
 {
     public enum State { None, Placed, Grabbed, Thrown }
@@ -13,9 +13,12 @@ public class Item : MonoBehaviour, IInteractable
     private float uprightBottomOffset;
     private ItemPhysics physics;
     private ItemHit hit;
+    private ItemNetwork network;
     private float stopTimer; // 누적 시간 재는 용
     private float requiredStopDuration = 0.2f; // 기준
     private int shooterActorNumber;
+
+    private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
 
 
     private void Awake()
@@ -46,6 +49,10 @@ public class Item : MonoBehaviour, IInteractable
 
         // ItemHit
         hit = GetComponent<ItemHit>();
+
+        // 네트워크
+        network = GetComponent<ItemNetwork>();
+        network.Init(ExecuteShoot);
 
         ChangeState(State.Placed);
     }
@@ -86,6 +93,7 @@ public class Item : MonoBehaviour, IInteractable
                 physics.SetPhysics(false);
                 physics.SetColliders(true); // 레이캐스트 대상
                 hit.Deactivate(); // 히트박스 꺼짐
+                Debug.Log($"[Item] {data.ItemName} 정지: 비행 {Time.time - shootStartTime:F2}초, 위치 {transform.position:F3}, 회전 {transform.eulerAngles:F1}", this);
                 break;
 
             case State.Grabbed:
@@ -121,25 +129,31 @@ public class Item : MonoBehaviour, IInteractable
 
         // 시작위치 : 들려 있는 동안 소켓위치 = 자기 위치 = 시작 위치
         Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
 
         Vector3 force = direction.normalized * throwForce;
 
-        // [임시] 로컬 테스트용 던진사람 번호 1
-        ExecuteShoot(startPos, force, 1);
-        
+        network.SendShoot(startPos,startRot,force);
     }
 
-    private void ExecuteShoot(Vector3 startPos, Vector3 force, int shooterActorNumber)
+    /// <summary>
+    /// ItemNetwork가 RPC 수신 시에만 호출 (Init으로 전달), 직접 호출 금지
+    /// </summary>
+    private void ExecuteShoot(Vector3 startPos, Quaternion startRot, Vector3 force, int shooterActorNumber)
     {
         this.shooterActorNumber = shooterActorNumber;
-        // 로컬에서는 이미 같은 값. 추후 네트워크 때 맞추기위함
+        // 던진 사람 컴퓨터에서는 이미 같은 값. 다른 컴퓨터는 지연된 위치에 있으므로 받은 시작 위치로 맞춤
         transform.position = startPos;
+        transform.rotation = startRot;
 
         // Thrown으로 상태 바꿔야 물리 켜짐. 순서 : 상태전환 -> Launch
         ChangeState(State.Thrown);
 
-        Debug.Log($"[Item] {data.ItemName} Shoot: 던진 사람 {shooterActorNumber}, 시작 {startPos}, 힘 {force}, 무게 {data.Weight}", this);
+        Debug.Log($"[Item] {data.ItemName} Shoot: 던진 사람 {shooterActorNumber}, 시작 {startPos}, 시작 회전 {transform.eulerAngles:F1}, 힘 {force}, 무게 {data.Weight}", this);
         physics.Launch(force);
+
+        // 출발 시각 기록 ([임시] 측정용)
+        shootStartTime = Time.time;
     }
 
     // =============================================================
