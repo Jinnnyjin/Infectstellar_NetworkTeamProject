@@ -33,6 +33,7 @@ public sealed class PlayerMotor : MonoBehaviour
     private CharacterController characterController;
     private Transform body;
     private PlayerMovementSettings settings;
+    private PlayerLook playerLook;
     #endregion
 
     #region Stand 필드
@@ -86,6 +87,7 @@ public sealed class PlayerMotor : MonoBehaviour
 
         characterController = GetComponent<CharacterController>();
         body = transform;
+        playerLook = GetComponent<PlayerLook>();
 
         if (characterController == null)
         {
@@ -308,6 +310,10 @@ public sealed class PlayerMotor : MonoBehaviour
 
         // 웅크리고 있는지 여부를 crouchRequested로 설정
         isCrouching = crouchRequested;
+        if (playerLook != null)
+        {
+            playerLook.SetCrouchHeight(standingHeight - characterController.height);
+        }
     }
 
     /// <summary>

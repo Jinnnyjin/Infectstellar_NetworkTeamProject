@@ -17,4 +17,4 @@ MonoBehaviour:
   crouchSpeed: 1.5
   jumpHeight: 1.2
   gravity: 20
-  crouchHeightRatio: 0.6
+  crouchHeightRatio: 0.7

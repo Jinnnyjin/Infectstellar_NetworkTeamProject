@@ -1,7 +1,8 @@
+using DG.Tweening;
 using UnityEngine;
 
 /// <summary>
-/// 마우스의 좌우 입력은 몸에, 상하 입력은 독립 시점 축에 적용합니다.
+/// 마우스 시점 회전과 실제 웅크림에 따른 시점 높이 이동을 처리합니다.
 /// </summary>
 [DisallowMultipleComponent]
 public class PlayerLook : MonoBehaviour
@@ -17,11 +18,15 @@ public class PlayerLook : MonoBehaviour
     private float minPitch = -80f;
     [SerializeField, Range(89f, 0), Tooltip("위 쪽을 볼 때 허용하는 각도")]
     private float maxPitch = 80f;
+    [SerializeField, Min(0f), Tooltip("웅크리기와 일어서기 시점 높이 전환 시간(초)")]
+    private float heightTransitionDuration = 0.2f;
     #endregion
 
     private Transform body;
     private float yaw;
     private float pitch;
+    private float standingViewHeight;
+    private Tween heightTween;
 
     // 마우스로 확정한 상하 시선 각도. 위쪽은 음수, 아래쪽은 양수이며 단위는 도.
     public float PitchDegrees => pitch;
@@ -40,6 +45,52 @@ public class PlayerLook : MonoBehaviour
 
         yaw = body.eulerAngles.y;
         pitch = Mathf.Clamp(Mathf.DeltaAngle(0f, viewPivot.localEulerAngles.x), minPitch, maxPitch);
+        standingViewHeight = viewPivot.localPosition.y;
+    }
+
+    /// <summary>
+    /// 재활성화 시 멈췄던 높이 전환을 이어갑니다.
+    /// </summary>
+    private void OnEnable() => heightTween?.Play();
+
+    /// <summary>
+    /// 비활성화 시 현재 시점 높이에서 전환을 멈춥니다.
+    /// </summary>
+    private void OnDisable() => heightTween?.Pause();
+
+    /// <summary>
+    /// 파괴 시 높이 전환을 정리합니다.
+    /// </summary>
+    private void OnDestroy() => heightTween?.Kill();
+
+    /// <summary>
+    /// 실제 캡슐이 줄어든 로컬 높이만큼 시점을 내립니다.
+    /// </summary>
+    public void SetCrouchHeight(float heightReduction)
+    {
+        if (viewPivot == null)
+        {
+            return;
+        }
+
+        heightTween?.Kill();
+        heightTween = null;
+        float targetHeight = standingViewHeight - heightReduction;
+        if (heightTransitionDuration <= 0f)
+        {
+            Vector3 position = viewPivot.localPosition;
+            position.y = targetHeight;
+            viewPivot.localPosition = position;
+            return;
+        }
+
+        heightTween = viewPivot.DOLocalMoveY(targetHeight, heightTransitionDuration)
+            .SetEase(Ease.InOutSine)
+            .SetAutoKill(false);
+        if (!isActiveAndEnabled)
+        {
+            heightTween.Pause();
+        }
     }
 
     public void Rotate(Vector2 lookDelta)

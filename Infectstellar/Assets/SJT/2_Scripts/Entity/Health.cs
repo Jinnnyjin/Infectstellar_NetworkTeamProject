@@ -44,7 +44,8 @@ public class Health : MonoBehaviour, IDamageable
             return;
         }
 
-        if (!IsFiniteNonNegative(health) || health == 0f)
+        //if (!IsFiniteNonNegative(health) || health == 0f)
+        if (health == 0f)
         {
 #if UNITY_EDITOR
             Debug.LogError($"[Health] 초기 체력은 양수인 유한한 값이어야 합니다. 입력값: {health}", this);
@@ -61,7 +62,7 @@ public class Health : MonoBehaviour, IDamageable
 
         if (hasChanged)
         {
-            NotifyChange(() => D_HealthChanged?.Invoke(previousHealth, health, health));
+            //NotifyChange(() => D_HealthChanged?.Invoke(previousHealth, health, health));
         }
     }
 
@@ -86,10 +87,10 @@ public class Health : MonoBehaviour, IDamageable
             return;
         }
 
-        if (!CanChangeHealth(damageInfo.Amount))
-        {
-            return;
-        }
+        // if (!CanChangeHealth(damageInfo.Amount))
+        // {
+        //     return;
+        // }
 
         float previousHealth = currentHealth;
         float nextHealth = Mathf.Max(0f, previousHealth - damageInfo.Amount);

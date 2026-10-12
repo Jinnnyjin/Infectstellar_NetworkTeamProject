@@ -1,23 +1,34 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-11 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-12 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## 현재 상태: Animator 직접 관리 전환
+
+- PlayerAnimationController의 런타임 Override 생성·Controller 복원과 클립 대체를 제거하고 Animator에 연결된 Controller를 그대로 사용한다. 상태별 해시·HFSM 직접 호출·동일 상태 재시작 방지·0.15초 완화를 유지한다.
+- 공유 PlayerController.controller의 8개 상태/3개 방향 Blend Tree에 기존 실제 클립 17개를 직접 연결했다. Settings에는 전환 시간만 남는다. 이후 클립 변경은 Animator에서 한다. 기존 GUID·프리팹/씬/백업·실제 클립 파일을 보존했다.
+- 독립 리뷰·최종 Unity 컴파일·직접 Motion 연결 검사 170개 조건을 통과했다. 새 오류 0건이며 대상 밖 기존 경고 6건이다. 단계·결과·Play 미검증 항목은 [Animator 직접 관리 계획](plans/2026-10-12-player-animator-direct.md)을 따른다. 기존 Walk 시작 부분 반복 증상의 해결은 아직 확인하지 않았다.
+
+## 현재 상태: 웅크리기 카메라 높이 연동 완료
+
+- Motor가 실제 캡슐 자세 변경 후 Look에 줄어든 높이를 전달하고, Look이 기존 ViewPivot을 DOTween으로 양방향 0.2초 이동한다. HeadLookPoint 연결과 기존 사용자 캡슐/씬 Override·비율 0.65를 유지한다. Controller와 백업은 변경하지 않았다.
+- 독립 검토·최종 Unity 컴파일·읽기 전용 프리팹/씬 참조 검증을 통과했다. 새 컴파일 오류 0, 기존 파일 경고 6이다. 실제 Play의 전환 느낌·머리 자세는 사용자가 확인한다. 상세 범위·결과·수동 확인은 [카메라 높이 계획](plans/2026-10-12-player-crouch-camera.md)을 따른다.
 
 ## 현재 상태: _Health 학습 원본 단순화
 
 - `Assets/SJT/2_Scripts/Entity/_Health.cs`에서 Queue<Action>·NotifyChange·드레인 플래그·캡처 람다를 제거했다. 각 변경 메서드가 이벤트를 직접 호출한다. 사용자가 작성 중인 같은 폴더의 Health.cs와 DamageInfo, 기존 GUID·Player·씬은 보존했다.
 - 초기화·피해·회복·이벤트 계약과 0 피해 피격 알림은 유지한다. 이벤트 중 같은 _Health를 변경하는 호출은 가드로 무시하며 대기 처리하지 않는다. 외부 부활 준비 후 초기화는 이벤트 알림이 끝난 뒤 호출한다.
-- 독립 리뷰와 최종 소스의 Unity 참조 인메모리 컴파일·PreviewScene 격리 16개 시나리오/65개 assertions 통과. 전체 프로젝트 컴파일은 학습 중 Health.cs의 기존 미정의 메서드 3건(CS0103)으로 실패했으며 해당 파일을 수정하지 않았다. 입력검사에서 예상 오류 로그 19건이 Console에 남았다. 최종 근거·한계는 [_Health 단순화 계획](plans/2026-10-11-health-refactor.md)을 따른다. 최초 FIFO/클로저 검증 결과는 현재 원본의 근거로 재사용하지 않는다.
+- 독립 리뷰와 최종 소스의 Unity 참조 인메모리 컴파일·PreviewScene 격리 16개 시나리오/65개 assertions 통과. 전체 프로젝트 컴파일은 학습 중 Health.cs의 기존 미정의 메서드 3건(CS0103)으로 실패했으며 해당 파일을 수정하지 않았다. 입력검사에서 예상 오류 로그 19건이 Console에 남았다. 최종 근거·한계는 _Health 단순화 계획 (`docs/ai/plans/2026-10-11-health-refactor.md`, 현재 파일 없음)을 따른다. 최초 FIFO/클로저 검증 결과는 현재 원본의 근거로 재사용하지 않는다.
 
 ## 이전 작업: HFSM의 애니메이션 직접 호출
 
 - HFSM은 SetState, PlayerController는 SetMoveDirection을 호출한다. 애니메이션의 HFSM/InputReader 참조와 이벤트 구독을 제거하고 기존 Animator/17개 클립/0.15초 완화 구조를 유지했다.
 - 현재 Player.prefab의 두 호출자를 모델 애니메이션에 연결했다. PlayerScene은 이를 상속한다. 사용자 선택으로 Player_Pre와 _Recovery 백업은 수정하지 않았으며 재사용 시 새 참조 연결이 필요하다.
-- 독립 리뷰에서 취소된 같은 프레임 전환의 재시작 문제를 수정하고 재검토했다. 최종 Unity 컴파일과 격리 Editor 검사 37건이 통과했다. 실제 Animator 평가·조작·발 타이밍·PlayMode·빌드는 미검증이다. 상세 단계·결과·검사 한계는 [직접 호출 계획](plans/2026-10-11-player-animation-push.md)을 따른다.
+- 독립 리뷰에서 취소된 같은 프레임 전환의 재시작 문제를 수정하고 재검토했다. 최종 Unity 컴파일과 격리 Editor 검사 37건이 통과했다. 실제 Animator 평가·조작·발 타이밍·PlayMode·빌드는 미검증이다. 상세 단계·결과·검사 한계는 직접 호출 계획 (`docs/ai/plans/2026-10-11-player-animation-push.md`, 현재 파일 없음)을 따른다.
 
 ## 이전 작업: Player 클립 이름·독립 복제본·SO 연결
 
 - Player 폴더의 17개 FBX 임포트 클립 이름을 각 FBX 이름으로 바꾸고, 편집 가능한 독립 `.anim` 복제본 17개를 `Assets/SJT/1_Assets/Animations/Clips/`에 만들었다. SO의 17개 필드에 복제본을 지정해 이전 Missing/빈 슬롯을 교체했다.
-- 원본 FBX·리그·반복·프레임 구간·Controller·0.15초 전환 시간·씬·프리팹·코드는 유지했다. 실제 캐릭터 재생 자세와 발 미끄러짐은 미검증이다. 단계와 검증 결과는 [클립 복제·연결 계획](plans/2026-10-11-player-animation-clips.md)에 기록한다.
+- 원본 FBX·리그·반복·프레임 구간·Controller·0.15초 전환 시간·씬·프리팹·코드는 유지했다. 실제 캐릭터 재생 자세와 발 미끄러짐은 미검증이다. 단계와 검증 결과는 클립 복제·연결 계획 (`docs/ai/plans/2026-10-11-player-animation-clips.md`, 현재 파일 없음)에 기록한다.
 - 독립 검토와 Unity 객체·곡선·설정·SO 참조 검사를 통과했다. 격리된 Editor PreviewScene에서 원본/복제본 17쌍을 4시점씩 비교한 68쌍의 자세 차이는 0이었다. 실제 PlayerScene에서 입력·HFSM 전환·발 미끄러짐을 보는 게임 실행 검증은 하지 않았다.
 
 ## 이전 상태: Player FBX의 Humanoid·반복 설정
@@ -30,7 +41,7 @@
 ## 이전 상태: 독립 Health 시스템 추가
 
 - 최초 독립 Health 컴포넌트와 DamageInfo를 추가한 당시 기록이다. 당시 이벤트 중 변경 요청은 현재 알림 묶음 종료 후 FIFO로 처리했다. 사용자가 파일을 Entity로 이동하고 원본을 _Health로 구분한 후 큐를 제거했다. 최신 동작은 위 단순화 절을 따른다.
-- 최종 Unity 컴파일과 독립 리뷰, PreviewScene 격리 26개 시나리오/126개 assertions를 통과했다. 기존 PlayerScene의 미저장 상태를 보존했으며 PlayMode·게임 실행·빌드는 수행하지 않았다. 상세 계약과 검증 근거는 [Health 계획](plans/2026-10-11-health.md)에 기록했다.
+- 최종 Unity 컴파일과 독립 리뷰, PreviewScene 격리 26개 시나리오/126개 assertions를 통과했다. 기존 PlayerScene의 미저장 상태를 보존했으며 PlayMode·게임 실행·빌드는 수행하지 않았다. 상세 계약과 검증 근거는 Health 계획 (`docs/ai/plans/2026-10-11-health.md`, 현재 파일 없음)에 기록했다.
 - 최초 작업에서는 씬·프리팹에 연결하지 않았다. 부활 준비·사망 반응·Player/HFSM·네트워크 연결은 외부 작업이다.
 
 ## 이전 상태: Player와 모델 분리
@@ -38,7 +49,7 @@
 - PlayerScene의 새 Player 루트에는 이동·입력·상태·시점을, 자식 Astronaut에는 Animator와 PlayerAnimationController를 구성했다. Inspector 참조·새 카메라 대상·머리 AimConstraint를 연결했다. 프리팹 원본과 FBX 설정은 변경하지 않았다.
 - 사용자 설정의 AstronautAvatar는 유효한 Humanoid로 확인했다. PlayerAnimationController만 Inspector 직접 참조와 분리 계층 검사로 최소 수정했다.
 - 추가 승인으로 기존 Controller의 잘못된 Idle/전진 걷기 슬롯을 복구하고 선택한 실제 클립은 SO에 연결했다. 현재 Walk.fbx는 비 Humanoid라 기존 정책대로 Idle로 대체한다.
-- 구성·Unity 컴파일·독립 리뷰와 실제 입력 경로의 이동·웅크림·점프·시점·카메라·머리 추적·모델 뼈 평가 검증을 완료했다. Play를 종료한 뒤 씬의 Player_Pre를 삭제하고 저장했다. 프리팹 원본은 유지하며 PlayerScene은 dirty=false다. 상세 근거는 [모델 분리 계획](plans/2026-10-11-player-model-separation.md)을 따른다.
+- 구성·Unity 컴파일·독립 리뷰와 실제 입력 경로의 이동·웅크림·점프·시점·카메라·머리 추적·모델 뼈 평가 검증을 완료했다. Play를 종료한 뒤 씬의 Player_Pre를 삭제하고 저장했다. 프리팹 원본은 유지하며 PlayerScene은 dirty=false다. 상세 근거는 모델 분리 계획 (`docs/ai/plans/2026-10-11-player-model-separation.md`, 현재 파일 없음)을 따른다.
 - 현재 모든 실제 재생 클립은 Idle로 대체된다. 이동/공중 Animator 상태 전환은 검증했지만, 별도 보행·점프 동작을 보려면 SO에 호환 Humanoid 클립을 등록해야 한다. 실제 Crouch 키는 현재 PlayerControls의 Ctrl이다.
 
 ## 이전 상태: Astronaut 원본 리그 비교
@@ -50,17 +61,17 @@
 
 ## 기존 Player 구성: HFSM·SO·Animator 애니메이션 단순화
 
-- 승인한 [단순화 계획](plans/2026-10-11-player-animation-refactor.md)에 따라 애니메이션 관련 런타임 스크립트를 SO와 연결 컴포넌트 두 개로 줄였다. HFSM 이벤트로 상태를 재생하고, Animator의 세 방향 Blend Tree가 이동 입력을 혼합한다.
+- 승인한 단순화 계획 (`docs/ai/plans/2026-10-11-player-animation-refactor.md`, 현재 파일 없음)에 따라 애니메이션 관련 런타임 스크립트를 SO와 연결 컴포넌트 두 개로 줄였다. HFSM 이벤트로 상태를 재생하고, Animator의 세 방향 Blend Tree가 이동 입력을 혼합한다.
 - PlayerAnimation.controller의 8개 상태·17개 고유 슬롯 클립을 구성하고 기존 Player 프리팹/SO를 연결했다. 공통 0.15초를 상태 전환과 방향 완화에 사용한다. Landing·수동 Playables·개별 배율·보행 위상은 제거했다.
 - Idle.fbx를 Humanoid/반복으로 임포트해 SO Idle에 등록했다. 나머지 16개 슬롯은 비어 있고 Idle로 대체된다. 현재 이동/공중/사망에서 다른 동작이 보이지 않는 것은 이 빈 슬롯 구성 때문이다.
-- 독립 리뷰에서 확정 오류/회귀 없음. 최종 Unity 컴파일과 Editor 격리 검사 43개가 통과했다. 실제 완료 근거와 검사 한계는 [단순화 계획](plans/2026-10-11-player-animation-refactor.md)에 기록했다. 실제 조작·발 타이밍·PlayMode·빌드·네트워크는 검증 범위 밖이다.
+- 독립 리뷰에서 확정 오류/회귀 없음. 최종 Unity 컴파일과 Editor 격리 검사 43개가 통과했다. 실제 완료 근거와 검사 한계는 단순화 계획 (`docs/ai/plans/2026-10-11-player-animation-refactor.md`, 현재 파일 없음)에 기록했다. 실제 조작·발 타이밍·PlayMode·빌드·네트워크는 검증 범위 밖이다.
 - 다음 단계는 SO에 호환 Humanoid 클립을 등록하는 것이다. Idle/이동의 Loop Time을 켜고 Jump/Fall/Dead는 끈다. 실행 중 클립 참조를 교체했다면 재활성화한다. 구성과 역할은 [PROJECT.md](PROJECT.md)의 전신 애니메이션 절을 참고한다.
-- [이전 애니메이션 계획](plans/2026-10-10-player-animation.md)은 제거된 구현의 과거 기록이다. 그 검증 결과를 현재 Animator 구현의 검증으로 사용하지 않는다.
+- 이전 애니메이션 계획 (`docs/ai/plans/2026-10-10-player-animation.md`, 현재 파일 없음)은 제거된 구현의 과거 기록이다. 그 검증 결과를 현재 Animator 구현의 검증으로 사용하지 않는다.
 - 마무리 때 별도로 추가된 DoubleL 에셋 팩에서 .meta 파일 쓰기 오류가 발견됐다. 이번 애니메이션 검사 이후의 임포트 문제로 수정하지 않았으며 Console에 오류가 남아 있다. 상세 시점은 단순화 계획에 기록했다.
 
 ## 이전 작업: Player 입력·회전 분리와 임시 1인칭 카메라
 
-사용자가 승인한 [입력·회전 계획](plans/2026-10-10-player-input-look.md)에 따라 PlayerScene 인스턴스의 Unity PlayerInput, PlayerInputReader, PlayerLook과 Cinemachine 카메라를 연결했다. Controller는 입력 적재 → 회전 → 기존 상태머신 Tick을 시작한다. 상세 구조는 [PROJECT.md](PROJECT.md)의 PlayerScene 절을 참고한다.
+사용자가 승인한 입력·회전 계획 (`docs/ai/plans/2026-10-10-player-input-look.md`, 현재 파일 없음)에 따라 PlayerScene 인스턴스의 Unity PlayerInput, PlayerInputReader, PlayerLook과 Cinemachine 카메라를 연결했다. Controller는 입력 적재 → 회전 → 기존 상태머신 Tick을 시작한다. 상세 구조는 [PROJECT.md](PROJECT.md)의 PlayerScene 절을 참고한다.
 
 - 기존 이동 정책·수치와 사용자 재작성본/비교 파일을 보존했다. Settings 상속, HFSM root.Init(), 씬의 타입/설정 연결과 과거 Motor 참조를 최소 복구했다. 실행에서 발견한 기존 점프 차단은 Motor의 바닥 검사에 CharacterController 접촉 여유를 포함해 보완했다.
 - 새 코드 학습 시 PlayerInputReader의 CurrentFrame/LookDelta → PlayerLook.Rotate → PlayerController.Update → 기존 Tick 흐름을 연결해서 설명한다. 예전 Controller의 입력 자산 복제·액션 수명 설명은 현재 구조에 적용하지 않는다.
@@ -152,7 +163,7 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 
 <!-- harness:status:start -->
 ## 하네스 적용 상태
-- 적용한 원본 버전: `1.1.1`
+- 적용한 원본 버전: `1.1.6`
 - 기본 경로·버전·직접 패키지·주요 폴더를 확인했다.
 - 파일 배치·구조 검사와 실제 훅 신뢰·새 세션 스킬/역할 로딩은 구분한다.
 - 게임 컴파일·실행은 이 적용 작업의 확인 대상이 아니다.
@@ -161,7 +172,7 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 ## C# 리팩토링 공통 스킬
 
 - csharp-refactor 스킬·한국어 UI·참고 문서 4개와 AGENTS 연결을 이 프로젝트와 공통 원본에 추가했다. 공통 원본 main의 v1.1.5, 커밋 c6d091b7421a01ff9bacb3d916fe792a92f268c8로 게시했다.
-- 검증 결과·기존 HANDOFF 경로 오류 4개·PyYAML 부재·실제 자동 선택 미검증 및 설치 기준 유지 사항은 [반영 계획](plans/2026-10-10-csharp-refactor.md)에 기록했다. 게임 코드·자산과 다른 프로젝트는 변경하지 않았다.
+- 검증 결과·기존 HANDOFF 경로 오류 4개·PyYAML 부재·실제 자동 선택 미검증 및 설치 기준 유지 사항은 반영 계획 (`docs/ai/plans/2026-10-10-csharp-refactor.md`, 현재 파일 없음)에 기록했다. 게임 코드·자산과 다른 프로젝트는 변경하지 않았다.
 
 ## 로컬 디버그 가드 지침 동기화 (2026-10-11)
 
