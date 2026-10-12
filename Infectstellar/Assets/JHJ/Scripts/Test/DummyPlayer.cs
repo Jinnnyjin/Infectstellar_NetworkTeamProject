@@ -1,13 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Photon.Pun; // [임시]
 
 /// <summary>
-/// 아이템 상호작용 테스트용 더미 플레이어 (네트워크 X)
+/// 아이템 상호작용 테스트용 더미 플레이어
 /// 마우스 좌우 = 몸(Yaw) 회전, 위아래 = 카메라(Pitch)만 회전
 /// 구조: Player(CharacterController + DummyPlayer) / CameraPivot(Camera)
+/// [임시] 네트워크: PhotonView가 있고 방 안이면 내 것(IsMine)만 입력·카메라·화면 표시
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
-public class DummyPlayer : MonoBehaviour
+public class DummyPlayer : MonoBehaviourPun // [임시] MonoBehaviour → MonoBehaviourPun
 {
     [Header("참조")]
     [Tooltip("위아래 회전을 받을 카메라 Transform, 비우면 자식 Camera 자동 탐색")]
@@ -37,11 +39,22 @@ public class DummyPlayer : MonoBehaviour
     private float verticalVelocity;
     private IInteractable currentTarget;
     private Item heldItem; // [임시]
+    private bool isLocal = true; // [임시] 네트워크 아니면 항상 내 것
+    private int actorNumber = -1; // [임시] 네트워크 아니면 -1
 
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+
+        // [임시] 네트워크로 생성된 경우 내 것인지 확인 (PhotonNetwork.Instantiate는 IsMine 세팅 후 Awake 호출)
+        if (photonView != null && PhotonNetwork.InRoom) // [임시]
+        {
+            isLocal = photonView.IsMine; // [임시]
+            actorNumber = photonView.OwnerActorNr; // [임시]
+            gameObject.name = $"DummyPlayer_Actor{actorNumber}{(isLocal ? " (나)" : "")}"; // [임시]
+        }
+
         if (cameraPivot == null)
         {
             Camera cam = GetComponentInChildren<Camera>();
@@ -52,6 +65,13 @@ public class DummyPlayer : MonoBehaviour
                 return;
             }
             cameraPivot = cam.transform;
+        }
+
+        // [임시] 남의 플레이어는 카메라·오디오 리스너 끄기 (화면에 카메라 1개만)
+        if (!isLocal) // [임시]
+        {
+            foreach (Camera c in GetComponentsInChildren<Camera>()) c.enabled = false; // [임시]
+            foreach (AudioListener l in GetComponentsInChildren<AudioListener>()) l.enabled = false; // [임시]
         }
 
         // [임시] 머리 위 소켓: 카메라가 아닌 몸 자식 (좌우 회전만 따라감)
@@ -66,16 +86,20 @@ public class DummyPlayer : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!isLocal) return; // [임시]
         LockCursor(true);
     }
 
     private void OnDisable()
     {
+        if (!isLocal) return; // [임시]
         LockCursor(false);
     }
 
     private void Update()
     {
+        if (!isLocal) return; // [임시] 남의 플레이어는 PhotonTransformView가 움직임
+
         Keyboard keyboard = Keyboard.current;
         Mouse mouse = Mouse.current;
         if (keyboard == null || mouse == null) return;
@@ -229,6 +253,14 @@ public class DummyPlayer : MonoBehaviour
 
     private void OnGUI()
     {
+        if (!isLocal) return; // [임시]
+
+        // [임시] 내 Actor 번호 표시 (왼쪽 아래)
+        if (actorNumber >= 0) // [임시]
+        {
+            GUI.Label(new Rect(10f, Screen.height - 30f, 300f, 20f), $"나: Actor {actorNumber}"); // [임시]
+        }
+
         // 크로스헤어
         float cx = Screen.width * 0.5f;
         float cy = Screen.height * 0.5f;
