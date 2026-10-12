@@ -710,6 +710,8 @@ MonoBehaviour:
   interactMask:
     serializedVersion: 2
     m_Bits: 55
+  headSocket: {fileID: 0}
+  headSocketLocalPosition: {x: 0, y: 2.2, z: 0}
 --- !u!143 &1234070109
 CharacterController:
   m_ObjectHideFlags: 0
