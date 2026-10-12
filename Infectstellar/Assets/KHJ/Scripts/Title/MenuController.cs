@@ -34,25 +34,25 @@ namespace ENZEUN.Runtime
         private void OnEnable()
         {
             menuFSM.ChangeState(MenuState.Waiting);
-
-            FirebaseLinkManager.Instance.IsNewUserSetNickname += ChangeToNicknameMenu;
         }
 
         private void OnDisable()
         {
-            FirebaseLinkManager.Instance.IsNewUserSetNickname -= ChangeToNicknameMenu;
 
         }
 
-
-        private void ChangeToNicknameMenu()
+        public void ChangeToTitleMenu()
+        {
+            menuFSM.ChangeState(MenuState.Title);
+        }
+        public void ChangeToNicknameMenu()
         {
             menuFSM.ChangeState(MenuState.SetNickname);
         }
 
         public void ChangeToMainMenu()
         {
-            menuFSM.ChangeState(MenuState.SetNickname);
+            menuFSM.ChangeState(MenuState.MainMenu);
         }
 
 

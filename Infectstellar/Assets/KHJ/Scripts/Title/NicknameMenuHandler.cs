@@ -11,10 +11,13 @@ public class NicknameMenuHandler : MonoBehaviour
 {
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private Button confirmBtn;
+    [SerializeField] private Button cancelBtn;
+    [SerializeField] private TMP_Text userNickname;
+
+
+    public Action OnNicknameSaveSuccessed;
 
     public bool isMenuOnScreen = false;
-
-    public UnityEvent OnNicknameConfirmed;
 
     public void RefreshThisMenu()
     {
@@ -43,15 +46,24 @@ public class NicknameMenuHandler : MonoBehaviour
         }
     }
 
-    public async UniTaskVoid OnConfirmed()
+    public void OnConfirmed()
     {
         confirmBtn.interactable = false;
 
+        TrySaveNickname().Forget();
+    }
+
+    public async UniTask TrySaveNickname()
+    {
         if (await FirebaseLinkManager.Instance.SaveUserNicknameAsync(nicknameInput.text))
         {
             isMenuOnScreen = false;
-            OnNicknameConfirmed?.Invoke();
+
+            userNickname.SetText(FirebaseLinkManager.CurrentPlayerData.Nickname);
+
+            OnNicknameSaveSuccessed?.Invoke();
         }
+
         else
         {
 #if UNITY_EDITOR
@@ -59,7 +71,6 @@ public class NicknameMenuHandler : MonoBehaviour
 #endif
 
             confirmBtn.interactable = true;
-
         }
     }
 

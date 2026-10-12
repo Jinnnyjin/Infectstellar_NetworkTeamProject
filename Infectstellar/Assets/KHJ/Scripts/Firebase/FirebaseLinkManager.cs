@@ -6,10 +6,12 @@ using Firebase.Database;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
 {
+
     /// <summary>
     /// 현재 플레이어의 데이터를 저장하는 클래스
     /// </summary>
@@ -46,9 +48,12 @@ namespace ENZEUN.Runtime
 
         public static PlayerData CurrentPlayerData { get; private set; } = new();
 
+        public static bool playerHasNickname { get; private set; }
+
         private DatabaseReference databaseReference;
 
-        public Action IsNewUserSetNickname;
+
+
 
         /// <summary>
         /// Instance 는 하나만 존재하도록 (싱글턴)
@@ -70,13 +75,15 @@ namespace ENZEUN.Runtime
         /// <summary>
         /// 활성화됨과 동시에 firebase 와 연결 / 플레이어의 정보 최신화
         /// </summary>
-        private async void OnEnable()
+        public async UniTask ConnectToFirebaseAsync()
         {
             var status = await FirebaseApp.CheckAndFixDependenciesAsync();
 
             if (status == DependencyStatus.Available)
             {
                 Auth = FirebaseAuth.DefaultInstance;
+
+                databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
 
 #if UNITY_EDITOR
                 Debug.Log("Firebase initialized successfully.");
@@ -90,14 +97,34 @@ namespace ENZEUN.Runtime
                 Debug.LogError($"Could not resolve all Firebase dependencies: {status}");
             }
 #endif
+            if (Auth.CurrentUser == null)
+            {
+                try
+                {
+                    var result = await Auth.SignInAnonymouslyAsync();
+
+#if UNITY_EDITOR
+                    Debug.Log($"Anonymous login successful. User ID: {result.User.UserId}");
+#endif
+                }
+
+                catch (System.Exception ex)
+                {
+#if UNITY_EDITOR
+                    Debug.LogError($"Anonymous login failed: {ex.Message}");
+#endif
+                }
+            }
+            else
+            {
+#if UNITY_EDITOR
+                Debug.Log($"login successful. User ID: {Auth.CurrentUser.UserId}");
+#endif
+            }
 
             if (Auth.CurrentUser != null)
             {
-                if (!await LoadUserNicknameAsync())
-                {
-                    IsNewUserSetNickname?.Invoke();
-                }
-
+                playerHasNickname = await LoadUserNicknameAsync();
             }
 #if UNITY_EDITOR
             else
@@ -108,6 +135,14 @@ namespace ENZEUN.Runtime
         }
 
 
+        /// <summary>
+        /// 버튼클릭 이벤트 -> 닉네임 저장하기
+        /// </summary>
+        /// <returns></returns>
+        public async Task TrySaveNickname(string name)
+        {
+            await SaveUserNicknameAsync(name);
+        }
 
 
         /// <summary>
@@ -132,6 +167,7 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log($"닉네임 저장 완료: {newNickname}");
 #endif
+            playerHasNickname = true;
 
             return true;
         }
@@ -145,18 +181,32 @@ namespace ENZEUN.Runtime
 
             string userId = Auth.CurrentUser.UserId;
 
-            DataSnapshot snapshot = await databaseReference.Child("Users").Child(userId).Child("nickname").GetValueAsync();
+            try
+            {
+                DataSnapshot snapshot = await databaseReference.Child("Users").Child(userId).Child("nickname").GetValueAsync();
 
-            if (snapshot.Exists)
-            {
-                string loadedNickname = snapshot.Value.ToString();
-                CurrentPlayerData.Nickname = loadedNickname;
-                Debug.Log($"닉네임 불러오기 성공: {loadedNickname}");
-                return true;
+                if (snapshot.Exists && snapshot.Value != null)
+                {
+                    string loadedNickname = snapshot.Value.ToString();
+
+                    if (!string.IsNullOrEmpty(loadedNickname))
+                    {
+                        CurrentPlayerData.Nickname = loadedNickname;
+
+                        Debug.Log($"닉네임 불러오기 성공: {loadedNickname}");
+
+                        playerHasNickname = true;
+
+                        return true;
+                    }
+                }
+
+                Debug.Log("등록된 닉네임이 없거나 비어있습니다.");
+                return false;
             }
-            else
+            catch (System.Exception ex)
             {
-                Debug.Log("등록된 닉네임이 없습니다. (최초 설정 필요)");
+                Debug.LogError($"닉네임을 불러오는 중 에러 발생: {ex.Message}");
                 return false;
             }
         }
