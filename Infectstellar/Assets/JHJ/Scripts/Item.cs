@@ -48,12 +48,13 @@ public class Item : MonoBehaviour, IInteractable
             return;
         }
 
-        // ItemHit
-        hit = GetComponent<ItemHit>();
-
         // 네트워크
         network = GetComponent<ItemNetwork>();
         network.Init(ExecuteShoot);
+
+        // ItemHit
+        hit = GetComponent<ItemHit>();
+        hit.Init(network.GetOwnerActorNumber);
 
         ChangeState(State.Placed);
     }

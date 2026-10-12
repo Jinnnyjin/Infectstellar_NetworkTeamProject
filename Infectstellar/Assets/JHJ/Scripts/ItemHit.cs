@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 /// <summary>
 /// 아이템 적중 판정 : 히트박스 활성, isHit(1번), TakeDamage호출
@@ -9,6 +10,13 @@ public class ItemHit : MonoBehaviour
     private float damage;
     private int attackerActorNumber;
     private bool isLocalThrower;
+    private Func<Collider, int> getOwnerActorNumber;
+
+
+    public void Init(Func<Collider, int> GetOwnerActorNumber)
+    {
+        this.getOwnerActorNumber = GetOwnerActorNumber;
+    }
 
     public void Activate(float damage, int attackerActorNumber, bool isLocalThrower)
     {
@@ -27,11 +35,16 @@ public class ItemHit : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        // 활성화 상태 아니거나 이미 맞은 경우 무시
         if (!isActive || isHit)
             return;
 
         // 던진사람 컴퓨터에서만 판정, 나머지 컴퓨터는 물리 반응만
         if (!isLocalThrower)
+            return;
+
+        // 본인이 맞은 경우 무시
+        if(getOwnerActorNumber(collision.collider) == attackerActorNumber)
             return;
 
         isHit = true;

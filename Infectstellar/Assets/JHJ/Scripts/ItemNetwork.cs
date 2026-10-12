@@ -3,7 +3,7 @@ using UnityEngine;
 using Photon.Pun;
 
 /// <summary>
-/// 아이템 네트워크 담당 : ShootRPC 송수신
+/// 아이템 네트워크 담당 : ShootRPC 송수신, 닿은 대상 actorNumber 제공
 /// </summary>
 public class ItemNetwork : MonoBehaviourPun
 {
@@ -23,6 +23,18 @@ public class ItemNetwork : MonoBehaviourPun
         }
 
         photonView.RPC(nameof(RpcShoot), RpcTarget.All,startPos, startRot, force);
+    }
+
+    public int GetOwnerActorNumber(Collider collider)
+    {
+        // 본인 photonview와 헷갈림 방지 target photonView 
+        PhotonView targetView = collider.GetComponentInParent<PhotonView>();
+
+        // 벽, 바닥 등..
+        if (targetView == null)
+            return -1;
+
+        return targetView.OwnerActorNr;
     }
 
     [PunRPC]
