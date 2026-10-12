@@ -2,12 +2,17 @@
 
 최종 갱신일: 2026-10-12 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: 손전등 제어와 R키 연결
+
+- FlashLightSetter를 FlashlightController로 이름 변경하고 기존 GUID를 보존했다. 최초 꺼짐, R키 신규 입력 반전, Inspector의 두 표면 색, 사망 즉시 끄기·입력 차단, 부활 꺼짐 유지, 일반 재활성화 상태 유지와 변경 이벤트를 구현했다. Light.enabled와 모델의 헬멧 슬롯 2에 MaterialPropertyBlock을 사용한다.
+- 독립 리뷰·최종 Unity 컴파일·타입 반영 확인·하네스 구조 검사를 통과했다. 새 컴파일 오류 0건이며 기존 카메라 스크립트 경고 2건이다. 프리팹·씬·Material·Input Actions는 수정하지 않았다. Player 루트에 컴포넌트를 추가하고 ViewPivot/Flashlight의 Light, Player_TPose_Unrigged의 SkinnedMeshRenderer, 슬롯 2와 두 색을 직접 연결해야 한다. Inspector 연결·Play는 미검증이며 상세 결과는 [손전등 제어 계획](plans/2026-10-12-flashlight-controller.md)에 둔다.
+
 ## 현재 상태: HandsUp 호출 API 추가
 
 - PlayerAnimationController에 `SetHandsUp(true/false)`를 추가했다. Arms 레이어의 적용 Weight를 기존 BlendDuration으로 전환하고, 켜질 때만 HandsUp을 처음부터 재생한다. 활성화/비활성화 때 적용은 꺼진 상태로 초기화한다. 이동 Base Layer와 독립적이며 입력·사망·네트워크 호출은 별도 연결이 필요하다.
 - 사용자 구성 Animator·마스크·클립·씬·프리팹은 수정하지 않았다. 독립 코드 검토와 하네스 구조 검사는 통과했다. 전체 Unity 컴파일은 병행 작성 중인 `Assets/SJT/2_Scripts/Player/Input/FlashLightSetter.cs`의 Color 타입 충돌(CS0104, 6·7행)과 Action<> 미정의(CS0246, 11행)로 실패했으며 해당 파일은 수정하지 않았다. 최종 HandsUp의 실행 사례와 실제 이동 중 팔 자세·전환 느낌은 미검증이다.
 
-## 현재 상태: PlayerScene 기본 손전등
+## 이전 작업: PlayerScene 기본 손전등
 
 - Cookie 없는 흰색 기본 Spot Light와 약한 환경광·어두운 카메라 배경을 씬에 적용했다. 광원의 로컬 Z 0.2 이동으로 카메라 앞 Player 표면의 과한 근접 반사를 피한다. Player 프리팹·입력·모델·기존 사용자 변경은 보존했다.
 - 독립 리뷰와 최종 저장본 Play 검증 36개 assertions를 통과했다. 기존 Player 모델의 화면 하단 가림, 10~15m 벽/물체 식별과 Mobile/성능은 남은 확인이다. 단계·완료 근거·로그/병행 변경의 한계는 [손전등 계획](plans/2026-10-12-player-flashlight.md)에 둔다.

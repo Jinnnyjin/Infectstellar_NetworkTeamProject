@@ -33,12 +33,19 @@ public sealed class PlayerInputReader : MonoBehaviour
     #region 읽은 입력 결과와 조작 허용 상태를 저장하는 필드
     private PlayerInputFrame currentFrame; // 마지막으로 읽은 이동·달리기·웅크리기·점프 입력
     private Vector2 lookDelta; // 시점 회전에 사용할 이번 프레임의 마우스 이동량
+    private bool flashPressed;
     private bool isControlActive; // Controller가 플레이어 조작을 허용했는지
     private bool shouldBlockJumpUntilRelease = true; // 이미 누른 점프는 버튼을 놓을 때까지 차단할지, 예를 들어 Space를 누른 상태로 게임 창에 돌아와 조작을 재개한 경우, 이때 원본은 이미 누르고 있던 Space를 새로운 점프 요청으로 받아들이지 않도록 함
+    private bool shouldBlockFlashUntilRelease = true;
     #endregion
 
     public PlayerInputFrame CurrentFrame => currentFrame;
     public Vector2 LookDelta => lookDelta;
+
+    /// <summary>
+    /// 이번 프레임에 허용된 손전등 신규 입력이 있는지 반환합니다.
+    /// </summary>
+    public bool FlashPressed => flashPressed;
 
     private void Awake()
 
@@ -53,7 +60,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     {
         if (isControlActive && Application.isFocused)
         {
-            CaptureJumpHold();
+            CaptureButtonHolds();
             SetCursorLocked(true);
         }
     }
@@ -89,7 +96,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         ResetInput();
         if (isActive)
         {
-            CaptureJumpHold();
+            CaptureButtonHolds();
         }
 
         SetCursorLocked(isActive && isActiveAndEnabled && Application.isFocused);
@@ -102,10 +109,12 @@ public sealed class PlayerInputReader : MonoBehaviour
     {
         currentFrame = default;
         lookDelta = Vector2.zero;
+        flashPressed = false;
         if (!isControlActive || !isActiveAndEnabled || !Application.isFocused
         || playerInput == null || !playerInput.isActiveAndEnabled || !playerInput.inputIsActive)
         {
             shouldBlockJumpUntilRelease = true;
+            shouldBlockFlashUntilRelease = true;
             SetCursorLocked(false);
             return;
         }
@@ -125,6 +134,7 @@ public sealed class PlayerInputReader : MonoBehaviour
            || playerInput.currentActionMap != playerMap || !playerMap.enabled)
         {
             shouldBlockJumpUntilRelease = true;
+            shouldBlockFlashUntilRelease = true;
             SetCursorLocked(false);
             return;
         }
@@ -137,6 +147,16 @@ public sealed class PlayerInputReader : MonoBehaviour
         bool jumpHeld = jumpAction.enabled && IsButtonHeld(jumpAction);
         bool jumpPressed = jumpAction.enabled && jumpAction.WasPressedThisFrame() && !shouldBlockJumpUntilRelease;
         shouldBlockJumpUntilRelease = jumpHeld;
+        if (flashAction != null && flashAction.enabled)
+        {
+            flashPressed = flashAction.WasPressedThisFrame() && !shouldBlockFlashUntilRelease;
+            shouldBlockFlashUntilRelease = IsButtonHeld(flashAction);
+        }
+        else
+        {
+            shouldBlockFlashUntilRelease = true;
+        }
+
         currentFrame = new PlayerInputFrame(
             moveAction.enabled ? moveAction.ReadValue<Vector2>() : Vector2.zero,
             sprintAction.enabled && IsButtonHeld(sprintAction),
@@ -178,6 +198,7 @@ public sealed class PlayerInputReader : MonoBehaviour
             && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             shouldBlockJumpUntilRelease = true;
+            shouldBlockFlashUntilRelease = true;
             SetCursorLocked(false);
             return true;
         }
@@ -185,11 +206,13 @@ public sealed class PlayerInputReader : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             shouldBlockJumpUntilRelease = true;
+            shouldBlockFlashUntilRelease = true;
 
             if (Mouse.current != null
                 && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 shouldBlockJumpUntilRelease = IsButtonHeld(jumpAction);
+                shouldBlockFlashUntilRelease = IsButtonHeld(flashAction);
                 SetCursorLocked(true);
             }
 
@@ -201,10 +224,9 @@ public sealed class PlayerInputReader : MonoBehaviour
     }
 
     /// <summary>
-    /// 조작을 시작하거나 재활성화하는 순간, 점프 버튼을 이미 누르고 있는지 확인해서 차단 여부를 정하는 메서드
-    /// ex : Space를 누른 상태로 게임 창에 돌아와 조작을 재개한 경우 등 대비
+    /// 조작을 재개할 때 이미 누른 점프·손전등 버튼을 놓을 때까지 차단합니다.
     /// </summary>
-    private void CaptureJumpHold()
+    private void CaptureButtonHolds()
     {
         if (playerInput == null)
         {
@@ -214,10 +236,12 @@ public sealed class PlayerInputReader : MonoBehaviour
         if (playerInput == null || !CacheActions())
         {
             shouldBlockJumpUntilRelease = true;
+            shouldBlockFlashUntilRelease = true;
             return;
         }
 
         shouldBlockJumpUntilRelease = IsButtonHeld(jumpAction);
+        shouldBlockFlashUntilRelease = IsButtonHeld(flashAction);
     }
 
     /// <summary>
@@ -245,23 +269,32 @@ public sealed class PlayerInputReader : MonoBehaviour
         if (moveAction == null || lookAction == null || sprintAction == null || crouchAction == null || jumpAction == null)
         {
 #if UNITY_EDITOR
-            Debug.LogError("[PlayerInputReader] PlayerInput에 Player 맵의 Move, Look, Sprint, Crouch, Jump, Flash 액션을 연결해야 합니다.", this);
+            Debug.LogError("[PlayerInputReader] PlayerInput에 Player 맵의 Move, Look, Sprint, Crouch, Jump 액션을 연결해야 합니다.", this);
 #endif
             return false;
         }
+
+#if UNITY_EDITOR
+        if (flashAction == null)
+        {
+            Debug.LogWarning("[PlayerInputReader] Player 맵에 Flash 액션이 없어 손전등 입력을 사용할 수 없습니다.", this);
+        }
+#endif
 
         cachedActions = actions;
         return true;
     }
 
     /// <summary>
-    /// 지난 입력을 비우고 조작 재개 때는 점프 버튼을 놓을 때까지 기다림.
+    /// 지난 입력을 비우고 조작 재개 때는 점프·손전등 버튼을 놓을 때까지 기다립니다.
     /// </summary>
     private void ResetInput()
     {
         currentFrame = default;
         lookDelta = Vector2.zero;
+        flashPressed = false;
         shouldBlockJumpUntilRelease = true;
+        shouldBlockFlashUntilRelease = true;
     }
 
     /// <summary>

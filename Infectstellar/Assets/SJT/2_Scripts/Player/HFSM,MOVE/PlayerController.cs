@@ -16,6 +16,7 @@ public sealed class PlayerController : MonoBehaviour
 
     private PlayerInputReader inputReader;
     private PlayerLook playerLook;
+    private FlashlightController flashlightController;
     private bool isInitialized;
 
     /// <summary>
@@ -35,6 +36,7 @@ public sealed class PlayerController : MonoBehaviour
 
         inputReader = GetComponent<PlayerInputReader>();
         playerLook = GetComponent<PlayerLook>();
+        flashlightController = GetComponent<FlashlightController>();
         if (movementSettings == null || stateMachine == null || motor == null || inputReader == null || playerLook == null)
         {
             Debug.LogError("[PlayerController] 이동 설정, StateMachine, Motor, InputReader 또는 Look 참조가 없습니다.", this);
@@ -56,6 +58,7 @@ public sealed class PlayerController : MonoBehaviour
         }
 
         stateMachine.Initialize(motor, movementSettings);
+        stateMachine.StateChanged += HandlePlayerStateChanged;
         isInitialized = true;
     }
 
@@ -95,6 +98,10 @@ public sealed class PlayerController : MonoBehaviour
         if (stateMachine.IsAlive)
         {
             playerLook.Rotate(inputReader.LookDelta);
+            if (inputReader.FlashPressed && flashlightController != null && flashlightController.isActiveAndEnabled)
+            {
+                flashlightController.ToggleFlashlight();
+            }
         }
 
         stateMachine.Tick(inputReader.CurrentFrame, Time.deltaTime);
@@ -125,6 +132,28 @@ public sealed class PlayerController : MonoBehaviour
         if (inputReader != null)
         {
             inputReader.SetControlActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 비활성 중에도 받던 사망 알림의 구독을 객체 파괴 시 해제합니다.
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (stateMachine != null)
+        {
+            stateMachine.StateChanged -= HandlePlayerStateChanged;
+        }
+    }
+
+    /// <summary>
+    /// 사망 상태가 확정되면 즉시 손전등을 끕니다. 부활 때 다시 켜지 않습니다.
+    /// </summary>
+    private void HandlePlayerStateChanged(PlayerState previousState, PlayerState currentState)
+    {
+        if (currentState == PlayerState.Dead && flashlightController != null)
+        {
+            flashlightController.SetFlashlightEnabled(false);
         }
     }
 }
