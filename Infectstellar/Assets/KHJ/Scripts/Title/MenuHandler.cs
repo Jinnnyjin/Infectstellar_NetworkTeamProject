@@ -8,8 +8,8 @@ namespace ENZEUN.Runtime
     {
         [SerializeField] private MMF_Player gameStartBtnFb;
         [SerializeField] private MMF_Player mainMenuFb;
-
-
+        [SerializeField] private MMF_Player nicknameMenuFb;
+        [SerializeField] private NicknameMenuHandler nicknameMenuHandler;
 
 
 
@@ -44,6 +44,12 @@ namespace ENZEUN.Runtime
                     mainMenuFb.SetDirection(MMFeedbacks.Directions.BottomToTop);
                     mainMenuFb.PlayFeedbacks();
                     break;
+
+                case MenuController.MenuState.SetNickname:
+                    nicknameMenuFb.SetDirection(MMFeedbacks.Directions.BottomToTop);
+                    nicknameMenuFb.PlayFeedbacks();
+                    break;
+
             }
 
             switch (eventType.NewState)
@@ -60,6 +66,13 @@ namespace ENZEUN.Runtime
                     mainMenuFb.SetDirection(MMFeedbacks.Directions.TopToBottom);
                     mainMenuFb.PlayFeedbacks();
                     break;
+
+                case MenuController.MenuState.SetNickname:
+                    nicknameMenuHandler.RefreshThisMenu();
+                    nicknameMenuFb.SetDirection(MMFeedbacks.Directions.TopToBottom);
+                    nicknameMenuFb.PlayFeedbacks();
+                    break;
+
             }
         }
     }
