@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(ItemPhysics))]
+[RequireComponent(typeof(ItemPhysics), typeof(ItemHit))]
 public class Item : MonoBehaviour, IInteractable
 {
     public enum State { None, Placed, Grabbed, Thrown }
@@ -8,12 +8,14 @@ public class Item : MonoBehaviour, IInteractable
     public ItemDataSO ItemData => data;
 
     [SerializeField] private ItemDataSO data;
-    [SerializeField] private float throwForce; // 테스트용
+    [SerializeField] private float throwForce; // [임시]
 
     private float uprightBottomOffset;
     private ItemPhysics physics;
+    private ItemHit hit;
     private float stopTimer; // 누적 시간 재는 용
     private float requiredStopDuration = 0.2f; // 기준
+    private int shooterActorNumber;
 
 
     private void Awake()
@@ -41,6 +43,9 @@ public class Item : MonoBehaviour, IInteractable
             gameObject.SetActive(false);
             return;
         }
+
+        // ItemHit
+        hit = GetComponent<ItemHit>();
 
         ChangeState(State.Placed);
     }
@@ -80,16 +85,19 @@ public class Item : MonoBehaviour, IInteractable
             case State.Placed:
                 physics.SetPhysics(false);
                 physics.SetColliders(true); // 레이캐스트 대상
+                hit.Deactivate(); // 히트박스 꺼짐
                 break;
 
             case State.Grabbed:
                 physics.SetPhysics(false);
                 physics.SetColliders(false); // 몸, 벽이랑 부딪히지 않게
+                hit.Deactivate();
                 break;
 
             case State.Thrown:
                 physics.SetColliders(true); 
                 physics.SetPhysics(true);
+                hit.Activate(data.Attack, shooterActorNumber);
                 stopTimer = 0;
                 break;
 
@@ -116,19 +124,21 @@ public class Item : MonoBehaviour, IInteractable
 
         Vector3 force = direction.normalized * throwForce;
 
-        ExecuteShoot(startPos, force);
+        // [임시] 로컬 테스트용 던진사람 번호 1
+        ExecuteShoot(startPos, force, 1);
         
     }
 
-    private void ExecuteShoot(Vector3 startPos, Vector3 force)
+    private void ExecuteShoot(Vector3 startPos, Vector3 force, int shooterActorNumber)
     {
+        this.shooterActorNumber = shooterActorNumber;
         // 로컬에서는 이미 같은 값. 추후 네트워크 때 맞추기위함
         transform.position = startPos;
 
         // Thrown으로 상태 바꿔야 물리 켜짐. 순서 : 상태전환 -> Launch
         ChangeState(State.Thrown);
 
-        Debug.Log($"[Item] {data.ItemName} Shoot: 시작 {startPos}, 힘 {force}, 무게 {data.Weight}", this);
+        Debug.Log($"[Item] {data.ItemName} Shoot: 던진 사람 {shooterActorNumber}, 시작 {startPos}, 힘 {force}, 무게 {data.Weight}", this);
         physics.Launch(force);
     }
 
