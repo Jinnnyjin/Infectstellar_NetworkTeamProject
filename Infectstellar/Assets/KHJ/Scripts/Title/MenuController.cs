@@ -15,17 +15,19 @@ namespace ENZEUN.Runtime
             ConnectToFirebase,
             SetNickname,
             MainMenu,
-            PlayOnline,
+            ConnectToPhotonServer,
+            InLobby,
             PlayOffline,
             Ranking,
             Options,
-            CreateRoom,
-            JoinRoom,
+            InRoom,
         }
 
         [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Initailize;
 
         private MMStateMachine<MenuState> menuFSM;
+
+        private bool subscribedJoinLobby = false;
 
         private void Awake()
         {
@@ -39,7 +41,14 @@ namespace ENZEUN.Runtime
 
         private void OnDisable()
         {
-
+            if (PhotonLinkManager.Instance != null)
+            {
+                if (subscribedJoinLobby)
+                {
+                    PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
+                    subscribedJoinLobby = false;
+                }
+            }
         }
 
         private void Start()
@@ -62,6 +71,18 @@ namespace ENZEUN.Runtime
             menuFSM.ChangeState(MenuState.MainMenu);
         }
 
+        public void ChangeToRoomSearchMenu()
+        {
+            menuFSM.ChangeState(MenuState.InLobby);
+
+        }
+
+        public void ChangeToInRoomMenu()
+        {
+            menuFSM.ChangeState(MenuState.InRoom);
+
+        }
+
 
         /// <summary>
         /// Title 상태에서 GameStart 버튼 클릭 시
@@ -78,8 +99,21 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOnlineBtnClicked()
         {
-            //더미
-            menuFSM.ChangeState(MenuState.PlayOnline);
+            if (PhotonLinkManager.Instance != null)
+            {
+                PhotonLinkManager.Instance.ConnectToPhotonServer();
+
+                if (!subscribedJoinLobby)
+                {
+                    PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
+                    subscribedJoinLobby = true;
+                }
+            }
+            else
+            {
+                Debug.Log("서버에 연결할 수 없습니다");
+            }
+            menuFSM.ChangeState(MenuState.ConnectToPhotonServer);
         }
 
         public void OnPlayOfflineBtnClicked()

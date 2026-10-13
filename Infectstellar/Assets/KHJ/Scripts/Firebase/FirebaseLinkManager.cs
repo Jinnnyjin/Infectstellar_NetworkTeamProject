@@ -128,6 +128,10 @@ namespace ENZEUN.Runtime
 
                 catch (System.Exception ex)
                 {
+                    if (ErrorPanelManager.Instance != null)
+                    {
+                        ErrorPanelManager.Instance.ShowError($"Anonymous login failed: {ex.Message}");
+                    }
 #if UNITY_EDITOR
                     Debug.LogError($"Anonymous login failed: {ex.Message}");
 #endif
@@ -150,6 +154,10 @@ namespace ENZEUN.Runtime
                 }
                 catch (System.Exception ex)
                 {
+                    if (ErrorPanelManager.Instance != null)
+                    {
+                        ErrorPanelManager.Instance.ShowError($"Anonymous login failed: {ex.Message}");
+                    }
 #if UNITY_EDITOR
                     Debug.LogError($"Anonymous login failed: {ex.Message}");
 #endif
@@ -178,9 +186,15 @@ namespace ENZEUN.Runtime
             // 로컬 데이터도 동기화
             CurrentPlayerData.Nickname = newNickname;
 
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError($"닉네임 저장 완료: {newNickname}");
+            }
+
 #if UNITY_EDITOR
             Debug.Log($"닉네임 저장 완료: {newNickname}");
 #endif
+
             playerHasNickname = true;
 
             OnNicknameSaveSucceeded?.Invoke();
@@ -224,6 +238,10 @@ namespace ENZEUN.Runtime
             }
             catch (System.Exception ex)
             {
+                if (ErrorPanelManager.Instance != null)
+                {
+                    ErrorPanelManager.Instance.ShowError($"닉네임을 불러오는 중 에러 발생: {ex.Message}");
+                }
                 Debug.LogError($"닉네임을 불러오는 중 에러 발생: {ex.Message}");
                 return false;
             }
@@ -287,12 +305,20 @@ namespace ENZEUN.Runtime
 
                 else
                 {
+                    if (ErrorPanelManager.Instance != null)
+                    {
+                        ErrorPanelManager.Instance.ShowError("등록된 랭킹 데이터가 없습니다.");
+                    }
                     Debug.Log("등록된 랭킹 데이터가 없습니다.");
                 }
             }
 
             catch (System.Exception ex)
             {
+                if (ErrorPanelManager.Instance != null)
+                {
+                    ErrorPanelManager.Instance.ShowError($"랭킹을 불러오는 중 에러 발생: {ex.Message}");
+                }
                 Debug.LogError($"랭킹을 불러오는 중 에러 발생: {ex.Message}");
             }
         }

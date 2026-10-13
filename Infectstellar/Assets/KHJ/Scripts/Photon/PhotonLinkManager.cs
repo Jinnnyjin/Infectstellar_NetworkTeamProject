@@ -2,6 +2,8 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
+using System;
+using TMPro;
 
 
 namespace ENZEUN.Runtime
@@ -9,6 +11,10 @@ namespace ENZEUN.Runtime
     public class PhotonLinkManager : MonoBehaviourPunCallbacks
     {
         public static PhotonLinkManager Instance;
+
+        public static int MaxPlayer = 4;
+
+        [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
 
         /// <summary>
         /// Instance 는 하나만 존재하도록 (싱글턴)
@@ -32,8 +38,8 @@ namespace ENZEUN.Runtime
         public List<RoomInfo> CachedRoomList { get; private set; } = new List<RoomInfo>();
 
         // 방 목록 갱신 시 호출할 수 있는 이벤트 (UI 연동용)
-        public System.Action<List<RoomInfo>> OnRoomListUpdated;
-
+        public Action<List<RoomInfo>> OnRoomListUpdated;
+        public Action OnJoinedLobbyCallback;
 
         public void ConnectToPhotonServer()
         {
@@ -52,18 +58,19 @@ namespace ENZEUN.Runtime
         public override void OnJoinedLobby()
         {
             Debug.Log("Joined Lobby");
-
+            photonRoomListHandler.Initialize();
+            OnJoinedLobbyCallback?.Invoke();
         }
 
 
         /// <summary>
         /// 1. 특정 이름으로 방 만들기 (방이 이미 있으면 에러 발생 가능)
         /// </summary>
-        public void CreateRoom(string roomName, int maxPlayers = 4)
+        public void CreateRoom(string roomName)
         {
             if (!PhotonNetwork.IsConnectedAndReady) return;
 
-            RoomOptions roomOptions = new RoomOptions { MaxPlayers = (byte)maxPlayers };
+            RoomOptions roomOptions = new RoomOptions { MaxPlayers = (byte)MaxPlayer };
             PhotonNetwork.CreateRoom(roomName, roomOptions);
         }
 
@@ -80,12 +87,22 @@ namespace ENZEUN.Runtime
         /// <summary>
         /// 3. 대기 중인 방이 있으면 들어가고, 없으면 새로 만들기 (빠른 매칭)
         /// </summary>
-        public void JoinOrCreateRandomRoom(int maxPlayers = 4)
+        public void JoinOrCreateRandomRoom()
         {
             if (!PhotonNetwork.IsConnectedAndReady) return;
 
-            RoomOptions roomOptions = new RoomOptions { MaxPlayers = (byte)maxPlayers };
+            RoomOptions roomOptions = new RoomOptions { MaxPlayers = (byte)MaxPlayer };
             PhotonNetwork.JoinRandomOrCreateRoom(expectedCustomRoomProperties: null, expectedMaxPlayers: 0, roomOptions: roomOptions);
+        }
+
+        /// <summary>
+        /// 4. 랜덤 방에 들어가기
+        /// </summary>
+        public void JoinRandomRoom()
+        {
+            if (!PhotonNetwork.IsConnectedAndReady) return;
+
+            PhotonNetwork.JoinRandomRoom();
         }
 
 
@@ -93,23 +110,44 @@ namespace ENZEUN.Runtime
 
         public override void OnJoinedRoom()
         {
+
+#if UNITY_EDITOR
             Debug.Log($"방 입장 성공! 방 이름: {PhotonNetwork.CurrentRoom.Name} (현재 인원: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers})");
+#endif
         }
 
         public override void OnCreateRoomFailed(short returnCode, string message)
         {
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError($"방 생성 실패: {message}");
+            }
+#if UNITY_EDITOR
             Debug.LogError($"방 생성 실패: {message} (코드: {returnCode})");
+#endif
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError($"방 입장 실패: {message}");
+            }
+#if UNITY_EDITOR
             Debug.LogError($"방 입장 실패: {message} (코드: {returnCode})");
+#endif
         }
 
         public override void OnJoinRandomFailed(short returnCode, string message)
         {
-            Debug.Log("입장할 수 있는 랜덤 방이 없어 새로 생성합니다.");
-            CreateRoom("Room_" + UnityEngine.Random.Range(1000, 9999));
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError("입장할 수 있는 랜덤 방이 없습니다.");
+            }
+#if UNITY_EDITOR
+            Debug.Log("입장할 수 있는 랜덤 방이 없습니다.");
+            //CreateRoom("Room_" + UnityEngine.Random.Range(1000, 9999));
+#endif
         }
 
         // 로비에 있을 때 방 목록이 변경될 때마다 자동 호출됨 (방 찾기 목록용)

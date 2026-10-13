@@ -12,7 +12,6 @@ public class NicknameMenuHandler : MonoBehaviour
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private Button confirmBtn;
     [SerializeField] private Button cancelBtn;
-    [SerializeField] private TMP_Text userNickname;
 
 
     private bool isSubscribed = false;
@@ -26,21 +25,19 @@ public class NicknameMenuHandler : MonoBehaviour
         {
             if (isSubscribed)
             {
-
-                FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
                 FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= OnNicknameSaved;
             }
         }
     }
 
-    public void RefreshThisMenu()
+
+    public void InitializeNicknameMenu()
     {
         if (!isSubscribed)
         {
             if (FirebaseLinkManager.Instance != null)
             {
                 isSubscribed = true;
-                FirebaseLinkManager.Instance.OnNicknameLoadSucceeded += ChangeNicknameText;
                 FirebaseLinkManager.Instance.OnNicknameSaveSucceeded += OnNicknameSaved;
                 isSubscribed = false;
             }
@@ -50,6 +47,10 @@ public class NicknameMenuHandler : MonoBehaviour
                 return;
             }
         }
+    }
+
+    public void RefreshThisMenu()
+    {
         isMenuOnScreen = true;
         nicknameInput.text = string.Empty;
     }
@@ -86,6 +87,10 @@ public class NicknameMenuHandler : MonoBehaviour
     {
         if (await FirebaseLinkManager.Instance.SaveUserNicknameAsync(nicknameInput.text))
         {
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError("닉네임 변경에 성공했습니다.");
+            }
 #if UNITY_EDITOR
             Debug.Log("닉네임 변경에 성공했습니다.");
 #endif
@@ -93,6 +98,10 @@ public class NicknameMenuHandler : MonoBehaviour
 
         else
         {
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
+            }
 #if UNITY_EDITOR
             Debug.Log("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
 #endif
@@ -102,14 +111,10 @@ public class NicknameMenuHandler : MonoBehaviour
 
     private void OnNicknameSaved()
     {
-        ChangeNicknameText();
         CloseMenu();
     }
 
-    private void ChangeNicknameText()
-    {
-        userNickname.SetText(FirebaseLinkManager.CurrentPlayerData.Nickname);
-    }
+
 
     public void CloseMenu()
     {
