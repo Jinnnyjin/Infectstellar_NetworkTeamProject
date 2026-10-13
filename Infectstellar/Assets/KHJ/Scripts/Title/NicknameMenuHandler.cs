@@ -11,10 +11,43 @@ public class NicknameMenuHandler : MonoBehaviour
 {
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private Button confirmBtn;
+    [SerializeField] private Button cancelBtn;
 
-    public bool isMenuOnScreen = false;
 
-    public UnityEvent OnNicknameConfirmed;
+    private bool isSubscribed = false;
+    private bool isMenuOnScreen = false;
+
+    public UnityEvent OnMenuClosed;
+
+    private void OnDisable()
+    {
+        if (FirebaseLinkManager.Instance != null)
+        {
+            if (isSubscribed)
+            {
+                FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= OnNicknameSaved;
+            }
+        }
+    }
+
+
+    public void InitializeNicknameMenu()
+    {
+        if (!isSubscribed)
+        {
+            if (FirebaseLinkManager.Instance != null)
+            {
+                isSubscribed = true;
+                FirebaseLinkManager.Instance.OnNicknameSaveSucceeded += OnNicknameSaved;
+                isSubscribed = false;
+            }
+            else
+            {
+                Debug.Log("아직 FirebaseLinkManager 가 초기화되지 않았습니다.");
+                return;
+            }
+        }
+    }
 
     public void RefreshThisMenu()
     {
@@ -27,7 +60,7 @@ public class NicknameMenuHandler : MonoBehaviour
         if (!isMenuOnScreen)
             return;
 
-        if (string.IsNullOrEmpty(nicknameInput.text))
+        if (string.IsNullOrWhiteSpace(nicknameInput.text))
         {
             if (confirmBtn.interactable == true)
             {
@@ -43,24 +76,49 @@ public class NicknameMenuHandler : MonoBehaviour
         }
     }
 
-    public async UniTaskVoid OnConfirmed()
+    public void OnConfirmed()
     {
+        isMenuOnScreen = false;
         confirmBtn.interactable = false;
+        TrySaveNickname().Forget();
+    }
 
+    public async UniTask TrySaveNickname()
+    {
         if (await FirebaseLinkManager.Instance.SaveUserNicknameAsync(nicknameInput.text))
         {
-            isMenuOnScreen = false;
-            OnNicknameConfirmed?.Invoke();
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError("닉네임 변경에 성공했습니다.");
+            }
+#if UNITY_EDITOR
+            Debug.Log("닉네임 변경에 성공했습니다.");
+#endif
         }
+
         else
         {
+            if (ErrorPanelManager.Instance != null)
+            {
+                ErrorPanelManager.Instance.ShowError("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
+            }
 #if UNITY_EDITOR
             Debug.Log("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
 #endif
-
-            confirmBtn.interactable = true;
-
+            RefreshThisMenu();
         }
     }
 
+    private void OnNicknameSaved()
+    {
+        CloseMenu();
+    }
+
+
+
+    public void CloseMenu()
+    {
+        isMenuOnScreen = false;
+        OnMenuClosed?.Invoke();
+    }
 }
