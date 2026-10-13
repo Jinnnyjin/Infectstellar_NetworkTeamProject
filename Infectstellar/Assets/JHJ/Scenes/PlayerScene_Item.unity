@@ -179,13 +179,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2938492648037888111, guid: 5678d2820db448b46a9ac26444a080ad, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1822840394}
-    - targetCorrespondingSourceObject: {fileID: 2938492648037888111, guid: 5678d2820db448b46a9ac26444a080ad, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1822840395}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5678d2820db448b46a9ac26444a080ad, type: 3}
 --- !u!1001 &348841495
 PrefabInstance:
@@ -957,40 +951,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1822840385 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2938492648037888111, guid: 5678d2820db448b46a9ac26444a080ad, type: 3}
-  m_PrefabInstance: {fileID: 200359184}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1822840394
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1822840385}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fcef26e30beb86240b6e195c9b6bd4bd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractor
-  viewPivot: {fileID: 181576544}
-  interactDistance: 3
-  interactMask:
-    serializedVersion: 2
-    m_Bits: 55
---- !u!114 &1822840395
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1822840385}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e84cc4b269ffbe340a9f92d2b8389889, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractInfoDisplay
 --- !u!1 &2051086280
 GameObject:
   m_ObjectHideFlags: 0

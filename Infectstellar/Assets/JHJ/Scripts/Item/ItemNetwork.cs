@@ -83,4 +83,12 @@ public class ItemNetwork : MonoBehaviourPun
         return targetView.OwnerActorNr;
     }
 
+    /// <summary>
+    /// 이 컴퓨터의 Actor 번호 (방 밖 = -1)
+    /// </summary>
+    public int GetLocalActorNumber()
+    {
+        return PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : -1;
+    }
+
 }
