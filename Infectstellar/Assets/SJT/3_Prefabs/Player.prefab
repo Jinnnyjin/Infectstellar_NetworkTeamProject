@@ -336,9 +336,10 @@ GameObject:
   - component: {fileID: 410302212340407713}
   - component: {fileID: 3040360623469986304}
   - component: {fileID: 8018515648191320931}
-  m_Layer: 0
+  - component: {fileID: 4312769478608084884}
+  m_Layer: 3
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -489,6 +490,23 @@ MonoBehaviour:
   stateMachine: {fileID: 410302212340407713}
   motor: {fileID: 5987840334879598537}
   animationController: {fileID: 964594448781665934}
+--- !u!114 &4312769478608084884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2938492648037888111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fedf1190d3dc0545aa199effe605208, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FlashlightController
+  flashlightLight: {fileID: 5863880551468347095}
+  helmetRenderer: {fileID: 1250569442615415023}
+  helmetMaterialIndex: 2
+  onColor: {r: 1, g: 0.78431374, b: 0.29411766, a: 1}
+  offColor: {r: 0.7058824, g: 0.49019608, b: 0.019607844, a: 1}
 --- !u!1 &3163993947981100936
 GameObject:
   m_ObjectHideFlags: 0
@@ -1060,9 +1078,9 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -476548289913318233, guid: ce5c765b9c921a34dae62e3098312d06, type: 3}
-  - {fileID: -2693615358285513361, guid: ce5c765b9c921a34dae62e3098312d06, type: 3}
-  - {fileID: 1804938782109069155, guid: ce5c765b9c921a34dae62e3098312d06, type: 3}
+  - {fileID: 2100000, guid: e2326b6408ea5234eacfa29885d89ba9, type: 2}
+  - {fileID: 2100000, guid: bb2a904ae8964714a8e03e1a330a645a, type: 2}
+  - {fileID: 2100000, guid: 752f763192e0700439d9d2dca6bd11c3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
