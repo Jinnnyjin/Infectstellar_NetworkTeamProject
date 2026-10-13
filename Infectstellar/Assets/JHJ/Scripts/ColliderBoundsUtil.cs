@@ -33,12 +33,12 @@ public static class ColliderBoundsUtil
     }
 
     /// <summary>
-    /// 루트(아이템 베이스)를 똑바로 세웠을때 (회전0) 루트에서 콜라이더 전체 바닥까지 거리 구함
-    /// 플레이어 머리 위 소켓 맞추는 곳에 사용
+    /// 루트를 똑바로 세웠을 때(회전 0) 루트 기준 콜라이더 바닥면 가운데 지점 (루트 로컬 위치)
+    /// 피벗이 모델마다 달라 높이뿐 아니라 가로 중심도 보정. 소켓·스폰 배치에 사용
     /// </summary>
-    public static bool TryGetUprightBottomOffset(Transform root, Collider[] colliders, out float offset)
+    public static bool TryGetUprightBottomCenter(Transform root, Collider[] colliders, out Vector3 bottomCenter)
     {
-        offset = 0f;
+        bottomCenter = Vector3.zero;
 
         // 놓인 자세와 무관하게 재기위해 잠시 세움
         Quaternion originalRotation = root.rotation;
@@ -50,8 +50,9 @@ public static class ColliderBoundsUtil
         bool found = TryGetCombinedBounds(colliders, out Bounds bounds);
         if(found)
         {
-            // 루트 높이 - 실제 바닥 높이 (피벗 위치가 모델마다 달라 높이의 절반X)
-            offset = root.position.y - bounds.min.y;
+            // 바닥면 가운데 - 루트 위치 (회전 0, 스케일 1이라 월드 차이 = 루트 로컬 위치)
+            // x, z: 범위 중심 / y: 범위 최저점 (루트보다 아래면 음수)
+            bottomCenter = new(bounds.center.x - root.position.x, bounds.min.y - root.position.y, bounds.center.z - root.position.z);
         }
 
         root.rotation = originalRotation;

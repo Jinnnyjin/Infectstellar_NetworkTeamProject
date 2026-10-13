@@ -9,7 +9,7 @@ using Photon.Pun; // [임시]
 /// [임시] 네트워크: PhotonView가 있고 방 안이면 내 것(IsMine)만 입력·카메라·화면 표시
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
-public class DummyPlayer : MonoBehaviourPun // [임시] MonoBehaviour → MonoBehaviourPun
+public class DummyPlayer : MonoBehaviourPun, ITempDamageable // [임시] MonoBehaviour → MonoBehaviourPun, [임시] ITempDamageable
 {
     [Header("참조")]
     [Tooltip("위아래 회전을 받을 카메라 Transform, 비우면 자식 Camera 자동 탐색")]
@@ -34,6 +34,9 @@ public class DummyPlayer : MonoBehaviourPun // [임시] MonoBehaviour → MonoBe
     [Tooltip("자동 생성되는 HeadSocket의 로컬 위치")] // [임시]
     [SerializeField] private Vector3 headSocketLocalPosition = new Vector3(0f, 2.2f, 0f); // [임시]
 
+    [Header("피격 (테스트)")] // [임시]
+    [SerializeField] private float maxHp = 100f; // [임시]
+
     private CharacterController controller;
     private float pitch;
     private float verticalVelocity;
@@ -41,11 +44,13 @@ public class DummyPlayer : MonoBehaviourPun // [임시] MonoBehaviour → MonoBe
     private Item heldItem; // [임시]
     private bool isLocal = true; // [임시] 네트워크 아니면 항상 내 것
     private int actorNumber = -1; // [임시] 네트워크 아니면 -1
+    private float currentHp; // [임시]
 
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        currentHp = maxHp; // [임시] 카메라 체크에서 return 되기 전에 초기화
 
         // [임시] 네트워크로 생성된 경우 내 것인지 확인 (PhotonNetwork.Instantiate는 IsMine 세팅 후 Awake 호출)
         if (photonView != null && PhotonNetwork.InRoom) // [임시]
@@ -246,6 +251,23 @@ public class DummyPlayer : MonoBehaviourPun // [임시] MonoBehaviour → MonoBe
         }
         Debug.Log($"[DummyPlayer] 던지기 호출: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})"); // [임시]
         heldItem.Shoot(cameraPivot.forward); // [임시]
+    }
+
+    // =============================================================
+    // [임시] 피격 (본인 여부는 판단 안 함: 아이템 쪽에서 거르는지 확인용)
+
+    public void TakeDamage(TempDamageInfo info) // [임시]
+    {
+        int ownerActor = photonView != null ? photonView.OwnerActorNr : -1; // [임시]
+        int localActor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : -1; // [임시]
+
+        currentHp -= info.Damage; // [임시]
+        Debug.Log($"[DummyPlayer] 피격: 주인 Actor {ownerActor}, 공격자 {info.AttackerActorNumber}, 데미지 {info.Damage}, 남은 체력 {currentHp} / 찍힌 창 Actor {localActor}", this); // [임시]
+
+        if (currentHp <= 0f) // [임시]
+        {
+            Debug.Log($"[DummyPlayer] 쓰러짐: 주인 Actor {ownerActor} / 찍힌 창 Actor {localActor}", this); // [임시]
+        }
     }
 
     // =============================================================

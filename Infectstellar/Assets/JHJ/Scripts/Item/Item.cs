@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(ItemPhysics), typeof(ItemHit), typeof(ItemNetwork))]
@@ -6,11 +7,19 @@ public class Item : MonoBehaviour, IInteractable
     public enum State { None, Placed, Grabbed, Thrown }
     public State CurrentState { get; private set; }
     public ItemDataSO ItemData => data;
+    /// <summary>
+    /// 똑바로 선 기준 루트 → 콜라이더 바닥면 가운데 지점 (루트 로컬 위치). 소켓 배치용
+    /// </summary>
+    public Vector3 UprightBottomCenter => uprightBottomCenter;
+    /// <summary>
+    /// 잡혔을때 발생, 각 플레이어가 자기 번호와 같으면 들기
+    /// </summary>
+    public static event Action<Item, int> Grabbed;
 
     [SerializeField] private ItemDataSO data;
     [SerializeField] private float throwForce; // [임시]
 
-    private float uprightBottomOffset;
+    private Vector3 uprightBottomCenter;
     private ItemPhysics physics;
     private ItemHit hit;
     private ItemNetwork network;
@@ -18,7 +27,6 @@ public class Item : MonoBehaviour, IInteractable
     private float requiredStopDuration = 0.2f; // 기준
     private int shooterActorNumber;
     private bool isLocalThrower;
-
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
 
 
@@ -40,20 +48,21 @@ public class Item : MonoBehaviour, IInteractable
             return;
         }
 
-        // 최하단 오프셋 계산
-        if (!ColliderBoundsUtil.TryGetUprightBottomOffset(transform, physics.Colliders, out uprightBottomOffset))
+        // 바닥 중심 계산 (피벗이 모델마다 달라 소켓 배치 보정용)
+        if (!ColliderBoundsUtil.TryGetUprightBottomCenter(transform, physics.Colliders, out uprightBottomCenter))
         {
-            Debug.LogError($"{gameObject.name} 최하단 오프셋 구하기 실패", this);
+            Debug.LogError($"{gameObject.name} 바닥 중심 구하기 실패", this);
             gameObject.SetActive(false);
             return;
         }
 
-        // ItemHit
-        hit = GetComponent<ItemHit>();
-
         // 네트워크
         network = GetComponent<ItemNetwork>();
-        network.Init(ExecuteShoot);
+        network.Init(ExecuteShoot, ApplyStopSync);
+
+        // ItemHit
+        hit = GetComponent<ItemHit>();
+        hit.Init(network.GetOwnerActorNumber);
 
         ChangeState(State.Placed);
     }
@@ -63,11 +72,18 @@ public class Item : MonoBehaviour, IInteractable
         if (CurrentState != State.Thrown)
             return;
 
-        if(physics.IsBelowStopThreshold())
+        if (physics.IsBelowStopThreshold())
         {
             stopTimer += Time.fixedDeltaTime;
-            if(stopTimer > requiredStopDuration)
+            if (stopTimer > requiredStopDuration)
+            {
                 ChangeState(State.Placed);
+                // 판정 컴퓨터만 최종 위치를 나머지에게 보냄 (자신은 이미 그 위치)
+                if (isLocalThrower)
+                {
+                    network.SendStop(transform.position, transform.rotation);
+                }
+            }
         }
         else
         {
@@ -159,6 +175,29 @@ public class Item : MonoBehaviour, IInteractable
     }
 
     // =============================================================
+    // Stop
+    /// <summary>
+    /// ItemNetwork가 RPC 수신 시에만 호출 (Init으로 전달), 직접 호출 금지
+    /// </summary>
+    private void ApplyStopSync(Vector3 pos, Quaternion rot)
+    {
+        if (CurrentState == State.Grabbed)
+        {
+            Debug.Log($"[Item] {data.ItemName} 정지 보정 무시: 이미 누가 들고 있음", this);
+            return;
+        }
+
+        if (CurrentState == State.Thrown)
+            ChangeState(State.Placed);
+
+
+        float correction = Vector3.Distance(transform.position, pos);
+        Debug.Log($"[Item] {data.ItemName} 정지 보정: 이동 거리 {correction:F3}m", this);
+
+        transform.SetPositionAndRotation(pos, rot);
+    }
+
+    // =============================================================
     // 인터페이스
 
     public InteractableInfo GetInfo()
@@ -179,6 +218,9 @@ public class Item : MonoBehaviour, IInteractable
             return;
         }
 
+        int holderActor = network.GetLocalActorNumber();
         ChangeState(State.Grabbed);
+
+        Grabbed?.Invoke(this, holderActor);
     }
 }
