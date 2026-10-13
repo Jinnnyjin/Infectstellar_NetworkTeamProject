@@ -2,7 +2,19 @@
 
 최종 갱신일: 2026-10-13 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: PUN2 플레이어 동기화 구현
+## 현재 상태: PlayerSyncRateManager 씬 싱글톤
+
+- Manager의 Instance 등록·중복 비활성화·소유자만 정리/참조 해제를 추가하고, NetworkSync는 관리자 탐색 대신 Initialize(PlayerSyncRateManager.Instance)를 사용한다. 두 기존 스크립트만 변경했으며 거리별 전송·적응형 보간·스포너 Inspector·씬·프리팹은 유지한다.
+- 사용자 학습 파일의 추가/삭제 작업을 보존한다. 이전 _PlayerSnapshotPlayback 미정의 오류는 과거 검사 결과이며 현재 상태로 단정하지 않는다. 이번 최종 검증과 재개 조건은 [씬 싱글톤 계획](plans/2026-10-13-player-manager-singleton.md)을 따른다.
+- 최종 전체 Unity 컴파일(20:00:48 KST)과 독립 리뷰, 격리 수명 검사 4개 시나리오/18 assertions를 통과했다. 20:07:06 KST에 임시 객체·싱글톤/PUN 전역값을 복원하고 PlayerScene dirty=false/roots6/stopped를 확인했다. Play/MPP/빌드는 수행하지 않았다.
+
+## 이전 상태: PUN2 코드 가독성 리팩토링
+
+- 사용자 선택대로 거리별 전송·적응형 보간을 유지하고 NetworkSync/Playback/Manager/Snapshot 네 파일의 책임별 메서드와 계산 표현을 정리했다. 새 스크립트·컴포넌트·자산은 없으며 라이트 지연이나 실제 송신 빈도를 변경한 작업은 아니다.
+- 사용자 학습 파일 `_PlayerSnapshotPlayback.cs`와 설정 변경·기존 주석을 보존했다. 실제 Unity 컴파일은 해당 학습 파일의 ProcessEvents 미정의(CS0103)로 실패했으며 이번 변경 4파일의 오류는 보고되지 않았다. 아래 과거 MPP 결과를 새 수정본의 전체 컴파일·Play 통과로 사용하지 않는다.
+- 독립 소스 리뷰, 전송 계약과 보호 파일 해시 확인을 완료했다. 기준/최종 Playback을 별도로 동적 컴파일하고 격리 프리팹 비교 7개 시나리오·30,461 assertions와 기대값 검사 9건을 통과했다. 기존 도메인 의존의 제한 검증이며 새 수정본의 MPP/Play는 실행하지 않았다. 상세 결과와 남은 전체 컴파일 확인은 [네트워크 리팩토링 계획](plans/2026-10-13-player-network-refactor.md)을 따른다.
+
+## 이전 상태: PUN2 플레이어 동기화 구현
 
 - Resources/PhotonPrefabs/Player에 PlayerNetworkSync/PlayerSnapshotPlayback/PhotonView를 연결했다. 로컬 제어만 입력·카메라·HFSM/이동을 수행하며 원격은 RPC/스냅샷을 Photon 시간축에서 재생한다. 초기 전체 상태, 순서/생사 버전, 30/15/10Hz 거리별 전송과 고정/적응형 버퍼 비교를 구현했다.
 - PlayerScene은 관리자 하나와 기존 로그인 씬 인스턴스의 스포너를 사용한다. 사용자 선택으로 단독 Player를 추가하지 않고 PlayerSpawnPoints를 스폰 중심으로 사용한다. 방 입장 전에는 플레이어가 없다. 기존 로그인/SJT Player 원본은 보존했다.

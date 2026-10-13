@@ -10,6 +10,15 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
 {
     private const int c_snapshotCapacity = 128; // 버퍼에 보관할 스냅샷 수의 상한
     private const float c_maxExtrapolation = 0.1f; // 다음 기록이 없을 때 속도로 위치를 예측할 최대 시간(초)
+    private const float c_fixedBufferDelay = 0.1f; // 적응형을 끈 상태에서 고정으로 기다릴 시간(초)
+    private const float c_minBufferDelay = 0.08f; // 적응형 보간에서 기다릴 최소 시간(초)
+    private const float c_maxBufferDelay = 0.3f; // 적응형 보간에서 기다릴 최대 시간(초)
+    private const float c_bufferedIntervals = 2f; // 보간을 위해 기다릴 스냅샷 전송 간격 수
+    private const float c_jitterMargin = 2f; // 도착 간격의 흔들림에 곱할 여유 배수
+    private const float c_jitterSmoothing = 0.1f; // 새로 측정한 도착 흔들림을 기존 값에 반영할 비율
+    private const float c_clockCorrection = 0.5f; // 목표 시각과의 차이를 재생 속도에 반영할 세기
+    private const float c_minPlaybackSpeed = 0.95f; // 재생 속도의 최소 배율(1이면 정상 속도)
+    private const float c_maxPlaybackSpeed = 1.05f; // 재생 속도의 최대 배율(1이면 정상 속도)
 
     private readonly List<PlayerSnapshot> snapshots = new List<PlayerSnapshot>(c_snapshotCapacity); // 발생 시각순으로 모아 둔 이동·자세 기록
     private readonly List<PlayerStateEvent> events = new List<PlayerStateEvent>(); // 재생 시각에 맞춰 적용할 손전등·손들기·생사 변경
@@ -111,19 +120,27 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         {
             return false;
         }
-        if (!double.IsNegativeInfinity(latestSampleTime) && lastRate == snapshot.Rate)
-        {
-            float variation = (float)Math.Abs((arrivalTime - lastArrivalTime) - (snapshot.Time - latestSampleTime));
-            jitter = Mathf.Lerp(jitter, Mathf.Min(variation, 0.3f), 0.1f);
-        }
-        else
-        {
-            jitter = 0f;
-        }
+        UpdateArrivalJitter(snapshot, arrivalTime);
         latestSampleTime = snapshot.Time;
         lastArrivalTime = arrivalTime;
         lastRate = snapshot.Rate;
         return true;
+    }
+
+    /// <summary>발생 간격과 도착 간격의 차이를 완화합니다. 전송 등급이 바뀌면 새 간격으로 시작합니다.</summary>
+    private void UpdateArrivalJitter(PlayerSnapshot snapshot, double arrivalTime)
+    {
+        if (double.IsNegativeInfinity(latestSampleTime) || lastRate != snapshot.Rate)
+        {
+            jitter = 0f;
+            return;
+        }
+
+        double arrivalInterval = arrivalTime - lastArrivalTime;
+        double sampleInterval = snapshot.Time - latestSampleTime;
+        float intervalDifference = (float)Math.Abs(arrivalInterval - sampleInterval);
+        float limitedDifference = Mathf.Min(intervalDifference, c_maxBufferDelay);
+        jitter = Mathf.Lerp(jitter, limitedDifference, c_jitterSmoothing);
     }
 
     /// <summary>RPC를 발생 시각·변경 순서로 정렬하고 이미 확인한 과거 변경은 버립니다.</summary>
@@ -163,96 +180,206 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     /// <summary>전달된 시각과 경과 시간으로 재생을 진행합니다. 위치 정지 중에도 RPC와 시계는 계속 갱신합니다.</summary>
     private void AdvancePlayback(double now, float deltaTime, bool adaptive)
     {
-        float delay = adaptive ? Mathf.Clamp(2f / lastRate + jitter * 2f, 0.08f, 0.3f) : 0.1f;
-        double error = now - delay - playbackTime;
-        float speed = Mathf.Clamp(1f + (float)error * 0.5f, 0.95f, 1.05f);
-        playbackTime = Math.Max(playbackTime, Math.Min(now, playbackTime + deltaTime * speed));
+        float delay = CalculateBufferDelay(adaptive);
+        double targetTime = now - delay;
+        double timeDifference = targetTime - playbackTime;
+        float speed = CalculatePlaybackSpeed(timeDifference);
+
+        AdvanceClock(now, deltaTime, speed);
         ProcessEvents();
+        DiscardPlayedSnapshots();
+        ApplyBufferedPose();
+#if UNITY_EDITOR
+        UpdateDiagnostics(now, delay, speed, timeDifference);
+#endif
+    }
+
+    /// <summary>두 번의 전송 간격에 도착 흔들림 여유를 더해 기다릴 시간을 정합니다.</summary>
+    private float CalculateBufferDelay(bool adaptive)
+    {
+        if (!adaptive)
+        {
+            return c_fixedBufferDelay;
+        }
+
+        float snapshotDelay = c_bufferedIntervals / lastRate;
+        float jitterDelay = jitter * c_jitterMargin;
+        float desiredDelay = snapshotDelay + jitterDelay;
+        return Mathf.Clamp(desiredDelay, c_minBufferDelay, c_maxBufferDelay);
+    }
+
+    /// <summary>목표 시각보다 뒤처지면 조금 빠르게, 앞서면 조금 느리게 재생합니다.</summary>
+    private static float CalculatePlaybackSpeed(double timeDifference)
+    {
+        float speedCorrection = (float)timeDifference * c_clockCorrection;
+        float desiredSpeed = 1f + speedCorrection;
+        return Mathf.Clamp(desiredSpeed, c_minPlaybackSpeed, c_maxPlaybackSpeed);
+    }
+
+    /// <summary>재생 시각을 앞으로만 진행하며 현재 Photon 시각을 넘지 않게 합니다.</summary>
+    private void AdvanceClock(double now, float deltaTime, float speed)
+    {
+        double nextTime = playbackTime + deltaTime * speed;
+        double limitedTime = Math.Min(now, nextTime);
+        playbackTime = Math.Max(playbackTime, limitedTime);
+    }
+
+    /// <summary>재생 시각을 둘러싼 두 기록만 남도록 이미 지난 앞쪽 기록을 제거합니다.</summary>
+    private void DiscardPlayedSnapshots()
+    {
         while (snapshots.Count > 1 && snapshots[1].Time <= playbackTime)
         {
             snapshots.RemoveAt(0);
         }
+    }
+
+    /// <summary>두 기록이 있으면 보간하고 하나만 남으면 마지막 속도로 짧게 예측합니다.</summary>
+    private void ApplyBufferedPose()
+    {
         PlayerSnapshot from = snapshots[0];
-        PlayerSnapshot to = snapshots.Count > 1 ? snapshots[1] : from;
-        float t = to.Time > from.Time ? Mathf.Clamp01((float)((playbackTime - from.Time) / (to.Time - from.Time))) : 0f;
-        float extrapolation = snapshots.Count == 1 ? Mathf.Clamp((float)(playbackTime - from.Time), 0f, c_maxExtrapolation) : 0f;
-        Vector3 position = snapshots.Count > 1 ? Vector3.Lerp(from.Position, to.Position, t) : from.Position + from.Velocity * extrapolation;
-        ApplyPose(from, to, t, position);
 #if UNITY_EDITOR
-        playbackDelayMs = (float)(now - playbackTime) * 1000f;
-        targetDelayMs = delay * 1000f;
-        playbackSpeed = speed;
-        extrapolationMs = extrapolation * 1000f;
-        correctionMs = (float)error * 1000f;
-        bufferedSnapshots = snapshots.Count;
-        pendingEvents = events.Count;
-        if (snapshots.Count == 1 && playbackTime > from.Time)
+        extrapolationMs = 0f;
+#endif
+        if (snapshots.Count > 1)
+        {
+            PlayerSnapshot to = snapshots[1];
+            float progress = CalculateInterpolationProgress(from.Time, to.Time);
+            Vector3 position = Vector3.Lerp(from.Position, to.Position, progress);
+            ApplyPose(from, to, progress, position);
+            return;
+        }
+
+        float elapsed = (float)(playbackTime - from.Time);
+        float predictionTime = Mathf.Clamp(elapsed, 0f, c_maxExtrapolation);
+        Vector3 predictedPosition = from.Position + from.Velocity * predictionTime;
+        ApplyPose(from, from, 0f, predictedPosition);
+#if UNITY_EDITOR
+        extrapolationMs = predictionTime * 1000f;
+        if (playbackTime > from.Time)
         {
             underrunFrames++;
         }
 #endif
     }
 
+    /// <summary>기록 사이에서 얼마나 진행했는지 0~1로 반환합니다.</summary>
+    private float CalculateInterpolationProgress(double fromTime, double toTime)
+    {
+        double interval = toTime - fromTime;
+        if (interval <= 0d)
+        {
+            return 0f;
+        }
+
+        // Photon 절대 시각은 double로 빼고, 최종 비율만 float로 바꿔 정밀도를 유지한다.
+        double elapsed = playbackTime - fromTime;
+        float progress = (float)(elapsed / interval);
+        return Mathf.Clamp01(progress);
+    }
+
+#if UNITY_EDITOR
+    /// <summary>동작 계산과 분리하여 현재 재생 상태를 Inspector에 표시합니다.</summary>
+    private void UpdateDiagnostics(double now, float delay, float speed, double timeDifference)
+    {
+        playbackDelayMs = (float)(now - playbackTime) * 1000f;
+        targetDelayMs = delay * 1000f;
+        playbackSpeed = speed;
+        correctionMs = (float)timeDifference * 1000f;
+        bufferedSnapshots = snapshots.Count;
+        pendingEvents = events.Count;
+    }
+#endif
+
     /// <summary>생사 버전이 확정되지 않은 변경은 보류하고 늦은 RPC도 시간 역행 없이 한 번 적용합니다.</summary>
     private void ProcessEvents()
     {
-        // 생사 확정 RPC를 처리한 뒤 같은 시각의 다른 상태가 한 프레임 더 지연되지 않게 두 번 순회한다.
-        for (int pass = 0; pass < 2; pass++)
+        ProcessDueEvents();
+        // 첫 순회에서 생사가 확정되면, 보류했던 같은 시각의 상태도 이번 프레임에 적용한다.
+        ProcessDueEvents();
+    }
+
+    /// <summary>재생 시각이 된 변경 중 생사 버전이 확정된 것만 대기열에서 꺼냅니다.</summary>
+    private void ProcessDueEvents()
+    {
+        for (int i = 0; i < events.Count;)
         {
-            for (int i = 0; i < events.Count;)
+            PlayerStateEvent stateEvent = events[i];
+            if (stateEvent.Time > playbackTime)
             {
-                PlayerStateEvent e = events[i];
-                if (e.Time > playbackTime)
-                {
-                    break;
-                }
-                if (e.Type != PlayerStateEventType.LifeState && e.LifeVersion > appliedLifeVersion)
-                {
-                    i++;
-                    continue;
-                }
-                events.RemoveAt(i);
-                int typeIndex = (int)e.Type;
-                if (e.Sequence <= appliedSequences[typeIndex] || e.LifeVersion < appliedLifeVersion)
-                {
-                    continue;
-                }
-                appliedSequences[typeIndex] = e.Sequence;
-#if UNITY_EDITOR
-                if (e.Time < playbackTime - Time.unscaledDeltaTime)
-                {
-                    lateEvents++;
-                }
-#endif
-                switch (e.Type)
-                {
-                    case PlayerStateEventType.Flashlight:
-                        flashlight.SetFlashlightEnabled(isAlive && e.Value);
-                        break;
-                    case PlayerStateEventType.HandsUp:
-                        animationController.SetHandsUp(e.Value);
-                        break;
-                    case PlayerStateEventType.LifeState:
-                        if (e.LifeVersion <= appliedLifeVersion)
-                        {
-                            break;
-                        }
-                        appliedLifeVersion = e.LifeVersion;
-                        isAlive = e.Value;
-                        stateMachine.ApplyRemoteState(isAlive ? PlayerState.Idle : PlayerState.Dead);
-                        flashlight.SetFlashlightEnabled(false);
-                        break;
-                }
+                break;
             }
+
+            bool waitingForLifeState = stateEvent.Type != PlayerStateEventType.LifeState
+                && stateEvent.LifeVersion > appliedLifeVersion;
+            if (waitingForLifeState)
+            {
+                i++;
+                continue;
+            }
+
+            events.RemoveAt(i);
+            ApplyEvent(stateEvent);
         }
     }
 
-    /// <summary>움직임은 보간하고 이산 자세는 같은 생사 버전의 이전 스냅샷 시점에 적용합니다.</summary>
-    private void ApplyPose(PlayerSnapshot from, PlayerSnapshot to, float t, Vector3 position)
+    /// <summary>과거·중복 변경을 거른 뒤 종류별 확정값을 한 번 적용합니다.</summary>
+    private void ApplyEvent(PlayerStateEvent stateEvent)
     {
-        body.SetPositionAndRotation(position, Quaternion.Euler(0f, Mathf.LerpAngle(from.Yaw, to.Yaw, t), 0f));
-        playerLook.ApplyRemotePitch(Mathf.LerpAngle(from.Pitch, to.Pitch, t));
-        if (from.LifeVersion != appliedLifeVersion || (from.State != PlayerState.Dead) != isAlive)
+        int typeIndex = (int)stateEvent.Type;
+        bool alreadyApplied = stateEvent.Sequence <= appliedSequences[typeIndex];
+        bool oldLifeVersion = stateEvent.LifeVersion < appliedLifeVersion;
+        if (alreadyApplied || oldLifeVersion)
+        {
+            return;
+        }
+
+        appliedSequences[typeIndex] = stateEvent.Sequence;
+#if UNITY_EDITOR
+        if (stateEvent.Time < playbackTime - Time.unscaledDeltaTime)
+        {
+            lateEvents++;
+        }
+#endif
+        switch (stateEvent.Type)
+        {
+            case PlayerStateEventType.Flashlight:
+                flashlight.SetFlashlightEnabled(isAlive && stateEvent.Value);
+                break;
+            case PlayerStateEventType.HandsUp:
+                animationController.SetHandsUp(stateEvent.Value);
+                break;
+            case PlayerStateEventType.LifeState:
+                ApplyLifeState(stateEvent);
+                break;
+        }
+    }
+
+    /// <summary>새 생사 버전으로 전환하고 사망·부활 때 손전등을 끕니다.</summary>
+    private void ApplyLifeState(PlayerStateEvent stateEvent)
+    {
+        if (stateEvent.LifeVersion <= appliedLifeVersion)
+        {
+            return;
+        }
+
+        appliedLifeVersion = stateEvent.LifeVersion;
+        isAlive = stateEvent.Value;
+        PlayerState state = isAlive ? PlayerState.Idle : PlayerState.Dead;
+        stateMachine.ApplyRemoteState(state);
+        flashlight.SetFlashlightEnabled(false);
+    }
+
+    /// <summary>움직임은 보간하고 이산 자세는 같은 생사 버전의 이전 스냅샷 시점에 적용합니다.</summary>
+    private void ApplyPose(PlayerSnapshot from, PlayerSnapshot to, float progress, Vector3 position)
+    {
+        float yaw = Mathf.LerpAngle(from.Yaw, to.Yaw, progress);
+        float pitch = Mathf.LerpAngle(from.Pitch, to.Pitch, progress);
+        body.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+        playerLook.ApplyRemotePitch(pitch);
+
+        bool matchingLifeVersion = from.LifeVersion == appliedLifeVersion;
+        bool matchingLifeState = (from.State != PlayerState.Dead) == isAlive;
+        if (!matchingLifeVersion || !matchingLifeState)
         {
             return;
         }

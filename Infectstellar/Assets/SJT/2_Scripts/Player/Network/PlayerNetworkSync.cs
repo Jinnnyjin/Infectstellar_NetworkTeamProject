@@ -8,42 +8,56 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PhotonView), typeof(PlayerSnapshotPlayback))]
 public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
 {
-    [SerializeField] private GameObject playerCamera;
+    [SerializeField] private GameObject playerCamera; // 내가 조종할 때 켜는 플레이어의 자식 카메라
 
-    private PhotonView view;
-    private PlayerController controller;
-    private PlayerStateMachine stateMachine;
-    private PlayerMotor motor;
-    private PlayerLook playerLook;
-    private FlashlightController flashlight;
-    private PlayerAnimationController animationController;
-    private PlayerSnapshotPlayback playback;
-    private PlayerSyncRateManager manager;
-    private Transform body;
-    private bool isInitialized;
-    private bool isLocal;
-    private bool isControlSuspended;
-    private int spawnSlot = -1;
-    private int actorNumber;
-    private int rate = 30;
-    private int sequence;
-    private int lifeVersion;
-    private double nextSendTime;
-    private double nextInitialRequestTime;
-    private Vector3 latestPosition;
-    private bool hasLatestPosition;
-    private double latestPositionTime = double.NegativeInfinity;
+    private PhotonView view; // 이 플레이어의 조작 권한 확인과 RPC 전송에 쓰는 PUN 컴포넌트
+    private PlayerController controller; // 로컬 조작을 켜고 끄며 이동 입력을 읽을 컴포넌트
+    private PlayerStateMachine stateMachine; // 걷기·점프·사망 등 현재 상태를 읽을 컴포넌트
+    private PlayerMotor motor; // 실제 이동 속도와 웅크림 여부를 읽을 컴포넌트
+    private PlayerLook playerLook; // 위아래 시선 각도를 읽을 컴포넌트
+    private FlashlightController flashlight; // 손전등 상태를 읽고 변경을 감지할 컴포넌트
+    private PlayerAnimationController animationController; // 이동 방향·손들기 애니메이션을 관리하는 컴포넌트
+    private PlayerSnapshotPlayback playback; // 받은 이동 기록과 RPC를 시간에 맞춰 화면에 적용할 컴포넌트
+    private PlayerSyncRateManager manager; // 플레이어 등록·카메라·거리별 전송 빈도를 관리하는 씬 컴포넌트
+    private Transform body; // 전송할 플레이어의 위치와 몸 회전을 읽을 Transform
+    private bool isInitialized; // 필수 참조 연결과 관리자 등록이 완료됐는지 여부
+    private bool isLocal; // 초기화 당시 내가 조종하는 플레이어였는지 여부
+    private bool isControlSuspended; // 관리자 종료나 플레이어 교체로 로컬 조작이 중단됐는지 여부
+    private int spawnSlot = -1; // 생성할 때 배정받은 시작 위치 번호(0~3, -1이면 미배정)
+    private int actorNumber; // 이 플레이어를 생성한 클라이언트의 방 안 번호
+    private int rate = 30; // 현재 초당 스냅샷 전송 목표 횟수(30/15/10Hz)
+    private int sequence; // RPC 상태 변경마다 증가하는 순서 번호
+    private int lifeVersion; // 사망·부활마다 증가해 이전 생사 상태를 구분하는 번호
+    private double nextSendTime; // 다음 스냅샷을 보낼 Photon 시각(초)
+    private double nextInitialRequestTime; // 초기 전체 상태를 다시 요청할 Photon 시각(초)
+    private Vector3 latestPosition; // 거리 계산에 쓰는 상대의 최신 수신 위치
+    private bool hasLatestPosition; // 거리 계산에 사용할 위치를 한 번 이상 받았는지 여부
+    private double latestPositionTime = double.NegativeInfinity; // 최신 수신 위치가 상대에게서 기록된 Photon 시각(초)
 
 #if UNITY_EDITOR
-    [SerializeField] private int sentSnapshots;
-    [SerializeField] private int receivedSnapshots;
-    [SerializeField] private int currentRate = 30;
+    [SerializeField] private int sentSnapshots; // 이 플레이어가 보낸 스냅샷의 누적 개수
+    [SerializeField] private int receivedSnapshots; // 제어자·수치 검사를 통과해 받은 스냅샷의 누적 개수
+    [SerializeField] private int currentRate = 30; // Inspector에서 확인할 현재 전송 목표 횟수(Hz)
 #endif
 
     /// <summary>생성 콜백과 관리자 등록이 완료됐는지 반환합니다.</summary>
     public bool IsInitialized => isInitialized;
     /// <summary>이번 인스턴스가 담당하던 제어 권한이 유효할 때만 로컬 조작을 허용합니다.</summary>
-    public bool IsLocalControlActive => isInitialized && isLocal && !isControlSuspended && manager != null && manager.isActiveAndEnabled && PhotonNetwork.InRoom && view.IsMine && view.ControllerActorNr == actorNumber;
+    public bool IsLocalControlActive
+    {
+        get
+        {
+            if (!isInitialized || !isLocal || isControlSuspended)
+            {
+                return false;
+            }
+            if (manager == null || !manager.isActiveAndEnabled || !PhotonNetwork.InRoom)
+            {
+                return false;
+            }
+            return view.IsMine && view.ControllerActorNr == actorNumber;
+        }
+    }
     /// <summary>생성 데이터에 저장된 시작 위치 슬롯입니다.</summary>
     public int SpawnSlot => spawnSlot;
     /// <summary>생성한 플레이어의 ActorNumber입니다.</summary>
@@ -123,7 +137,7 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         }
     }
 
-    /// <summary>로컬·원격 복제 모두 생성 정보를 확인하고 같은 활성 씬의 관리자를 한 번 연결합니다.</summary>
+    /// <summary>로컬·원격 복제 모두 생성 정보를 확인하고 씬 싱글톤 관리자를 연결합니다.</summary>
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
         object[] data = view.InstantiationData;
@@ -137,22 +151,7 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
 
         spawnSlot = slot;
         actorNumber = info.Sender.ActorNumber;
-        PlayerSyncRateManager foundManager = null;
-        foreach (PlayerSyncRateManager candidate in FindObjectsByType<PlayerSyncRateManager>(FindObjectsSortMode.None))
-        {
-            if (candidate.gameObject.scene == gameObject.scene)
-            {
-                if (foundManager != null)
-                {
-#if UNITY_EDITOR
-                    Debug.LogError("[PlayerNetworkSync] 같은 씬에 관리자가 두 개 이상 있습니다.", this);
-#endif
-                    return;
-                }
-                foundManager = candidate;
-            }
-        }
-        Initialize(foundManager);
+        Initialize(PlayerSyncRateManager.Instance);
     }
 
     /// <summary>의존성과 역할을 확정하고 관리자 등록 후 로컬 제어 또는 원격 재생을 시작합니다.</summary>
@@ -162,7 +161,7 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         {
             return;
         }
-        if (manager == null || !manager.isActiveAndEnabled || controller == null || !controller.IsInitialized || !controller.isActiveAndEnabled || stateMachine == null || !stateMachine.isActiveAndEnabled || motor == null || !motor.CanSimulate || playerLook == null || !playerLook.isActiveAndEnabled || flashlight == null || !flashlight.isActiveAndEnabled || animationController == null || !animationController.isActiveAndEnabled || playback == null || !playback.isActiveAndEnabled || playerCamera == null || !PhotonNetwork.InRoom || view.ViewID == 0 || spawnSlot < 0)
+        if (!CanInitialize(manager))
         {
 #if UNITY_EDITOR
             Debug.LogError("[PlayerNetworkSync] 네트워크 플레이어의 필수 참조 또는 씬 관리자가 없습니다. 조작을 시작하지 않습니다.", this);
@@ -189,10 +188,51 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         }
     }
 
+    /// <summary>관리자·이동·표시·PUN 생성 준비를 차례로 확인합니다.</summary>
+    private bool CanInitialize(PlayerSyncRateManager manager)
+    {
+        if (manager == null || !manager.isActiveAndEnabled || playerCamera == null)
+        {
+            return false;
+        }
+        if (manager.gameObject.scene != gameObject.scene)
+        {
+            return false;
+        }
+        if (controller == null || !controller.IsInitialized || !controller.isActiveAndEnabled)
+        {
+            return false;
+        }
+        if (stateMachine == null || !stateMachine.isActiveAndEnabled || motor == null || !motor.CanSimulate)
+        {
+            return false;
+        }
+        if (playerLook == null || !playerLook.isActiveAndEnabled || flashlight == null || !flashlight.isActiveAndEnabled)
+        {
+            return false;
+        }
+        if (animationController == null || !animationController.isActiveAndEnabled || playback == null || !playback.isActiveAndEnabled)
+        {
+            return false;
+        }
+        return PhotonNetwork.InRoom && view.ViewID != 0 && spawnSlot >= 0;
+    }
+
     /// <summary>높은 전송 등급으로 바뀌면 다음 PUN 관찰 호출에서 즉시 최신 기록을 보냅니다.</summary>
     public void SetSendRate(int value)
     {
-        value = value >= 30 ? 30 : value >= 15 ? 15 : 10;
+        if (value >= 30)
+        {
+            value = 30;
+        }
+        else if (value >= 15)
+        {
+            value = 15;
+        }
+        else
+        {
+            value = 10;
+        }
         if (value > rate)
         {
             nextSendTime = 0d;
@@ -208,48 +248,62 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     {
         if (stream.IsWriting)
         {
-            if (!IsLocalControlActive)
-            {
-                return;
-            }
-            double now = PhotonNetwork.Time;
-            double interval = 1d / rate;
-            if (now + 0.001d < nextSendTime)
-            {
-                return;
-            }
-            if (nextSendTime <= 0d || now - nextSendTime > interval)
-            {
-                nextSendTime = now;
-            }
-            nextSendTime += interval;
-            PlayerSnapshot snapshot = CaptureSnapshot(now);
-            stream.SendNext(snapshot.Time);
-            stream.SendNext(snapshot.Position);
-            stream.SendNext(snapshot.Velocity);
-            stream.SendNext(snapshot.Yaw);
-            stream.SendNext(snapshot.Pitch);
-            stream.SendNext((int)snapshot.State);
-            stream.SendNext(snapshot.Direction);
-            stream.SendNext(snapshot.Crouching);
-            stream.SendNext(snapshot.Rate);
-            stream.SendNext(snapshot.LifeVersion);
-#if UNITY_EDITOR
-            sentSnapshots++;
-#endif
+            SendSnapshot(stream);
+        }
+        else
+        {
+            ReceiveSnapshot(stream, info);
+        }
+    }
+
+    /// <summary>로컬 제어와 전송 시각을 확인한 뒤 현재 상태를 보냅니다.</summary>
+    private void SendSnapshot(PhotonStream stream)
+    {
+        if (!IsLocalControlActive)
+        {
             return;
         }
 
-        var received = new PlayerSnapshot((double)stream.ReceiveNext(), (Vector3)stream.ReceiveNext(), (Vector3)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext(), (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext(), (int)stream.ReceiveNext(), (int)stream.ReceiveNext());
-        if (!CanReceive(info) || !IsValidSnapshot(received))
+        double now = PhotonNetwork.Time;
+        if (!AdvanceSendSchedule(now))
+        {
+            return;
+        }
+
+        PlayerSnapshot snapshot = CaptureSnapshot(now);
+        snapshot.WriteTo(stream);
+#if UNITY_EDITOR
+        sentSnapshots++;
+#endif
+    }
+
+    /// <summary>PUN 관찰 호출 중 개별 등급의 전송 시각에 도달한 호출만 통과시킵니다.</summary>
+    private bool AdvanceSendSchedule(double now)
+    {
+        double interval = 1d / rate;
+        if (now + 0.001d < nextSendTime)
+        {
+            return false;
+        }
+        if (nextSendTime <= 0d || now - nextSendTime > interval)
+        {
+            nextSendTime = now;
+        }
+        nextSendTime += interval;
+        return true;
+    }
+
+    /// <summary>전송 형식을 읽고 제어자와 수치를 검사한 뒤 재생 버퍼에 넣습니다.</summary>
+    private void ReceiveSnapshot(PhotonStream stream, PhotonMessageInfo info)
+    {
+        PlayerSnapshot received = PlayerSnapshot.ReadFrom(stream);
+        if (!CanReceive(info) || !received.IsValid())
         {
             return;
         }
         if (playback.PushSnapshot(received, PhotonNetwork.Time))
         {
-            latestPosition = received.Position;
-            latestPositionTime = received.Time;
-            hasLatestPosition = true;
+            RecordLatestPosition(received);
         }
 #if UNITY_EDITOR
         receivedSnapshots++;
@@ -257,17 +311,22 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     }
 
     /// <summary>현재 로컬 상태를 하나의 확정된 시간 기록으로 수집합니다.</summary>
-    private PlayerSnapshot CaptureSnapshot(double time) => new PlayerSnapshot(time, body.position, motor.Velocity, body.eulerAngles.y, playerLook.PitchDegrees, stateMachine.CurrentState, controller.MoveDirection, motor.IsCrouching, rate, lifeVersion);
-
-    /// <summary>수신 기록의 타입 범위와 비정상 수치를 검사합니다.</summary>
-    private static bool IsValidSnapshot(PlayerSnapshot snapshot)
+    private PlayerSnapshot CaptureSnapshot(double time)
     {
-        return !double.IsNaN(snapshot.Time) && !double.IsInfinity(snapshot.Time) && snapshot.LifeVersion >= 0 && snapshot.State >= PlayerState.Idle && snapshot.State <= PlayerState.Dead && (snapshot.Rate == 10 || snapshot.Rate == 15 || snapshot.Rate == 30)
-            && IsFinite(snapshot.Position.x) && IsFinite(snapshot.Position.y) && IsFinite(snapshot.Position.z) && IsFinite(snapshot.Velocity.x) && IsFinite(snapshot.Velocity.y) && IsFinite(snapshot.Velocity.z) && IsFinite(snapshot.Yaw) && IsFinite(snapshot.Pitch) && IsFinite(snapshot.Direction.x) && IsFinite(snapshot.Direction.y);
+        return new PlayerSnapshot(
+            time, body.position, motor.Velocity,
+            body.eulerAngles.y, playerLook.PitchDegrees,
+            stateMachine.CurrentState, controller.MoveDirection,
+            motor.IsCrouching, rate, lifeVersion);
     }
 
-    /// <summary>벡터와 각도에 NaN 또는 무한대가 들어오지 않게 합니다.</summary>
-    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+    /// <summary>거리 계산에 사용할 최신 위치와 그 시각을 함께 보관합니다.</summary>
+    private void RecordLatestPosition(PlayerSnapshot snapshot)
+    {
+        latestPosition = snapshot.Position;
+        latestPositionTime = snapshot.Time;
+        hasLatestPosition = true;
+    }
 
     /// <summary>현재 제어자에게서 온 원격 기록만 받습니다.</summary>
     private bool CanReceive(PhotonMessageInfo info) => isInitialized && !isLocal && PhotonNetwork.InRoom && info.Sender != null && info.Sender.ActorNumber == view.ControllerActorNr;
@@ -291,23 +350,27 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         {
             return;
         }
-        PlayerSnapshot s = CaptureSnapshot(PhotonNetwork.Time);
-        view.RPC(nameof(RpcProvideInitialState), info.Sender, s.Time, s.Position, s.Velocity, s.Yaw, s.Pitch, (int)s.State, s.Direction, s.Crouching, s.Rate, s.LifeVersion, flashlight.IsOn, animationController.IsHandsUp, sequence);
+        PlayerSnapshot snapshot = CaptureSnapshot(PhotonNetwork.Time);
+        view.RPC(nameof(RpcProvideInitialState), info.Sender,
+            snapshot.Time, snapshot.Position, snapshot.Velocity,
+            snapshot.Yaw, snapshot.Pitch, (int)snapshot.State,
+            snapshot.Direction, snapshot.Crouching, snapshot.Rate, snapshot.LifeVersion,
+            flashlight.IsOn, animationController.IsHandsUp, sequence);
     }
 
     /// <summary>최초 전체 상태를 재생 기준과 이벤트 순서 하한으로 사용합니다.</summary>
     [PunRPC]
     private void RpcProvideInitialState(double time, Vector3 position, Vector3 velocity, float yaw, float pitch, int state, Vector2 direction, bool crouching, int rate, int version, bool light, bool handsUp, int changeSequence, PhotonMessageInfo info)
     {
-        var snapshot = new PlayerSnapshot(time, position, velocity, yaw, pitch, (PlayerState)state, direction, crouching, rate, version);
-        if (!CanReceive(info) || !IsValidSnapshot(snapshot) || changeSequence < 0 || playback.HasInitialState)
+        var snapshot = new PlayerSnapshot(time, position, velocity, yaw, pitch,
+            (PlayerState)state, direction, crouching, rate, version);
+        if (!CanReceive(info) || !snapshot.IsValid() || changeSequence < 0 || playback.HasInitialState)
         {
             return;
         }
         if (snapshot.Time >= latestPositionTime)
         {
-            latestPosition = snapshot.Position;
-            latestPositionTime = snapshot.Time;
+            RecordLatestPosition(snapshot);
         }
         hasLatestPosition = true;
         playback.SetInitialState(snapshot, light, handsUp, changeSequence, PhotonNetwork.Time);

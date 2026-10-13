@@ -3,40 +3,54 @@ using Photon.Pun;
 using Unity.Cinemachine;
 using UnityEngine;
 
-/// <summary>씬의 플레이어 등록과 카메라 교체, 가장 가까운 상대에 따른 송신 빈도를 관리합니다.</summary>
+/// <summary>씬 수명의 싱글톤으로 플레이어 등록·카메라 교체·거리별 송신 빈도를 관리합니다.</summary>
 [DefaultExecutionOrder(-100)]
 [DisallowMultipleComponent]
 public sealed class PlayerSyncRateManager : MonoBehaviour
 {
-    [SerializeField] private CinemachineBrain brain;
-    [SerializeField] private bool useDistanceRates = true;
-    [SerializeField] private bool useAdaptiveBuffer = true;
-    [SerializeField, Min(0f)] private float nearEnterDistance = 10f;
-    [SerializeField, Min(0f)] private float nearExitDistance = 12f;
-    [SerializeField, Min(0f)] private float middleEnterDistance = 25f;
-    [SerializeField, Min(0f)] private float middleExitDistance = 30f;
+    private static PlayerSyncRateManager instance; // 현재 클라이언트에서 사용할 하나의 씬 관리자
 
-    private readonly List<PlayerNetworkSync> players = new List<PlayerNetworkSync>(4);
-    private PlayerNetworkSync localPlayer;
-    private GameObject localCamera;
-    private float nextCheckTime;
-    private int localRate = 30;
+    [SerializeField] private CinemachineBrain brain; // Main Camera에서 플레이어 카메라 전환을 처리할 컴포넌트
+    [SerializeField] private bool useDistanceRates = true; // 거리에 따라 전송 빈도를 바꿀지 여부(끄면 항상 30Hz)
+    [SerializeField] private bool useAdaptiveBuffer = true; // 전송 빈도와 도착 흔들림에 맞춰 보간 지연을 조절할지 여부
+    [SerializeField, Min(0f)] private float nearEnterDistance = 10f; // 상대가 이 거리 안으로 오면 30Hz로 올리는 기준(m)
+    [SerializeField, Min(0f)] private float nearExitDistance = 12f; // 30Hz 상태에서 상대가 이 거리 밖으로 가면 낮추는 기준(m)
+    [SerializeField, Min(0f)] private float middleEnterDistance = 25f; // 10Hz 상태에서 상대가 이 거리 안으로 오면 15Hz 이상으로 올리는 기준(m)
+    [SerializeField, Min(0f)] private float middleExitDistance = 30f; // 30/15Hz 상태에서 상대가 이 거리 밖으로 가면 10Hz로 낮추는 기준(m)
+
+    private readonly List<PlayerNetworkSync> players = new List<PlayerNetworkSync>(4); // 이 씬에 등록된 네트워크 플레이어 목록
+    private PlayerNetworkSync localPlayer; // 현재 내가 조종하는 플레이어
+    private GameObject localCamera; // 현재 켜져 있는 내 플레이어 카메라
+    private float nextCheckTime; // 다음 거리 검사 시각(게임 시작 후 실제 경과 시간, 초)
+    private int localRate = 30; // 거리 판정으로 선택한 내 플레이어의 전송 목표 횟수(Hz)
 
 #if UNITY_EDITOR
-    [SerializeField] private int registeredPlayers;
-    [SerializeField] private int currentSendRate = 30;
-    [SerializeField] private float nearestDistance;
-    [SerializeField] private int pingMs;
-    [SerializeField] private long outgoingPacketBytes;
-    [SerializeField] private long incomingPacketBytes;
+    [SerializeField] private int registeredPlayers; // Inspector에서 확인할 등록된 플레이어 수
+    [SerializeField] private int currentSendRate = 30; // Inspector에서 확인할 현재 전송 목표 횟수(Hz)
+    [SerializeField] private float nearestDistance; // 가장 가까운 상대까지의 거리(m, 상대가 없으면 무한대)
+    [SerializeField] private int pingMs; // Photon 서버와 왕복하는 데 걸리는 시간(ms)
+    [SerializeField] private long outgoingPacketBytes; // PUN이 집계한 누적 송신 패킷 크기(바이트)
+    [SerializeField] private long incomingPacketBytes; // PUN이 집계한 누적 수신 패킷 크기(바이트)
 #endif
+
+    /// <summary>이 클라이언트의 씬 관리자를 반환합니다. 생성 전·파괴 후에는 null입니다.</summary>
+    public static PlayerSyncRateManager Instance => instance;
 
     /// <summary>현재 원격 재생의 고정·적응형 버퍼 비교 선택입니다.</summary>
     public bool UseAdaptiveBuffer => useAdaptiveBuffer;
 
-    /// <summary>씬 수명 동안 PUN 관찰/송신의 전역 상한을 30Hz로 유지합니다.</summary>
+    /// <summary>중복을 차단하고 필수 참조가 준비된 관리자를 싱글톤으로 등록합니다.</summary>
     private void Awake()
     {
+        if (instance != null && instance != this)
+        {
+#if UNITY_EDITOR
+            Debug.LogError("[PlayerSyncRateManager] 이미 등록된 씬 관리자가 있어 중복 관리자를 비활성화합니다.", this);
+#endif
+            enabled = false;
+            return;
+        }
+
         PhotonNetwork.SendRate = 30;
         PhotonNetwork.SerializationRate = 30;
 #if UNITY_EDITOR
@@ -47,6 +61,18 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
 #if UNITY_EDITOR
             Debug.LogError("[PlayerSyncRateManager] Main Camera의 CinemachineBrain을 연결해야 합니다.", this);
 #endif
+            enabled = false;
+            return;
+        }
+
+        instance = this;
+    }
+
+    /// <summary>중복 관리자를 다시 켜더라도 싱글톤 외의 관리자는 동작하지 않게 합니다.</summary>
+    private void OnEnable()
+    {
+        if (instance != this)
+        {
             enabled = false;
         }
     }
@@ -79,6 +105,11 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
     /// <summary>관리자가 비활성화되면 자신이 관리하던 로컬 입력과 카메라를 해제합니다.</summary>
     private void OnDisable()
     {
+        if (instance != this)
+        {
+            return;
+        }
+
         if (localPlayer != null)
         {
             localPlayer.SuspendLocalControl();
@@ -86,10 +117,19 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
         SwitchCamera(null);
     }
 
+    /// <summary>자신이 등록한 싱글톤 참조만 해제하여 다음 씬의 관리자가 등록될 수 있게 합니다.</summary>
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+
     /// <summary>슬롯·플레이어 중복을 차단하고 로컬 카메라를 한 개만 활성화합니다.</summary>
     public bool Register(PlayerNetworkSync player)
     {
-        if (player == null || brain == null || !isActiveAndEnabled)
+        if (instance != this || player == null || brain == null || !isActiveAndEnabled)
         {
             return false;
         }
@@ -189,8 +229,28 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
     /// <summary>상대의 최신 수신 위치로 거리 히스테리시스를 적용합니다. 초기 정보 부족 시 30Hz입니다.</summary>
     private void UpdateRate()
     {
-        float nearest = float.PositiveInfinity;
-        bool missingPosition = false;
+        bool allPositionsKnown = TryGetNearestDistance(out float nearest);
+        bool allPlayersRegistered = players.Count >= PhotonNetwork.CurrentRoom.PlayerCount;
+        if (!useDistanceRates || !allPositionsKnown || !allPlayersRegistered)
+        {
+            localRate = 30;
+        }
+        else
+        {
+            localRate = SelectSendRate(nearest);
+        }
+
+        localPlayer.SetSendRate(localRate);
+#if UNITY_EDITOR
+        nearestDistance = nearest;
+#endif
+    }
+
+    /// <summary>가장 가까운 상대까지의 거리를 구하고, 아직 수신 위치가 없는 상대도 확인합니다.</summary>
+    private bool TryGetNearestDistance(out float nearest)
+    {
+        nearest = float.PositiveInfinity;
+        bool allPositionsKnown = true;
         Vector3 position = localPlayer.Position;
         foreach (PlayerNetworkSync player in players)
         {
@@ -200,37 +260,41 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
             }
             if (!player.HasLatestPosition)
             {
-                missingPosition = true;
+                allPositionsKnown = false;
                 continue;
             }
             nearest = Mathf.Min(nearest, Vector3.Distance(position, player.LatestPosition));
         }
-        if (!useDistanceRates || missingPosition || players.Count < PhotonNetwork.CurrentRoom.PlayerCount)
-        {
-            localRate = 30;
-        }
-        else if (localRate == 30)
+        return allPositionsKnown;
+    }
+
+    /// <summary>현재 등급의 이탈·진입 거리로 30/15/10Hz 중 다음 등급을 선택합니다.</summary>
+    private int SelectSendRate(float nearest)
+    {
+        if (localRate == 30)
         {
             if (nearest > nearExitDistance)
             {
-                localRate = nearest > middleExitDistance ? 10 : 15;
+                if (nearest > middleExitDistance)
+                {
+                    return 10;
+                }
+                return 15;
             }
+            return 30;
         }
-        else if (nearest <= nearEnterDistance)
+        if (nearest <= nearEnterDistance)
         {
-            localRate = 30;
+            return 30;
         }
-        else if (localRate == 15 && nearest > middleExitDistance)
+        if (localRate == 15 && nearest > middleExitDistance)
         {
-            localRate = 10;
+            return 10;
         }
-        else if (localRate == 10 && nearest <= middleEnterDistance)
+        if (localRate == 10 && nearest <= middleEnterDistance)
         {
-            localRate = 15;
+            return 15;
         }
-        localPlayer.SetSendRate(localRate);
-#if UNITY_EDITOR
-        nearestDistance = nearest;
-#endif
+        return localRate;
     }
 }
