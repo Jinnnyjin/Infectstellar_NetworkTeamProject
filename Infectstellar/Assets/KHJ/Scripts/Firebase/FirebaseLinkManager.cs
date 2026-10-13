@@ -53,6 +53,9 @@ namespace ENZEUN.Runtime
         private DatabaseReference databaseReference;
 
 
+        public Action OnFirebaseLoginSucceeded;
+        public Action OnNicknameLoadSucceeded;
+        public Action OnNicknameSaveSucceeded;
 
 
         /// <summary>
@@ -77,6 +80,11 @@ namespace ENZEUN.Runtime
         /// </summary>
         public async UniTask ConnectToFirebaseAsync()
         {
+            if (Auth != null)
+            {
+                return;
+            }
+
             var status = await FirebaseApp.CheckAndFixDependenciesAsync();
 
             if (status == DependencyStatus.Available)
@@ -88,7 +96,6 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
                 Debug.Log("Firebase initialized successfully.");
 #endif
-
             }
 
 #if UNITY_EDITOR
@@ -97,15 +104,26 @@ namespace ENZEUN.Runtime
                 Debug.LogError($"Could not resolve all Firebase dependencies: {status}");
             }
 #endif
+
+            if (Auth == null)
+            {
+                Debug.Log($"Could not resolve all Firebase dependencies: {status}");
+                return;
+            }
+
+            // 초기화가 끝나면 로그인 시도 (익명 로그인)
             if (Auth.CurrentUser == null)
             {
                 try
                 {
                     var result = await Auth.SignInAnonymouslyAsync();
 
+                    OnFirebaseLoginSucceeded?.Invoke();
+
 #if UNITY_EDITOR
                     Debug.Log($"Anonymous login successful. User ID: {result.User.UserId}");
 #endif
+
                 }
 
                 catch (System.Exception ex)
@@ -120,29 +138,25 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
                 Debug.Log($"login successful. User ID: {Auth.CurrentUser.UserId}");
 #endif
+                OnFirebaseLoginSucceeded?.Invoke();
             }
 
+            // 로그인이 되면 닉네임 불러오기
             if (Auth.CurrentUser != null)
             {
-                playerHasNickname = await LoadUserNicknameAsync();
-            }
+                try
+                {
+                    playerHasNickname = await LoadUserNicknameAsync();
+                }
+                catch (System.Exception ex)
+                {
 #if UNITY_EDITOR
-            else
-            {
-                Debug.LogWarning("No user is currently signed in.");
-            }
+                    Debug.LogError($"Anonymous login failed: {ex.Message}");
 #endif
+                }
+            }
         }
 
-
-        /// <summary>
-        /// 버튼클릭 이벤트 -> 닉네임 저장하기
-        /// </summary>
-        /// <returns></returns>
-        public async Task TrySaveNickname(string name)
-        {
-            await SaveUserNicknameAsync(name);
-        }
 
 
         /// <summary>
@@ -168,6 +182,8 @@ namespace ENZEUN.Runtime
             Debug.Log($"닉네임 저장 완료: {newNickname}");
 #endif
             playerHasNickname = true;
+
+            OnNicknameSaveSucceeded?.Invoke();
 
             return true;
         }
@@ -197,6 +213,8 @@ namespace ENZEUN.Runtime
 
                         playerHasNickname = true;
 
+                        OnNicknameLoadSucceeded?.Invoke();
+
                         return true;
                     }
                 }
@@ -212,7 +230,7 @@ namespace ENZEUN.Runtime
         }
 
         /// <summary>
-        /// 랭킹 점수 저장 메서드
+        /// 랭킹 점수 저장 메서드 / push 를 써서, 한 사람이 여러번 등록 할 수 있도록 설계
         /// </summary>
         public async UniTaskVoid SaveRankingScoreAsync(RankingData rankingData)
         {
@@ -226,8 +244,6 @@ namespace ENZEUN.Runtime
 
             // "Rankings" 경로 아래에 유저 UID별로 저장
             await databaseReference.Child("Rankings").Push().SetRawJsonValueAsync(json);
-
-            await TrimRankingsAsync(20);
 
             Debug.Log("랭킹 점수 등록 완료!");
         }

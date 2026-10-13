@@ -10,19 +10,20 @@ namespace ENZEUN.Runtime
     {
         public enum MenuState
         {
-            Waiting,
+            Initailize,
             Title,
-            MainMenu,
+            ConnectToFirebase,
             SetNickname,
-            Options,
-            Ranking,
+            MainMenu,
             PlayOnline,
-            CreateRoom,
             PlayOffline,
-            GameStart,
+            Ranking,
+            Options,
+            CreateRoom,
+            JoinRoom,
         }
 
-        [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Waiting;
+        [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Initailize;
 
         private MMStateMachine<MenuState> menuFSM;
 
@@ -33,7 +34,7 @@ namespace ENZEUN.Runtime
 
         private void OnEnable()
         {
-            menuFSM.ChangeState(MenuState.Waiting);
+            menuFSM.ChangeState(MenuState.Initailize);
         }
 
         private void OnDisable()
@@ -41,10 +42,16 @@ namespace ENZEUN.Runtime
 
         }
 
+        private void Start()
+        {
+            ChangeToTitleMenu();
+        }
+
         public void ChangeToTitleMenu()
         {
             menuFSM.ChangeState(MenuState.Title);
         }
+
         public void ChangeToNicknameMenu()
         {
             menuFSM.ChangeState(MenuState.SetNickname);
@@ -56,9 +63,12 @@ namespace ENZEUN.Runtime
         }
 
 
+        /// <summary>
+        /// Title 상태에서 GameStart 버튼 클릭 시
+        /// </summary>
         public void OnGameStartBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.MainMenu);
+            menuFSM.ChangeState(MenuState.ConnectToFirebase);
         }
 
         public void OnSetNicknameBtnClicked()
@@ -68,12 +78,14 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOnlineBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Title);
+            //더미
+            menuFSM.ChangeState(MenuState.PlayOnline);
         }
 
         public void OnPlayOfflineBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Title);
+            //더미
+            menuFSM.ChangeState(MenuState.PlayOffline);
         }
 
         public void OnRankingBtnClicked()
@@ -84,6 +96,16 @@ namespace ENZEUN.Runtime
         public void OnOptionsBtnClicked()
         {
             menuFSM.ChangeState(MenuState.Options);
+        }
+
+        public void OnCreateRoomClicked()
+        {
+
+        }
+
+        public void OnJoinRoomClicked()
+        {
+
         }
 
         public void OnQuitBtnClicked()

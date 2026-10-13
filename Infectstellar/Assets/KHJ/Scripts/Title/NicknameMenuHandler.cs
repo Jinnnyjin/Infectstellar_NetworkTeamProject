@@ -15,12 +15,41 @@ public class NicknameMenuHandler : MonoBehaviour
     [SerializeField] private TMP_Text userNickname;
 
 
-    public Action OnNicknameSaveSuccessed;
+    private bool isSubscribed = false;
+    private bool isMenuOnScreen = false;
 
-    public bool isMenuOnScreen = false;
+    public UnityEvent OnMenuClosed;
+
+    private void OnDisable()
+    {
+        if (FirebaseLinkManager.Instance != null)
+        {
+            if (isSubscribed)
+            {
+
+                FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
+                FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= OnNicknameSaved;
+            }
+        }
+    }
 
     public void RefreshThisMenu()
     {
+        if (!isSubscribed)
+        {
+            if (FirebaseLinkManager.Instance != null)
+            {
+                isSubscribed = true;
+                FirebaseLinkManager.Instance.OnNicknameLoadSucceeded += ChangeNicknameText;
+                FirebaseLinkManager.Instance.OnNicknameSaveSucceeded += OnNicknameSaved;
+                isSubscribed = false;
+            }
+            else
+            {
+                Debug.Log("아직 FirebaseLinkManager 가 초기화되지 않았습니다.");
+                return;
+            }
+        }
         isMenuOnScreen = true;
         nicknameInput.text = string.Empty;
     }
@@ -30,7 +59,7 @@ public class NicknameMenuHandler : MonoBehaviour
         if (!isMenuOnScreen)
             return;
 
-        if (string.IsNullOrEmpty(nicknameInput.text))
+        if (string.IsNullOrWhiteSpace(nicknameInput.text))
         {
             if (confirmBtn.interactable == true)
             {
@@ -48,8 +77,8 @@ public class NicknameMenuHandler : MonoBehaviour
 
     public void OnConfirmed()
     {
+        isMenuOnScreen = false;
         confirmBtn.interactable = false;
-
         TrySaveNickname().Forget();
     }
 
@@ -57,11 +86,9 @@ public class NicknameMenuHandler : MonoBehaviour
     {
         if (await FirebaseLinkManager.Instance.SaveUserNicknameAsync(nicknameInput.text))
         {
-            isMenuOnScreen = false;
-
-            userNickname.SetText(FirebaseLinkManager.CurrentPlayerData.Nickname);
-
-            OnNicknameSaveSuccessed?.Invoke();
+#if UNITY_EDITOR
+            Debug.Log("닉네임 변경에 성공했습니다.");
+#endif
         }
 
         else
@@ -69,9 +96,24 @@ public class NicknameMenuHandler : MonoBehaviour
 #if UNITY_EDITOR
             Debug.Log("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
 #endif
-
-            confirmBtn.interactable = true;
+            RefreshThisMenu();
         }
     }
 
+    private void OnNicknameSaved()
+    {
+        ChangeNicknameText();
+        CloseMenu();
+    }
+
+    private void ChangeNicknameText()
+    {
+        userNickname.SetText(FirebaseLinkManager.CurrentPlayerData.Nickname);
+    }
+
+    public void CloseMenu()
+    {
+        isMenuOnScreen = false;
+        OnMenuClosed?.Invoke();
+    }
 }
