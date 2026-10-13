@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -37,6 +38,9 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private bool shouldPlayHandsUp; // 켜짐 요청을 Animator 평가 전에 한 번만 재생하도록 예약
 
     public bool IsHandsUp => isHandsUp;
+
+    /// <summary>실제 HandsUp 요청 값이 변경된 뒤 한 번 알립니다.</summary>
+    public event Action<bool> D_HandsUpStateChanged;
 
     /// <summary>
     /// Animator와 Arms 상태를 확인하고 이동 재생을 예약합니다. HandsUp은 꺼진 상태로 시작합니다.
@@ -224,6 +228,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
         isHandsUp = value;
         shouldPlayHandsUp = value;
+        D_HandsUpStateChanged?.Invoke(value);
     }
 
     /// <summary>
