@@ -136,17 +136,13 @@ public class Item : MonoBehaviour, IInteractable
 
     // =============================================================
     // Shoot
-    public void Shoot(Vector3 direction)
+    public void Shoot(Vector3 startPos, Quaternion startRot, Vector3 direction)
     {
         if (CurrentState != State.Grabbed)
         {
             Debug.LogWarning($"[Item] Shoot 불가 : {data.ItemName} 상태 = {CurrentState}",this);
             return;
         }
-
-        // 시작위치 : 들려 있는 동안 소켓위치 = 자기 위치 = 시작 위치
-        Vector3 startPos = transform.position;
-        Quaternion startRot = transform.rotation;
 
         Vector3 force = direction.normalized * throwForce;
 
