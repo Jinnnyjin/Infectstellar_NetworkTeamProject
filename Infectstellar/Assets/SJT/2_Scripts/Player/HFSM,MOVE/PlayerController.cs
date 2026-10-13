@@ -18,6 +18,14 @@ public sealed class PlayerController : MonoBehaviour
     private PlayerLook playerLook;
     private FlashlightController flashlightController;
     private bool isInitialized;
+    private bool isLocalControlActive;
+    private PlayerNetworkSync networkSync;
+
+    /// <summary>필수 이동 컴포넌트의 초기화 성공 여부입니다.</summary>
+    public bool IsInitialized => isInitialized;
+
+    /// <summary>스냅샷에 사용할 마지막 이동 방향입니다.</summary>
+    public Vector2 MoveDirection => inputReader != null ? inputReader.CurrentFrame.Move : Vector2.zero;
 
     /// <summary>
     /// 필요한 컴포넌트를 찾고 기존 이동 설정과 상태머신을 초기화합니다.
@@ -37,6 +45,7 @@ public sealed class PlayerController : MonoBehaviour
         inputReader = GetComponent<PlayerInputReader>();
         playerLook = GetComponent<PlayerLook>();
         flashlightController = GetComponent<FlashlightController>();
+        networkSync = GetComponent<PlayerNetworkSync>();
         if (movementSettings == null || stateMachine == null || motor == null || inputReader == null || playerLook == null)
         {
             Debug.LogError("[PlayerController] 이동 설정, StateMachine, Motor, InputReader 또는 Look 참조가 없습니다.", this);
@@ -74,7 +83,7 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        inputReader.SetControlActive(true);
+        SetLocalControlActive(networkSync == null || networkSync.IsLocalControlActive);
         if (animationController != null)
         {
             animationController.SetMoveDirection(Vector2.zero);
@@ -86,6 +95,11 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void Update()
     {
+        if (!isLocalControlActive || (networkSync != null && !networkSync.IsLocalControlActive))
+        {
+            return;
+        }
+
         if (stateMachine == null || motor == null || movementSettings == null || inputReader == null || playerLook == null
             || !stateMachine.isActiveAndEnabled || !motor.CanSimulate)
         {
@@ -112,7 +126,7 @@ public sealed class PlayerController : MonoBehaviour
 
 #if UNITY_EDITOR
         // 잡기 테스트용 코드
-        if (Input.GetKeyDown(KeyCode.O))
+        if (animationController != null && Input.GetKeyDown(KeyCode.O))
         {
             animationController.SetHandsUp(!animationController.IsHandsUp);
         }
@@ -124,6 +138,11 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void OnDisable()
     {
+        if (!isLocalControlActive)
+        {
+            return;
+        }
+
         if (animationController != null)
         {
             animationController.SetMoveDirection(Vector2.zero);
@@ -133,6 +152,20 @@ public sealed class PlayerController : MonoBehaviour
         {
             inputReader.SetControlActive(false);
         }
+        isLocalControlActive = false;
+    }
+
+    /// <summary>초기화 후 로컬 입력만 시작하거나 중단합니다.</summary>
+    public void SetLocalControlActive(bool isActive)
+    {
+        isActive = isActive && isInitialized && isActiveAndEnabled;
+        if (isLocalControlActive == isActive)
+        {
+            return;
+        }
+
+        isLocalControlActive = isActive;
+        inputReader.SetControlActive(isActive);
     }
 
     /// <summary>

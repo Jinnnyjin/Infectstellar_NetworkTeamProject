@@ -22,8 +22,7 @@ public interface IInteractable
     public bool CanGrab();
 
     /// <summary>
-    /// 플레이어가 Grab 처리 중 호출
-    /// 아이템은 상태전환
+    /// 잡기 요청. 결과는 Item.Grabbed 알림으로 전달
     /// </summary>
     public void OnGrab();
 }

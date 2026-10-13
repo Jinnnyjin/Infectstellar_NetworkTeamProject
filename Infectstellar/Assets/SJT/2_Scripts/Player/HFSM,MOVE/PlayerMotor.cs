@@ -53,6 +53,9 @@ public sealed class PlayerMotor : MonoBehaviour
     #region 다음 프레임에도 유지하고, 상태 판단에 전달할 실제 몸의 정보 필드/프로퍼티
     // 수직 속도
     private float verticalVelocity;
+    private Vector3 velocity;
+    /// <summary>충돌 처리 후 실제 월드 이동 속도(m/s)입니다.</summary>
+    public Vector3 Velocity => velocity;
     // 현재 수직 속도. 양수면 위쪽
     public float VerticalVelocity => verticalVelocity;
     // 땅에 접지되어 있는지 여부
@@ -301,6 +304,17 @@ public sealed class PlayerMotor : MonoBehaviour
             return;
         }
 
+        ApplyRemoteCrouch(crouchRequested);
+    }
+
+    /// <summary>제어자가 확정한 캡슐 자세를 로컬 천장 검사 없이 적용합니다.</summary>
+    public void ApplyRemoteCrouch(bool crouchRequested)
+    {
+        if (settings == null || characterController == null || isCrouching == crouchRequested)
+        {
+            return;
+        }
+
         // 플레이어의 키 설정 : 웅크림 요청이 있으면 서 있는 키에서 웅크렸을 때 비율로 설정
         float height = crouchRequested ? standingHeight * settings.CrouchHeightRatio : standingHeight;
         characterController.height = height;
@@ -342,7 +356,9 @@ public sealed class PlayerMotor : MonoBehaviour
 
         #region  실제 이동 및 충돌 반영
         // CollisionFlags는 CharacterController가 이동하면서 “어느 방향에 부딪혔는지”를 알려주는 값
+        Vector3 previousPosition = body.position;
         CollisionFlags collisions = characterController.Move(movement);
+        velocity = deltaTime > 0f ? (body.position - previousPosition) / deltaTime : Vector3.zero;
         // 이동 중 천장이나 바닥에 부딪힌 결과를 반영해 수직 속도와 접지 상태를 갱신
         UpdateVerticalState(collisions);
         #endregion

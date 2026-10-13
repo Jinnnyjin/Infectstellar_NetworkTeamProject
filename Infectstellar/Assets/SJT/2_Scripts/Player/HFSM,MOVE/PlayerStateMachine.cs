@@ -95,6 +95,12 @@ public sealed class PlayerStateMachine : MonoBehaviour
     private void PublishStateChange()
     {
         PlayerState nextState = stateGraph.CurrentState;
+        ApplyRemoteState(nextState);
+    }
+
+    /// <summary>HFSM과 이동을 실행하지 않고 확정된 원격 상태와 애니메이션을 적용합니다.</summary>
+    public void ApplyRemoteState(PlayerState nextState)
+    {
         if (currentState == nextState)
         {
             return;
