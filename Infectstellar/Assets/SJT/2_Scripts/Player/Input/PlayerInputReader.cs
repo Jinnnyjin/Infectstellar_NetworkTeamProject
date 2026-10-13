@@ -71,7 +71,10 @@ public sealed class PlayerInputReader : MonoBehaviour
     private void OnDisable()
     {
         ResetInput();
-        SetCursorLocked(false);
+        if (isControlActive)
+        {
+            SetCursorLocked(false);
+        }
     }
 
     /// <summary>
@@ -80,7 +83,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     /// </summary>
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (!hasFocus)
+        if (!hasFocus && isControlActive)
         {
             ResetInput();
             SetCursorLocked(false);
@@ -92,6 +95,19 @@ public sealed class PlayerInputReader : MonoBehaviour
     /// </summary>
     public void SetControlActive(bool isActive)
     {
+        if (isControlActive == isActive)
+        {
+            return;
+        }
+
+        if (playerInput == null)
+        {
+            playerInput = GetComponent<PlayerInput>();
+        }
+        if (playerInput != null)
+        {
+            playerInput.enabled = isActive;
+        }
         isControlActive = isActive;
         ResetInput();
         if (isActive)
@@ -110,7 +126,11 @@ public sealed class PlayerInputReader : MonoBehaviour
         currentFrame = default;
         lookDelta = Vector2.zero;
         flashPressed = false;
-        if (!isControlActive || !isActiveAndEnabled || !Application.isFocused
+        if (!isControlActive)
+        {
+            return;
+        }
+        if (!isActiveAndEnabled || !Application.isFocused
         || playerInput == null || !playerInput.isActiveAndEnabled || !playerInput.inputIsActive)
         {
             shouldBlockJumpUntilRelease = true;

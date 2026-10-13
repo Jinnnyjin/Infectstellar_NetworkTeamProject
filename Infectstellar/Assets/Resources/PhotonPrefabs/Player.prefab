@@ -427,6 +427,9 @@ GameObject:
   - component: {fileID: 8150208259652946239}
   - component: {fileID: 7423901455654246401}
   - component: {fileID: 8984561690930161050}
+  - component: {fileID: 7338459547745817413}
+  - component: {fileID: 4376986296744292997}
+  - component: {fileID: 7073898250178020161}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -484,7 +487,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2022546531456197676}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
@@ -598,6 +601,66 @@ MonoBehaviour:
   helmetMaterialIndex: 2
   onColor: {r: 1, g: 0.78431374, b: 0.29411766, a: 1}
   offColor: {r: 0.7058824, g: 0.49019608, b: 0.019607844, a: 1}
+--- !u!114 &7338459547745817413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 2
+  OwnershipTransfer: 0
+  observableSearch: 0
+  ObservedComponents:
+  - {fileID: 7073898250178020161}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &4376986296744292997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04928070139ac854386ff1d5052b0564, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSnapshotPlayback
+  playbackDelayMs: 0
+  targetDelayMs: 0
+  playbackSpeed: 1
+  extrapolationMs: 0
+  correctionMs: 0
+  bufferedSnapshots: 0
+  pendingEvents: 0
+  underrunFrames: 0
+  lateEvents: 0
+--- !u!114 &7073898250178020161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039ae4f0431161041aa7a3de9d5319b7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNetworkSync
+  playerCamera: {fileID: 3151569999027386306}
+  sentSnapshots: 0
+  receivedSnapshots: 0
+  currentRate: 30
 --- !u!1 &2046005324907659218
 GameObject:
   m_ObjectHideFlags: 0
@@ -817,7 +880,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3096919774434479975
 Transform:
   m_ObjectHideFlags: 0
