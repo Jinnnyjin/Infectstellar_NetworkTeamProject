@@ -67,7 +67,7 @@ public class PlayerGrabber : MonoBehaviour
             return;
         }
 
-        Vector3 position = socket.position + Vector3.up * heldItem.UprightBottomOffset;
+        Vector3 position = socket.position - socket.rotation * heldItem.UprightBottomCenter;
         heldItem.transform.SetPositionAndRotation(position, socket.rotation);
     }
 

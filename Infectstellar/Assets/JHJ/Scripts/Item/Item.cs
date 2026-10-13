@@ -8,9 +8,9 @@ public class Item : MonoBehaviour, IInteractable
     public State CurrentState { get; private set; }
     public ItemDataSO ItemData => data;
     /// <summary>
-    /// 똑바로 선 기준 루트 -> 콜라이더 바닥거리, 소켓 배치용
+    /// 똑바로 선 기준 루트 → 콜라이더 바닥면 가운데 지점 (루트 로컬 위치). 소켓 배치용
     /// </summary>
-    public float UprightBottomOffset => uprightBottomOffset;
+    public Vector3 UprightBottomCenter => uprightBottomCenter;
     /// <summary>
     /// 잡혔을때 발생, 각 플레이어가 자기 번호와 같으면 들기
     /// </summary>
@@ -19,7 +19,7 @@ public class Item : MonoBehaviour, IInteractable
     [SerializeField] private ItemDataSO data;
     [SerializeField] private float throwForce; // [임시]
 
-    private float uprightBottomOffset;
+    private Vector3 uprightBottomCenter;
     private ItemPhysics physics;
     private ItemHit hit;
     private ItemNetwork network;
@@ -48,10 +48,10 @@ public class Item : MonoBehaviour, IInteractable
             return;
         }
 
-        // 최하단 오프셋 계산
-        if (!ColliderBoundsUtil.TryGetUprightBottomOffset(transform, physics.Colliders, out uprightBottomOffset))
+        // 바닥 중심 계산 (피벗이 모델마다 달라 소켓 배치 보정용)
+        if (!ColliderBoundsUtil.TryGetUprightBottomCenter(transform, physics.Colliders, out uprightBottomCenter))
         {
-            Debug.LogError($"{gameObject.name} 최하단 오프셋 구하기 실패", this);
+            Debug.LogError($"{gameObject.name} 바닥 중심 구하기 실패", this);
             gameObject.SetActive(false);
             return;
         }
