@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5188babdc5eff3a4fa18b48d9663ccfd, type: 3}
-  m_Name: Item_Test_Heavy
+  m_Name: Item_02
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
   id: 2
-  itemName: "\uD14C\uC2A4\uD2B8 (\uBB34\uAC70\uC6C0)"
+  itemName: Gemstone(Green)
   price: 10
-  attack: 7
-  weight: 20
+  attack: 5
+  weight: 3
