@@ -1,40 +1,46 @@
-using System;
+
 using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 
-public class ErrorPanelManager : MonoBehaviour
+
+namespace ENZEUN.Runtime
 {
-    public static ErrorPanelManager Instance;
 
-    /// <summary>
-    /// Instance 는 하나만 존재하도록 (싱글턴)
-    /// </summary>
-    private void Awake()
+    public class ErrorPanelManager : MonoBehaviour
     {
-        if (Instance == null)
+        public static ErrorPanelManager Instance;
+
+        /// <summary>
+        /// Instance 는 하나만 존재하도록 (싱글턴)
+        /// </summary>
+        private void Awake()
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
         }
-        else if (Instance != this)
+
+        [SerializeField] TMP_Text errorText;
+        [SerializeField] MMF_Player fb;
+
+        public void ShowError(string message)
         {
-            Destroy(gameObject);
-            return;
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+            if (errorText == null)
+                return;
+
+            fb.PlayFeedbacks();
+            errorText.SetText("Error : " + message);
         }
     }
 
-    [SerializeField] TMP_Text errorText;
-    [SerializeField] MMF_Player fb;
-
-    public void ShowError(string message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-            return;
-        if (errorText == null)
-            return;
-
-        fb.PlayFeedbacks();
-        errorText.SetText("Error : " + message);
-    }
 }

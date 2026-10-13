@@ -1,7 +1,6 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using MoreMountains.Tools;
-using Cysharp.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -118,28 +117,20 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOfflineBtnClicked()
         {
-            //더미
-            menuFSM.ChangeState(MenuState.PlayOffline);
+            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            //menuFSM.ChangeState(MenuState.PlayOffline);
         }
 
         public void OnRankingBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Ranking);
+            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            //menuFSM.ChangeState(MenuState.Ranking);
         }
 
         public void OnOptionsBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Options);
-        }
-
-        public void OnCreateRoomClicked()
-        {
-
-        }
-
-        public void OnJoinRoomClicked()
-        {
-
+            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            //menuFSM.ChangeState(MenuState.Options);
         }
 
         public void OnQuitBtnClicked()

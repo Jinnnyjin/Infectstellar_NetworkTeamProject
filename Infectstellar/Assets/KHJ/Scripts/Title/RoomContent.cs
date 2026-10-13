@@ -3,49 +3,54 @@ using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 
-public class RoomContent : MonoBehaviour
+
+namespace ENZEUN.Runtime
 {
-    public bool isSelected = false;
 
-    [SerializeField] private UnityEngine.UI.Image focusImage;
-    [SerializeField] private TMP_Text roomNameText;
-    [SerializeField] private TMP_Text roomPlayerCountText;
-
-    public RoomInfo roomInfo;
-
-    public Action<RoomContent> OnSelected;
-
-    public int refreshCount = 0;
-
-    public void RefreshRoomContent()
+    public class RoomContent : MonoBehaviour
     {
-        roomNameText.SetText($"{roomInfo.Name}");
-        roomPlayerCountText.SetText($"{roomInfo.PlayerCount}/{roomInfo.MaxPlayers}");
-    }
+        public bool isSelected = false;
 
-    public void SelectThisRoom()
-    {
-        isSelected = true;
-        OnSelected?.Invoke(this);
-        FocusThisRoom();
-    }
+        [SerializeField] private UnityEngine.UI.Image focusImage;
+        [SerializeField] private TMP_Text roomNameText;
+        [SerializeField] private TMP_Text roomPlayerCountText;
 
-    public void UnselectThisRoom()
-    {
-        isSelected = false;
-        FocusThisRoom();
-    }
+        public RoomInfo roomInfo;
 
-    private void FocusThisRoom()
-    {
-        if (focusImage == null)
-            return;
+        public Action<RoomContent> OnSelected;
 
-        focusImage.enabled = isSelected;
-    }
+        public int refreshCount = 0;
 
-    public void DestroyThisRoom()
-    {
-        Destroy(gameObject);
+        public void RefreshRoomContent()
+        {
+            roomNameText.SetText($"{roomInfo.Name}");
+            roomPlayerCountText.SetText($"{roomInfo.PlayerCount}/{roomInfo.MaxPlayers}");
+        }
+
+        public void SelectThisRoom()
+        {
+            isSelected = true;
+            OnSelected?.Invoke(this);
+            FocusThisRoom();
+        }
+
+        public void UnselectThisRoom()
+        {
+            isSelected = false;
+            FocusThisRoom();
+        }
+
+        private void FocusThisRoom()
+        {
+            if (focusImage == null)
+                return;
+
+            focusImage.enabled = isSelected;
+        }
+
+        public void DestroyThisRoom()
+        {
+            Destroy(gameObject);
+        }
     }
 }

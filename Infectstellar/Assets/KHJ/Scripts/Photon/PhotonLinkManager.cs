@@ -3,7 +3,6 @@ using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
 using System;
-using TMPro;
 
 
 namespace ENZEUN.Runtime

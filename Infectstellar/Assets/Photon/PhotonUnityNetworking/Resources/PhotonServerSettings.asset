@@ -42,6 +42,11 @@ MonoBehaviour:
   - RespawnSpaceship
   - RpcShoot
   - RpcStop
+  - RpcProvideInitialState
+  - RpcRequestInitialState
+  - RpcSetFlashlight
+  - RpcSetHandsUp
+  - RpcSetLifeState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

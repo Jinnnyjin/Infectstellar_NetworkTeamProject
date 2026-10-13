@@ -6,7 +6,6 @@ using Firebase.Database;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -24,7 +23,7 @@ namespace ENZEUN.Runtime
     /// <summary>
     /// Firebase 랭킹에 저장할 데이터 목록
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class RankingData
     {
         public string nickname;
