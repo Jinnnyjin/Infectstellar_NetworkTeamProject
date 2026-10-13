@@ -14,6 +14,11 @@ public class ItemPhysics : MonoBehaviour
     /// </summary>
     public Collider[] Colliders => colliders;
 
+    [Header("정지판정 [임시] 조정예정")]
+    [SerializeField] private float stopLinearSpeed = 0.05f; // 이것보다 느리게 움직이면 멈춤
+    [SerializeField] private float stopAngularSpeed = 0.2f; // 이것보다 느리게 회전하면 멈춤
+    
+
     /// <summary>
     /// Item.Awake에서 호출.
     /// Awake 실행 순서가 보장되지 않아 Item이 직접 초기화 시점을 정함
@@ -50,6 +55,28 @@ public class ItemPhysics : MonoBehaviour
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
         }
+    }
+
+    /// <summary>
+    /// 물리가 켜진 이후 호출필요
+    /// Kinematic이면 무시
+    /// </summary>
+    public void Launch(Vector3 force)
+    {
+        rb.AddForce(force,ForceMode.Impulse);
+    }
+
+    /// <summary>
+    /// 이동, 회전 모두 기준보다 작은지 확인
+    /// </summary>
+    public bool IsBelowStopThreshold()
+    {
+        // 이동속도 크기의 제곱
+        // magnitude 내부에서 제곱근 계산이 필요
+        bool isLinearStopped = rb.linearVelocity.sqrMagnitude < stopLinearSpeed * stopLinearSpeed;
+        bool isAngularStopped = rb.angularVelocity.sqrMagnitude < stopAngularSpeed * stopAngularSpeed;
+
+        return isLinearStopped && isAngularStopped;
     }
 
     /// <summary>
