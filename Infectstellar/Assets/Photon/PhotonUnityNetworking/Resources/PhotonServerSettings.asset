@@ -49,6 +49,10 @@ MonoBehaviour:
   - RpcSetHandsUp
   - RpcSetLifeState
   - RPC_ReceiveChat
+  - RpcGrab
+  - RpcItemStop
+  - RpcSetHealth
+  - RpcTakeDamage
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0
