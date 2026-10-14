@@ -2,16 +2,15 @@ using UnityEngine;
 
 public class DamageSource : MonoBehaviour
 {
-    [SerializeField] DamageSourceSettings damageSourceSettings;
-    private float damage;
+    public float Damage { get; private set; }
 
-    void Awake()
+    public void Init(float damage)
     {
-        damage = damageSourceSettings.DamageAmount;
+        Damage = damage;
     }
 
     public void DealDamage(IDamageable damageable)
     {
-        damageable.TakeDamage(new DamageInfo(damage));
+        damageable.TakeDamage(new DamageInfo(Damage));
     }
 }

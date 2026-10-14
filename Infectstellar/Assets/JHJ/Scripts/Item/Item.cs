@@ -67,7 +67,7 @@ public class Item : MonoBehaviour, IInteractable
 
         // ItemHit
         hit = GetComponent<ItemHit>();
-        hit.Init(network.GetOwnerActorNumber);
+        hit.Init(network.GetOwnerActorNumber, data);
 
         ChangeState(State.Placed);
     }
