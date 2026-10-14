@@ -4,6 +4,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using UnityEngine.UI;
 using TMPro;
+using MoreMountains.Feedbacks;
 
 
 namespace ENZEUN.Runtime
@@ -13,8 +14,12 @@ namespace ENZEUN.Runtime
     {
         [SerializeField] private RectTransform roomListTransform;
         [SerializeField] private Button joinRoomBtn;
-        [SerializeField] private Button CreateRoomBtn;
-        [SerializeField] private Button QuickMatchBtn;
+        [SerializeField] private Button createRoomBtn;
+        [SerializeField] private Button quickMatchBtn;
+
+        [SerializeField] private MMF_Player createRoomFb;
+        [SerializeField] private Button createBtn;
+        [SerializeField] private Button cancelBtn;
         [SerializeField] private TMP_InputField roomnameEntered;
 
         private PhotonLinkManager photonInstance;
@@ -39,18 +44,22 @@ namespace ENZEUN.Runtime
 
             photonInstance = PhotonLinkManager.Instance;
             photonInstance.OnRoomListUpdated += RefreshRoomList;
+
+            // 버튼들 AddListener
+            joinRoomBtn?.onClick.AddListener(JoinRoomBtnClicked);
+            quickMatchBtn?.onClick.AddListener(QuickMatchBtnClicked);
+            createRoomBtn?.onClick.AddListener(CreateRoomBtnClicked);
+
+            createBtn?.onClick.AddListener(CreateBtnClicked);
+            cancelBtn?.onClick.AddListener(CancelBtnClicked);
+            roomnameEntered?.onValueChanged.AddListener(OnRoomnameTextChanged);
+
+            // 구독 완료 후 true
             isInitialized = true;
 
             RefreshBtns();
         }
 
-        private void OnEnable()
-        {
-            joinRoomBtn?.onClick.AddListener(JoinRoomBtnClicked);
-            QuickMatchBtn?.onClick.AddListener(QuickMatchBtnClicked);
-            CreateRoomBtn?.onClick.AddListener(CreateRoomBtnClicked);
-            roomnameEntered?.onValueChanged.AddListener(OnRoomnameTextChanged);
-        }
 
         private void OnDisable()
         {
@@ -60,13 +69,15 @@ namespace ENZEUN.Runtime
             if (photonInstance != null)
             {
                 photonInstance.OnRoomListUpdated -= RefreshRoomList;
-                isInitialized = false;
             }
 
             joinRoomBtn?.onClick.RemoveListener(JoinRoomBtnClicked);
-            QuickMatchBtn?.onClick.RemoveListener(QuickMatchBtnClicked);
-            CreateRoomBtn?.onClick.RemoveListener(CreateRoomBtnClicked);
+            quickMatchBtn?.onClick.RemoveListener(QuickMatchBtnClicked);
+
+            createBtn?.onClick.RemoveListener(CreateBtnClicked);
             roomnameEntered?.onValueChanged.RemoveListener(OnRoomnameTextChanged);
+
+            isInitialized = false;
         }
 
         private void RefreshRoomList(List<RoomInfo> rooms)
@@ -174,7 +185,7 @@ namespace ENZEUN.Runtime
 
 
             joinRoomBtn.interactable = roomSelected;
-            QuickMatchBtn.interactable = hasRoom;
+            quickMatchBtn.interactable = hasRoom;
         }
 
         private void JoinRoomBtnClicked()
@@ -187,13 +198,26 @@ namespace ENZEUN.Runtime
         }
         private void CreateRoomBtnClicked()
         {
+            roomnameEntered.text = "";
+            createRoomBtn.interactable = false;
+            createRoomFb.PlayFeedbacksTopToBottom();
+        }
+        private void CreateBtnClicked()
+        {
+            createRoomBtn.interactable = true;
+            createRoomFb.PlayFeedbacksBottomToTop();
             PhotonLinkManager.Instance.CreateRoom(roomnameEntered.text);
+        }
+        private void CancelBtnClicked()
+        {
+            createRoomBtn.interactable = true;
+            createRoomFb.PlayFeedbacksBottomToTop();
         }
 
         private void OnRoomnameTextChanged(string text)
         {
             bool isroomnameEntered = !string.IsNullOrWhiteSpace(roomnameEntered.text);
-            CreateRoomBtn.interactable = isroomnameEntered;
+            createBtn.interactable = isroomnameEntered;
         }
     }
 

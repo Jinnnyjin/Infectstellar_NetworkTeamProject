@@ -25,12 +25,26 @@ namespace ENZEUN.Runtime
         [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Initailize;
 
         private MMStateMachine<MenuState> menuFSM;
+        public static MenuController Instance;
 
         private bool subscribedPhotonCallbacks = false;
 
+        /// <summary>
+        /// Instance 는 하나만 존재하도록 (싱글턴)
+        /// </summary>
         private void Awake()
         {
             menuFSM = new MMStateMachine<MenuState>(this.gameObject, true);
+
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
         }
 
         private void OnEnable()
@@ -92,7 +106,6 @@ namespace ENZEUN.Runtime
         public void ChangeToInRoomMenu()
         {
             menuFSM.ChangeState(MenuState.InRoom);
-
         }
 
 

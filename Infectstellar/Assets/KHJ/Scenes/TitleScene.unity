@@ -6635,7 +6635,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 1325163.6
+      value: 942.6591
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -7071,7 +7071,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2065588160495393541, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_Name
-      value: CreateBtn
+      value: CreateRoomBtn
       objectReference: {fileID: 0}
     - target: {fileID: 2868138492693002779, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_AnchorMax.y
@@ -7091,7 +7091,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3745461731782335439, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3745461731782335439, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -7143,15 +7143,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_text
-      value: Create
+      value: Create Room
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSize
-      value: 15
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSizeBase
-      value: 15
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 5185271722402216729, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_Pivot.x
@@ -8034,7 +8034,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 40878.887
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -8122,7 +8122,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2065588160495393541, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_Name
-      value: JoinBtn
+      value: JoinRoomBtn
       objectReference: {fileID: 0}
     - target: {fileID: 2868138492693002779, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_AnchorMax.y
@@ -8142,15 +8142,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_text
-      value: Join
+      value: Join Room
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSize
-      value: 15
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSizeBase
-      value: 15
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 5185271722402216729, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_Pivot.x
@@ -8400,7 +8400,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3745461731782335439, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3745461731782335439, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -8564,6 +8564,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5185271722402216729, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
   m_PrefabInstance: {fileID: 1244595303}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1244595307 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3745461731782335439, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
+  m_PrefabInstance: {fileID: 1244595303}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 497961a156e672780253b63ccd9ed87f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeyHeyThere.PixelUISciFiFree::HeyHeyThere.PixelUISciFiFree.PixelButton
 --- !u!1 &1253323785
 GameObject:
   m_ObjectHideFlags: 0
@@ -12325,8 +12336,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PhotonRoomListHandler
   roomListTransform: {fileID: 994644785}
   joinRoomBtn: {fileID: 1646211870}
-  CreateRoomBtn: {fileID: 1943484886}
-  QuickMatchBtn: {fileID: 1854168840}
+  createRoomBtn: {fileID: 1400330660}
+  quickMatchBtn: {fileID: 1854168840}
+  createRoomFb: {fileID: 1793979144}
+  createBtn: {fileID: 1943484886}
+  cancelBtn: {fileID: 1244595307}
   roomnameEntered: {fileID: 1694666592}
   roomContentPrefab: {fileID: 51108162432560260, guid: ba3124e79412c1f46a17226ba0d21c87, type: 3}
   currentSeletedRoom: {fileID: 0}
@@ -12461,11 +12475,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSize
-      value: 11.6
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_fontSizeBase
-      value: 11.6
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 5185271722402216729, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
       propertyPath: m_Pivot.x
@@ -13653,7 +13667,7 @@ RectTransform:
   m_GameObject: {fileID: 2070189576}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 525328175}

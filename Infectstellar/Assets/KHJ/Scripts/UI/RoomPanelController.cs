@@ -1,4 +1,5 @@
 using System.Linq;
+using ENZEUN.Runtime;
 using Photon.Pun;
 using Photon.Realtime;
 using Unity.VisualScripting;
@@ -14,9 +15,29 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     [SerializeField] private Button gameStartBtn;
     [SerializeField] private Button leaveRoomBtn;
 
+    private bool isSubscribed = false;
+
     public void Start()
     {
         RefreshPlayerList();
+    }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+
+        if (isSubscribed)
+        {
+            leaveRoomBtn.onClick.RemoveListener(LeaveRoomBtnClicked);
+        }
+    }
+
+    private void InitializeRoomPanel()
+    {
+        if (!isSubscribed)
+        {
+            leaveRoomBtn.onClick.AddListener(LeaveRoomBtnClicked);
+        }
     }
 
     public override void OnJoinedRoom()
@@ -37,8 +58,17 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         RefreshPlayerList();
     }
 
+    public override void OnLeftRoom()
+    {
+        base.OnLeftRoom();
+
+        MenuController.Instance.ChangeToRoomSearchMenu();
+    }
+
     private void RefreshPlayerList()
     {
+        InitializeRoomPanel();
+
         if (!PhotonNetwork.IsConnected)
         {
             foreach (var panel in playerPanels)
@@ -73,5 +103,10 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
             playerPanels[i].RefreshPlayerPanel();
         }
 
+    }
+
+    public void LeaveRoomBtnClicked()
+    {
+        PhotonNetwork.LeaveRoom();
     }
 }

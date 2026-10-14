@@ -55,7 +55,7 @@ namespace ENZEUN.Runtime
         {
             InitializeNicknameMenu();
 
-            cancelBtn.interactable = !string.IsNullOrWhiteSpace(FirebaseLinkManager.CurrentPlayerData.Nickname);
+            cancelBtn.interactable = FirebaseLinkManager.playerHasNickname;
 
             isMenuOnScreen = true;
 
