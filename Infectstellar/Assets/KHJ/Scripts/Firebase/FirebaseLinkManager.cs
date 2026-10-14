@@ -185,11 +185,6 @@ namespace ENZEUN.Runtime
             // 로컬 데이터도 동기화
             CurrentPlayerData.Nickname = newNickname;
 
-            if (ErrorPanelManager.Instance != null)
-            {
-                ErrorPanelManager.Instance.ShowError($"Nickname Saved: {newNickname}");
-            }
-
 #if UNITY_EDITOR
             Debug.Log($"닉네임 저장 성공: {newNickname}");
 #endif

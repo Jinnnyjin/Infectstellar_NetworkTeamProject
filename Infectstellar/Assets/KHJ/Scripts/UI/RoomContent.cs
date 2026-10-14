@@ -12,8 +12,8 @@ namespace ENZEUN.Runtime
         public bool isSelected = false;
 
         [SerializeField] private UnityEngine.UI.Image focusImage;
-        [SerializeField] private TMP_Text roomNameText;
-        [SerializeField] private TMP_Text roomPlayerCountText;
+        [SerializeField] private TextMeshProUGUI roomNameText;
+        [SerializeField] private TextMeshProUGUI roomPlayerCountText;
 
         public RoomInfo roomInfo;
 

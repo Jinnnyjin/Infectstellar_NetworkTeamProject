@@ -11,7 +11,7 @@ using MoreMountains.Feedbacks;
 public class PlayerPanelController : MonoBehaviour
 {
     public Player player;
-    [SerializeField] private TMP_Text nickNameTextGrid;
+    [SerializeField] private TextMeshProUGUI nickNameTextGrid;
     [SerializeField] private Image colorGrid;
     [SerializeField] private MMF_Player fb;
 

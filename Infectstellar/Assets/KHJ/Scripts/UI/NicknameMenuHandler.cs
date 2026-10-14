@@ -28,6 +28,7 @@ namespace ENZEUN.Runtime
                 if (isSubscribed)
                 {
                     FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= OnNicknameSaved;
+                    isSubscribed = false;
                 }
             }
         }
@@ -41,7 +42,6 @@ namespace ENZEUN.Runtime
                 {
                     isSubscribed = true;
                     FirebaseLinkManager.Instance.OnNicknameSaveSucceeded += OnNicknameSaved;
-                    isSubscribed = false;
                 }
                 else
                 {
@@ -53,6 +53,7 @@ namespace ENZEUN.Runtime
 
         public void RefreshThisMenu()
         {
+            InitializeNicknameMenu();
             isMenuOnScreen = true;
             nicknameInput.text = string.Empty;
         }
@@ -89,10 +90,6 @@ namespace ENZEUN.Runtime
         {
             if (await FirebaseLinkManager.Instance.SaveUserNicknameAsync(nicknameInput.text))
             {
-                if (ErrorPanelManager.Instance != null)
-                {
-                    ErrorPanelManager.Instance.ShowError("Your nickname has been successfully changed.");
-                }
 #if UNITY_EDITOR
                 Debug.Log("닉네임 변경에 성공했습니다.");
 #endif

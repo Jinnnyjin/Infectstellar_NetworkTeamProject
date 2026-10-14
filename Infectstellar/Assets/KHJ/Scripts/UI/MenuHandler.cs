@@ -17,7 +17,7 @@ namespace ENZEUN.Runtime
         [SerializeField] private NicknameMenuHandler nicknameMenuHandler;
         [SerializeField] private MMF_Player connectPhotonFb;
         [SerializeField] private MMF_Player roomSearchMenuFb;
-        [SerializeField] private TMP_Text userNickname;
+        [SerializeField] private TextMeshProUGUI userNickname;
         [SerializeField] private MMF_Player roomMenuFb;
 
 

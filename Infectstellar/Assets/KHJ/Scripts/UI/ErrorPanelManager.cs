@@ -28,7 +28,7 @@ namespace ENZEUN.Runtime
             }
         }
 
-        [SerializeField] TMP_Text errorText;
+        [SerializeField] TextMeshProUGUI errorText;
         [SerializeField] MMF_Player fb;
 
         public void ShowError(string message)

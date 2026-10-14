@@ -3,6 +3,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
 using System;
+using ExitGames.Client.Photon;
 
 
 namespace ENZEUN.Runtime
@@ -40,6 +41,9 @@ namespace ENZEUN.Runtime
         public Action<List<RoomInfo>> OnRoomListUpdated;
         public Action OnJoinedLobbyCallback;
         public Action OnJoinedRoomCallback;
+
+        // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
+        public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
 
         public void ConnectToPhotonServer()
         {
@@ -188,9 +192,37 @@ namespace ENZEUN.Runtime
             OnRoomListUpdated?.Invoke(CachedRoomList);
         }
 
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey("IsReady"))
+            {
+                bool newReady = (bool)changedProps["IsReady"];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
+
+                // 준비 상태 변경 이벤트 발행
+                OnReadyStateChanged?.Invoke(targetPlayer, newReady);
+            }
+
+        }
+
         public override void OnDisconnected(DisconnectCause cause)
         {
             Debug.Log($"서버 연결 끊김: {cause}");
+        }
+
+        #endregion
+
+        #region Player Custom Property Edit Methods
+        /// <summary>
+        /// 내 준비 상태를 변경하고 서버에 동기화
+        /// </summary>
+        public void SetMyReadyState(bool isReady)
+        {
+            Hashtable props = new Hashtable() { { "IsReady", isReady } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
         #endregion
