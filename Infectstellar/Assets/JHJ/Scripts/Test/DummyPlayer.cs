@@ -1,13 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Photon.Pun; // [임시]
 
 /// <summary>
-/// 아이템 상호작용 테스트용 더미 플레이어 (네트워크 X)
+/// 아이템 상호작용 테스트용 더미 플레이어
 /// 마우스 좌우 = 몸(Yaw) 회전, 위아래 = 카메라(Pitch)만 회전
 /// 구조: Player(CharacterController + DummyPlayer) / CameraPivot(Camera)
+/// [임시] 네트워크: PhotonView가 있고 방 안이면 내 것(IsMine)만 입력·카메라·화면 표시
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
-public class DummyPlayer : MonoBehaviour
+public class DummyPlayer : MonoBehaviourPun, ITempDamageable // [임시] MonoBehaviour → MonoBehaviourPun, [임시] ITempDamageable
 {
     [Header("참조")]
     [Tooltip("위아래 회전을 받을 카메라 Transform, 비우면 자식 Camera 자동 탐색")]
@@ -26,15 +28,38 @@ public class DummyPlayer : MonoBehaviour
     [SerializeField] private float interactDistance = 3f;
     [SerializeField] private LayerMask interactMask = ~0;
 
+    [Header("들기 (테스트)")] // [임시]
+    [Tooltip("들고 있는 아이템이 따라갈 머리 위 소켓, 비우면 몸 자식으로 자동 생성")] // [임시]
+    [SerializeField] private Transform headSocket; // [임시]
+    [Tooltip("자동 생성되는 HeadSocket의 로컬 위치")] // [임시]
+    [SerializeField] private Vector3 headSocketLocalPosition = new Vector3(0f, 2.2f, 0f); // [임시]
+
+    [Header("피격 (테스트)")] // [임시]
+    [SerializeField] private float maxHp = 100f; // [임시]
+
     private CharacterController controller;
     private float pitch;
     private float verticalVelocity;
     private IInteractable currentTarget;
+    private Item heldItem; // [임시]
+    private bool isLocal = true; // [임시] 네트워크 아니면 항상 내 것
+    private int actorNumber = -1; // [임시] 네트워크 아니면 -1
+    private float currentHp; // [임시]
 
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        currentHp = maxHp; // [임시] 카메라 체크에서 return 되기 전에 초기화
+
+        // [임시] 네트워크로 생성된 경우 내 것인지 확인 (PhotonNetwork.Instantiate는 IsMine 세팅 후 Awake 호출)
+        if (photonView != null && PhotonNetwork.InRoom) // [임시]
+        {
+            isLocal = photonView.IsMine; // [임시]
+            actorNumber = photonView.OwnerActorNr; // [임시]
+            gameObject.name = $"DummyPlayer_Actor{actorNumber}{(isLocal ? " (나)" : "")}"; // [임시]
+        }
+
         if (cameraPivot == null)
         {
             Camera cam = GetComponentInChildren<Camera>();
@@ -46,20 +71,40 @@ public class DummyPlayer : MonoBehaviour
             }
             cameraPivot = cam.transform;
         }
+
+        // [임시] 남의 플레이어는 카메라·오디오 리스너 끄기 (화면에 카메라 1개만)
+        if (!isLocal) // [임시]
+        {
+            foreach (Camera c in GetComponentsInChildren<Camera>()) c.enabled = false; // [임시]
+            foreach (AudioListener l in GetComponentsInChildren<AudioListener>()) l.enabled = false; // [임시]
+        }
+
+        // [임시] 머리 위 소켓: 카메라가 아닌 몸 자식 (좌우 회전만 따라감)
+        if (headSocket == null) // [임시]
+        {
+            headSocket = new GameObject("HeadSocket").transform; // [임시]
+            headSocket.SetParent(transform, false); // [임시]
+            headSocket.localPosition = headSocketLocalPosition; // [임시]
+            headSocket.localRotation = Quaternion.identity; // [임시]
+        }
     }
 
     private void OnEnable()
     {
+        if (!isLocal) return; // [임시]
         LockCursor(true);
     }
 
     private void OnDisable()
     {
+        if (!isLocal) return; // [임시]
         LockCursor(false);
     }
 
     private void Update()
     {
+        if (!isLocal) return; // [임시] 남의 플레이어는 PhotonTransformView가 움직임
+
         Keyboard keyboard = Keyboard.current;
         Mouse mouse = Mouse.current;
         if (keyboard == null || mouse == null) return;
@@ -76,6 +121,27 @@ public class DummyPlayer : MonoBehaviour
         {
             TryGrab();
         }
+
+        if (keyboard.fKey.wasPressedThisFrame) // [임시]
+        {
+            TryThrow(); // [임시]
+        }
+    }
+
+    // [임시] 들고 있는 아이템을 머리 위 소켓에 붙여두기
+    private void LateUpdate()
+    {
+        if (heldItem == null) return; // [임시]
+
+        // [임시] 던진 뒤 다시 끌어오지 않도록 상태 확인이 먼저
+        if (heldItem.CurrentState != Item.State.Grabbed) // [임시]
+        {
+            Debug.Log($"[DummyPlayer] 따라가기 해제: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})"); // [임시]
+            heldItem = null; // [임시]
+            return; // [임시]
+        }
+
+        heldItem.transform.SetPositionAndRotation(headSocket.position, headSocket.rotation); // [임시]
     }
 
     // =============================================================
@@ -149,6 +215,11 @@ public class DummyPlayer : MonoBehaviour
 
     private void TryGrab()
     {
+        if (heldItem != null) // [임시]
+        {
+            Debug.Log($"[DummyPlayer] E: 이미 들고 있음 - {heldItem.GetInfo().ItemName}"); // [임시]
+            return; // [임시]
+        }
         if (currentTarget == null)
         {
             Debug.Log("[DummyPlayer] E: 바라보는 대상 없음");
@@ -160,6 +231,43 @@ public class DummyPlayer : MonoBehaviour
             return;
         }
         currentTarget.OnGrab();
+
+        // [임시] 잡기 성공(Grabbed)일 때만 보관
+        Item item = (currentTarget as Component)?.GetComponentInParent<Item>(); // [임시]
+        if (item != null && item.CurrentState == Item.State.Grabbed) // [임시]
+        {
+            heldItem = item; // [임시]
+            Debug.Log($"[DummyPlayer] 잡기 성공: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})"); // [임시]
+        }
+    }
+
+    // [임시] F: 던지기 (heldItem 정리는 LateUpdate가 상태를 보고 처리)
+    private void TryThrow()
+    {
+        if (heldItem == null) // [임시]
+        {
+            Debug.Log("[DummyPlayer] F: 들고 있는 아이템 없음"); // [임시]
+            return; // [임시]
+        }
+        Debug.Log($"[DummyPlayer] 던지기 호출: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})"); // [임시]
+        heldItem.Shoot(cameraPivot.forward); // [임시]
+    }
+
+    // =============================================================
+    // [임시] 피격 (본인 여부는 판단 안 함: 아이템 쪽에서 거르는지 확인용)
+
+    public void TakeDamage(TempDamageInfo info) // [임시]
+    {
+        int ownerActor = photonView != null ? photonView.OwnerActorNr : -1; // [임시]
+        int localActor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : -1; // [임시]
+
+        currentHp -= info.Damage; // [임시]
+        Debug.Log($"[DummyPlayer] 피격: 주인 Actor {ownerActor}, 공격자 {info.AttackerActorNumber}, 데미지 {info.Damage}, 남은 체력 {currentHp} / 찍힌 창 Actor {localActor}", this); // [임시]
+
+        if (currentHp <= 0f) // [임시]
+        {
+            Debug.Log($"[DummyPlayer] 쓰러짐: 주인 Actor {ownerActor} / 찍힌 창 Actor {localActor}", this); // [임시]
+        }
     }
 
     // =============================================================
@@ -167,10 +275,25 @@ public class DummyPlayer : MonoBehaviour
 
     private void OnGUI()
     {
+        if (!isLocal) return; // [임시]
+
+        // [임시] 내 Actor 번호 표시 (왼쪽 아래)
+        if (actorNumber >= 0) // [임시]
+        {
+            GUI.Label(new Rect(10f, Screen.height - 30f, 300f, 20f), $"나: Actor {actorNumber}"); // [임시]
+        }
+
         // 크로스헤어
         float cx = Screen.width * 0.5f;
         float cy = Screen.height * 0.5f;
         GUI.Label(new Rect(cx - 5f, cy - 10f, 20f, 20f), "+");
+
+        // [임시] 들고 있는 아이템 표시 (왼쪽 위)
+        if (heldItem != null) // [임시]
+        {
+            GUI.Box(new Rect(10f, 10f, 220f, 45f),
+                $"들고 있음: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})\n[F] 던지기"); // [임시]
+        }
 
         if (currentTarget == null) return;
 
@@ -182,6 +305,11 @@ public class DummyPlayer : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        // [임시] 머리 위 소켓 위치 (플레이 전엔 자동 생성 예정 위치)
+        Vector3 socketPos = headSocket != null ? headSocket.position : transform.TransformPoint(headSocketLocalPosition); // [임시]
+        Gizmos.color = Color.cyan; // [임시]
+        Gizmos.DrawWireSphere(socketPos, 0.15f); // [임시]
+
         if (cameraPivot == null) return;
         Gizmos.color = Color.yellow;
         Gizmos.DrawRay(cameraPivot.position, cameraPivot.forward * interactDistance);

@@ -1,17 +1,23 @@
 using UnityEngine;
 using MoreMountains.Tools;
 using MoreMountains.Feedbacks;
+using Cysharp.Threading.Tasks;
+using TMPro;
 
 namespace ENZEUN.Runtime
 {
     public class MenuHandler : MonoBehaviour, MMEventListener<MMStateChangeEvent<MenuController.MenuState>>
     {
+        [SerializeField] private MenuController menuController;
+        [SerializeField] private MMF_Player LoadingPannelFb;
+        [SerializeField] private MMProgressBar loadingProgressBar;
         [SerializeField] private MMF_Player gameStartBtnFb;
         [SerializeField] private MMF_Player mainMenuFb;
         [SerializeField] private MMF_Player nicknameMenuFb;
         [SerializeField] private NicknameMenuHandler nicknameMenuHandler;
-
-
+        [SerializeField] private MMF_Player connectPhotonFb;
+        [SerializeField] private MMF_Player roomMenuFb;
+        [SerializeField] private TMP_Text userNickname;
 
 
         public void OnEnable()
@@ -22,9 +28,33 @@ namespace ENZEUN.Runtime
         public void OnDisable()
         {
             this.MMEventStopListening<MMStateChangeEvent<MenuController.MenuState>>();
+            FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
+            FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= ChangeNicknameText;
         }
 
+        public async UniTaskVoid InitialSettings()
+        {
+            FirebaseLinkManager firebaseLinkManager = FirebaseLinkManager.Instance;
 
+            firebaseLinkManager.OnNicknameLoadSucceeded += ChangeNicknameText;
+            firebaseLinkManager.OnNicknameSaveSucceeded += ChangeNicknameText;
+
+            // 여기서 로딩 연출함. 추가적으로 로직이 필요하면 사이에 넣으면 됨.
+            await firebaseLinkManager.ConnectToFirebaseAsync();
+
+            //loadingProgressBar.UpdateBar(50f, 0f, 100f);
+
+            loadingProgressBar.UpdateBar(100f, 0f, 100f);
+
+            await UniTask.Delay(1000);
+
+            menuController.ChangeToMainMenu();
+        }
+
+        public void ChangeNicknameText()
+        {
+            userNickname.SetText($"{FirebaseLinkManager.CurrentPlayerData.Nickname}");
+        }
 
         public void OnMMEvent(MMStateChangeEvent<MenuController.MenuState> eventType)
         {
@@ -33,47 +63,68 @@ namespace ENZEUN.Runtime
             Debug.Log($"MenuHandler: OnMMEvent: NewState : {eventType.NewState} / PrevState : {eventType.PreviousState}");
 #endif
 
-            switch (eventType.PreviousState)
-            {
-                case MenuController.MenuState.Title:
-                    gameStartBtnFb.SetDirection(MMFeedbacks.Directions.BottomToTop);
-                    gameStartBtnFb.PlayFeedbacks();
-                    break;
-
-                case MenuController.MenuState.MainMenu:
-                    mainMenuFb.SetDirection(MMFeedbacks.Directions.BottomToTop);
-                    mainMenuFb.PlayFeedbacks();
-                    break;
-
-                case MenuController.MenuState.SetNickname:
-                    nicknameMenuFb.SetDirection(MMFeedbacks.Directions.BottomToTop);
-                    nicknameMenuFb.PlayFeedbacks();
-                    break;
-
-            }
-
             switch (eventType.NewState)
             {
-                case MenuController.MenuState.Waiting:
+                case MenuController.MenuState.Title:
+                    gameStartBtnFb.PlayFeedbacksTopToBottom();
                     break;
 
-                case MenuController.MenuState.Title:
-                    gameStartBtnFb.SetDirection(MMFeedbacks.Directions.TopToBottom);
-                    gameStartBtnFb.PlayFeedbacks();
+                case MenuController.MenuState.ConnectToFirebase:
+                    LoadingPannelFb.PlayFeedbacksTopToBottom();
+                    InitialSettings().Forget();
                     break;
 
                 case MenuController.MenuState.MainMenu:
-                    mainMenuFb.SetDirection(MMFeedbacks.Directions.TopToBottom);
-                    mainMenuFb.PlayFeedbacks();
+                    if (!FirebaseLinkManager.playerHasNickname)
+                    {
+                        menuController.ChangeToNicknameMenu();
+                        break;
+                    }
+                    mainMenuFb.PlayFeedbacksTopToBottom();
                     break;
 
                 case MenuController.MenuState.SetNickname:
                     nicknameMenuHandler.RefreshThisMenu();
-                    nicknameMenuFb.SetDirection(MMFeedbacks.Directions.TopToBottom);
-                    nicknameMenuFb.PlayFeedbacks();
+                    nicknameMenuFb.PlayFeedbacksTopToBottom();
+                    break;
+
+                case MenuController.MenuState.ConnectToPhotonServer:
+                    connectPhotonFb.PlayFeedbacksTopToBottom();
+                    break;
+
+                case MenuController.MenuState.InLobby:
+                    roomMenuFb.PlayFeedbacksTopToBottom();
+                    break;
+            }
+
+            switch (eventType.PreviousState)
+            {
+                case MenuController.MenuState.Title:
+                    gameStartBtnFb.PlayFeedbacksBottomToTop();
+                    break;
+
+                case MenuController.MenuState.ConnectToFirebase:
+                    LoadingPannelFb.PlayFeedbacksBottomToTop();
+                    break;
+
+                case MenuController.MenuState.MainMenu:
+                    mainMenuFb.PlayFeedbacksBottomToTop();
+                    break;
+
+                case MenuController.MenuState.SetNickname:
+                    nicknameMenuFb.PlayFeedbacksBottomToTop();
+                    break;
+
+                case MenuController.MenuState.ConnectToPhotonServer:
+                    connectPhotonFb.PlayFeedbacksBottomToTop();
+                    break;
+
+                case MenuController.MenuState.InLobby:
+                    roomMenuFb.PlayFeedbacksBottomToTop();
                     break;
 
             }
+
         }
     }
 }

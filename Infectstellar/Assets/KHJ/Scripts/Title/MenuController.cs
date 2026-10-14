@@ -10,21 +10,24 @@ namespace ENZEUN.Runtime
     {
         public enum MenuState
         {
-            Waiting,
+            Initailize,
             Title,
-            MainMenu,
+            ConnectToFirebase,
             SetNickname,
-            Options,
-            Ranking,
-            PlayOnline,
-            CreateRoom,
+            MainMenu,
+            ConnectToPhotonServer,
+            InLobby,
             PlayOffline,
-            GameStart,
+            Ranking,
+            Options,
+            InRoom,
         }
 
-        [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Waiting;
+        [ShowInInspector, ReadOnly] public MenuState CurrentState => menuFSM?.CurrentState ?? MenuState.Initailize;
 
         private MMStateMachine<MenuState> menuFSM;
+
+        private bool subscribedJoinLobby = false;
 
         private void Awake()
         {
@@ -33,32 +36,60 @@ namespace ENZEUN.Runtime
 
         private void OnEnable()
         {
-            menuFSM.ChangeState(MenuState.Waiting);
-
-            FirebaseLinkManager.Instance.IsNewUserSetNickname += ChangeToNicknameMenu;
+            menuFSM.ChangeState(MenuState.Initailize);
         }
 
         private void OnDisable()
         {
-            FirebaseLinkManager.Instance.IsNewUserSetNickname -= ChangeToNicknameMenu;
-
+            if (PhotonLinkManager.Instance != null)
+            {
+                if (subscribedJoinLobby)
+                {
+                    PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
+                    subscribedJoinLobby = false;
+                }
+            }
         }
 
+        private void Start()
+        {
+            ChangeToTitleMenu();
+        }
 
-        private void ChangeToNicknameMenu()
+        public void ChangeToTitleMenu()
+        {
+            menuFSM.ChangeState(MenuState.Title);
+        }
+
+        public void ChangeToNicknameMenu()
         {
             menuFSM.ChangeState(MenuState.SetNickname);
         }
 
         public void ChangeToMainMenu()
         {
-            menuFSM.ChangeState(MenuState.SetNickname);
+            menuFSM.ChangeState(MenuState.MainMenu);
+        }
+
+        public void ChangeToRoomSearchMenu()
+        {
+            menuFSM.ChangeState(MenuState.InLobby);
+
+        }
+
+        public void ChangeToInRoomMenu()
+        {
+            menuFSM.ChangeState(MenuState.InRoom);
+
         }
 
 
+        /// <summary>
+        /// Title 상태에서 GameStart 버튼 클릭 시
+        /// </summary>
         public void OnGameStartBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.MainMenu);
+            menuFSM.ChangeState(MenuState.ConnectToFirebase);
         }
 
         public void OnSetNicknameBtnClicked()
@@ -68,12 +99,27 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOnlineBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Title);
+            if (PhotonLinkManager.Instance != null)
+            {
+                PhotonLinkManager.Instance.ConnectToPhotonServer();
+
+                if (!subscribedJoinLobby)
+                {
+                    PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
+                    subscribedJoinLobby = true;
+                }
+            }
+            else
+            {
+                Debug.Log("서버에 연결할 수 없습니다");
+            }
+            menuFSM.ChangeState(MenuState.ConnectToPhotonServer);
         }
 
         public void OnPlayOfflineBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Title);
+            //더미
+            menuFSM.ChangeState(MenuState.PlayOffline);
         }
 
         public void OnRankingBtnClicked()
@@ -84,6 +130,16 @@ namespace ENZEUN.Runtime
         public void OnOptionsBtnClicked()
         {
             menuFSM.ChangeState(MenuState.Options);
+        }
+
+        public void OnCreateRoomClicked()
+        {
+
+        }
+
+        public void OnJoinRoomClicked()
+        {
+
         }
 
         public void OnQuitBtnClicked()
