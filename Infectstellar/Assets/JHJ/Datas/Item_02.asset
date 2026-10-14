@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
   id: 2
   itemName: Gemstone(Green)
-  price: 10
-  attack: 5
-  weight: 3
+  price: 45
+  attack: 25
+  weight: 8
