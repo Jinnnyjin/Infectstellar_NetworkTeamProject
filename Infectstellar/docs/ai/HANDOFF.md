@@ -1,12 +1,49 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-13 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-14 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: PUN2 플레이어 동기화 구현
+## 현재 상태: 플레이어 아이템 RPC
+
+- Grab·Drop·Shoot 및 대응 Stop을 기존 PlayerNetworkSync/PlayerSnapshotPlayback의 시간순 이벤트에 연결했다. 사용자 추가 Grab/참조/공개 Try 메서드를 완성했으며 손전등·HandsUp·기존 ItemNetwork API와 사용자 자산 변경은 보존했다.
+- 로컬 Try는 즉시 실행 후 이벤트를 송신하고, 원격 Try 오버로드는 확정 아이템 ViewID·월드 자세·힘을 적용한다. 초기 소지 아이템 복원, 사망 시 Drop, 해당 해제 순서에 맞는 최종 Stop이 포함된다.
+- 독립 리뷰의 발사 도중 입장 Stop 누락 경로를 수정하고 재검토했다. 최종 컴파일 결과는 검증 후 계획에 기록한다. Play/네트워크 접속/빌드는 실행하지 않는다.
+- 수동 연결: 실제 Resources/PhotonPrefabs/Player의 PlayerGrabber.releasePoint가 비어 있다. socket은 기존 HeadSocket을 유지한다. TryShoot는 새 키 바인딩 없이 호출 API로 제공한다. 씬 배치 Player (1)은 기존 PUN 생성 초기화 계약을 만족하지 않는다. 두 명의 동시 잡기 승인 정책과 이미 정지한 월드 아이템 전체의 초기 동기화는 별도 범위다.
+- 상세 구현 순서·검증·다음 확인은 [아이템 RPC 계획](plans/2026-10-14-player-item-rpc.md)을 따른다.
+
+## 현재 상태: 플레이어 네트워크 파일 통합
+
+- 사용자 요청에 따라 6개 내부 클래스와 .meta를 정리하고 Playback(버퍼·시계·이벤트), NetworkSync(전송 예약), SyncRateManager(등록·거리 등급)에 private 메서드·필드로 통합했다. 기존 컴포넌트 4개, 순수 보간/외삽 계산, 공통 상수 파일만 유지한다. 한국어 주석·기능별 region·Inspector 설정·공개 API/RPC·전송 형식·기존 GUID를 유지했다.
+- 독립 리뷰에서 확정된 회귀 없음. 00:32:49 KST 최종 소스 추출 코어 6그룹·12,810 conditions/1,500프레임 기존 구현 비교 통과. 00:32:58 KST 전체 재컴파일은 동일 SDK 오류 24종으로 실패했다. 실제 컴포넌트 연결/Inspector/접속/Play/빌드는 미검증이다. 범위·근거·다음 확인은 [파일 통합 계획](plans/2026-10-14-player-network-consolidation.md)에 둔다.
+
+## 이전 상태: 플레이어 네트워크 책임 분리·학습용 주석
+
+- 승인한 계획대로 Network 폴더에 버퍼/시계/보간·외삽/이벤트/전송 일정/등록/거리 등급의 internal 클래스 7개를 추가했다. 기존 4개 MonoBehaviour와 Snapshot/Event를 정리하고 변수·매개변수·복잡한 단계의 한국어 주석과 Inspector Header를 추가했다. 기존 API·전송 순서·설정·씬/프리팹/기존 GUID와 사용자 변경은 유지했다.
+- 독립 리뷰에서 확정된 회귀를 찾지 못했다. 23:51:24 KST 실제 Unity/PUN 참조의 임시 코어 검사 6그룹·12,810 conditions와 1,500프레임 기존/분리 결과 비교가 통과했다. Registry와 네 컴포넌트의 실제 연결은 이 검사에 포함하지 않는다.
+- 23:50:04 KST 전체 Unity 재컴파일은 기존 SDK 참조 오류 24종으로 실패했으며 추가 진단 없음. 실제 의존 DLL 부재로 Registry/MonoBehaviour까지의 제한 컴파일도 불가했다. Play/접속/빌드/Inspector 로딩은 미검증이다. 상세 근거와 다음 확인은 [책임 분리 계획](plans/2026-10-13-player-network-responsibilities.md)에 둔다.
+
+## 현재 상태: 플레이어 네트워크 정책값 Inspector 노출
+
+- 네트워크 관련 5개 기존 스크립트를 수정하고 PlayerNetworkConstants.cs/.meta를 추가했다. 조절값 16개를 SerializeField로 노출하고 기존 기본값·스냅샷/RPC 형식·기존 씬/프리팹/GUID/참조를 유지했다. 기존 HANDOFF의 사용자 변경도 보존했다.
+- 독립 최종 리뷰·하네스 구조 검사와 보호 파일 해시 확인을 완료했다. 22:57:56 KST 실제 Unity 재컴파일은 변경 전과 같은 외부 SDK 타입 미정의 24건으로 실패했으며 새 진단은 없었다. Constants/Snapshot/기존 PlayerState만 실제 Unity/PUN DLL로 제한 컴파일 성공; MonoBehaviour 4개의 전체 컴파일·새 필드 Inspector 로딩·접속 동작은 미검증이다.
+- 조절 위치·적용 시점과 남은 검증은 [정책값 계획](plans/2026-10-13-player-network-settings.md)을 따른다. 기존 외부 의존성을 사용자가 복구한 환경에서 전체 재컴파일 및 네트워크 Player 프리팹/씬의 Inspector 기본값을 확인한다. 이번 작업에서는 설치·Play·빌드·커밋·푸시를 수행하지 않았다.
+
+## 현재 상태: PlayerSyncRateManager 씬 싱글톤
+
+- Manager의 Instance 등록·중복 비활성화·소유자만 정리/참조 해제를 추가하고, NetworkSync는 관리자 탐색 대신 Initialize(PlayerSyncRateManager.Instance)를 사용한다. 두 기존 스크립트만 변경했으며 거리별 전송·적응형 보간·스포너 Inspector·씬·프리팹은 유지한다.
+- 사용자 학습 파일의 추가/삭제 작업을 보존한다. 이전 _PlayerSnapshotPlayback 미정의 오류는 과거 검사 결과이며 현재 상태로 단정하지 않는다. 이번 최종 검증과 재개 조건은 씬 싱글톤 계획 (`docs/ai/plans/2026-10-13-player-manager-singleton.md`, 현재 파일 없음)을 따른다.
+- 최종 전체 Unity 컴파일(20:00:48 KST)과 독립 리뷰, 격리 수명 검사 4개 시나리오/18 assertions를 통과했다. 20:07:06 KST에 임시 객체·싱글톤/PUN 전역값을 복원하고 PlayerScene dirty=false/roots6/stopped를 확인했다. Play/MPP/빌드는 수행하지 않았다.
+
+## 이전 상태: PUN2 코드 가독성 리팩토링
+
+- 사용자 선택대로 거리별 전송·적응형 보간을 유지하고 NetworkSync/Playback/Manager/Snapshot 네 파일의 책임별 메서드와 계산 표현을 정리했다. 새 스크립트·컴포넌트·자산은 없으며 라이트 지연이나 실제 송신 빈도를 변경한 작업은 아니다.
+- 사용자 학습 파일 `_PlayerSnapshotPlayback.cs`와 설정 변경·기존 주석을 보존했다. 실제 Unity 컴파일은 해당 학습 파일의 ProcessEvents 미정의(CS0103)로 실패했으며 이번 변경 4파일의 오류는 보고되지 않았다. 아래 과거 MPP 결과를 새 수정본의 전체 컴파일·Play 통과로 사용하지 않는다.
+- 독립 소스 리뷰, 전송 계약과 보호 파일 해시 확인을 완료했다. 기준/최종 Playback을 별도로 동적 컴파일하고 격리 프리팹 비교 7개 시나리오·30,461 assertions와 기대값 검사 9건을 통과했다. 기존 도메인 의존의 제한 검증이며 새 수정본의 MPP/Play는 실행하지 않았다. 상세 결과와 남은 전체 컴파일 확인은 네트워크 리팩토링 계획 (`docs/ai/plans/2026-10-13-player-network-refactor.md`, 현재 파일 없음)을 따른다.
+
+## 이전 상태: PUN2 플레이어 동기화 구현
 
 - Resources/PhotonPrefabs/Player에 PlayerNetworkSync/PlayerSnapshotPlayback/PhotonView를 연결했다. 로컬 제어만 입력·카메라·HFSM/이동을 수행하며 원격은 RPC/스냅샷을 Photon 시간축에서 재생한다. 초기 전체 상태, 순서/생사 버전, 30/15/10Hz 거리별 전송과 고정/적응형 버퍼 비교를 구현했다.
 - PlayerScene은 관리자 하나와 기존 로그인 씬 인스턴스의 스포너를 사용한다. 사용자 선택으로 단독 Player를 추가하지 않고 PlayerSpawnPoints를 스폰 중심으로 사용한다. 방 입장 전에는 플레이어가 없다. 기존 로그인/SJT Player 원본은 보존했다.
-- 독립 리뷰와 격리 Editor 상태 로직 7개 시나리오/1,822개 assertion을 통과했다. 최종 컴파일/자산 참조 검사 결과, 추가·수정 파일과 실제 MPP 실행 검증은 [PUN2 동기화 계획](plans/2026-10-13-player-pun2-sync.md)에 둔다. 추가 실행 검증 결과는 아래를 따르며 충돌·점프·커서 삭제 관찰·지연/손실·Profiler 비교·빌드는 남아 있다.
+- 독립 리뷰와 격리 Editor 상태 로직 7개 시나리오/1,822개 assertion을 통과했다. 최종 컴파일/자산 참조 검사 결과, 추가·수정 파일과 실제 MPP 실행 검증은 PUN2 동기화 계획 (`docs/ai/plans/2026-10-13-player-pun2-sync.md`, 현재 파일 없음)에 둔다. 추가 실행 검증 결과는 아래를 따르며 충돌·점프·커서 삭제 관찰·지연/손실·Profiler 비교·빌드는 남아 있다.
 - 초기 구현 당시 미저장 Editor 씬은 보호했다. 추가 실행 검증에서는 최신 저장된 씬을 사용하고 종료 시 미저장 없음도 확인했다. IDamageable.cs와 사용자 학습 파일의 동시 변경을 보존한다. 게임 저장소 커밋/푸시는 하지 않았다.
 
 사용자 추가 실행 요청으로 MPP 메인+추가2의 실제 검증을 수행했다. 추가 Editor의 옛 메모리 씬(manager/spawner0)을 미저장 없음 확인 후 최신 PlayerScene 재로드로 해결했다. 3명/고유 슬롯/로컬만 입력·카메라, W/Ctrl/마우스 동기화, API 손전등·HandsUp·생사, 재입장 초기 상태, 전송 등급/버퍼 옵션을 확인했다. 15Hz 실측14.96/10Hz10.00이나 30Hz 설정은23.30Hz라 목표 미달 원인 조사가 남는다. 최종 Play 정지·씬미저장없음·기본 거리/옵션 복구, 세 클라이언트 새 Console 오류0을 확인했다. 실행 중 원본 Playback 변경은 필드 주석32개 추가뿐이며 제거한 파일의 SHA가 시작본과 같고 최신 컴파일도 통과했다. 상세 근거/추가 미검증은 위 계획에 기록한다.
@@ -14,7 +51,7 @@
 ## 현재 상태: 손전등 제어와 R키 연결
 
 - FlashLightSetter를 FlashlightController로 이름 변경하고 기존 GUID를 보존했다. 최초 꺼짐, R키 신규 입력 반전, Inspector의 두 표면 색, 사망 즉시 끄기·입력 차단, 부활 꺼짐 유지, 일반 재활성화 상태 유지와 변경 이벤트를 구현했다. Light.enabled와 모델의 헬멧 슬롯 2에 MaterialPropertyBlock을 사용한다.
-- 독립 리뷰·최종 Unity 컴파일·타입 반영 확인·하네스 구조 검사를 통과했다. 새 컴파일 오류 0건이며 기존 카메라 스크립트 경고 2건이다. 프리팹·씬·Material·Input Actions는 수정하지 않았다. Player 루트에 컴포넌트를 추가하고 ViewPivot/Flashlight의 Light, Player_TPose_Unrigged의 SkinnedMeshRenderer, 슬롯 2와 두 색을 직접 연결해야 한다. Inspector 연결·Play는 미검증이며 상세 결과는 [손전등 제어 계획](plans/2026-10-12-flashlight-controller.md)에 둔다.
+- 독립 리뷰·최종 Unity 컴파일·타입 반영 확인·하네스 구조 검사를 통과했다. 새 컴파일 오류 0건이며 기존 카메라 스크립트 경고 2건이다. 프리팹·씬·Material·Input Actions는 수정하지 않았다. Player 루트에 컴포넌트를 추가하고 ViewPivot/Flashlight의 Light, Player_TPose_Unrigged의 SkinnedMeshRenderer, 슬롯 2와 두 색을 직접 연결해야 한다. Inspector 연결·Play는 미검증이며 상세 결과는 손전등 제어 계획 (`docs/ai/plans/2026-10-12-flashlight-controller.md`, 현재 파일 없음)에 둔다.
 
 ## 현재 상태: HandsUp 호출 API 추가
 
@@ -24,18 +61,18 @@
 ## 이전 작업: PlayerScene 기본 손전등
 
 - Cookie 없는 흰색 기본 Spot Light와 약한 환경광·어두운 카메라 배경을 씬에 적용했다. 광원의 로컬 Z 0.2 이동으로 카메라 앞 Player 표면의 과한 근접 반사를 피한다. Player 프리팹·입력·모델·기존 사용자 변경은 보존했다.
-- 독립 리뷰와 최종 저장본 Play 검증 36개 assertions를 통과했다. 기존 Player 모델의 화면 하단 가림, 10~15m 벽/물체 식별과 Mobile/성능은 남은 확인이다. 단계·완료 근거·로그/병행 변경의 한계는 [손전등 계획](plans/2026-10-12-player-flashlight.md)에 둔다.
+- 독립 리뷰와 최종 저장본 Play 검증 36개 assertions를 통과했다. 기존 Player 모델의 화면 하단 가림, 10~15m 벽/물체 식별과 Mobile/성능은 남은 확인이다. 단계·완료 근거·로그/병행 변경의 한계는 손전등 계획 (`docs/ai/plans/2026-10-12-player-flashlight.md`, 현재 파일 없음)에 둔다.
 
 ## 현재 상태: Animator 직접 관리 전환
 
 - PlayerAnimationController의 런타임 Override 생성·Controller 복원과 클립 대체를 제거하고 Animator에 연결된 Controller를 그대로 사용한다. 상태별 해시·HFSM 직접 호출·동일 상태 재시작 방지·0.15초 완화를 유지한다.
 - 공유 PlayerController.controller의 8개 상태/3개 방향 Blend Tree에 기존 실제 클립 17개를 직접 연결했다. Settings에는 전환 시간만 남는다. 이후 클립 변경은 Animator에서 한다. 기존 GUID·프리팹/씬/백업·실제 클립 파일을 보존했다.
-- 독립 리뷰·최종 Unity 컴파일·직접 Motion 연결 검사 170개 조건을 통과했다. 새 오류 0건이며 대상 밖 기존 경고 6건이다. 단계·결과·Play 미검증 항목은 [Animator 직접 관리 계획](plans/2026-10-12-player-animator-direct.md)을 따른다. 기존 Walk 시작 부분 반복 증상의 해결은 아직 확인하지 않았다.
+- 독립 리뷰·최종 Unity 컴파일·직접 Motion 연결 검사 170개 조건을 통과했다. 새 오류 0건이며 대상 밖 기존 경고 6건이다. 단계·결과·Play 미검증 항목은 Animator 직접 관리 계획 (`docs/ai/plans/2026-10-12-player-animator-direct.md`, 현재 파일 없음)을 따른다. 기존 Walk 시작 부분 반복 증상의 해결은 아직 확인하지 않았다.
 
 ## 현재 상태: 웅크리기 카메라 높이 연동 완료
 
 - Motor가 실제 캡슐 자세 변경 후 Look에 줄어든 높이를 전달하고, Look이 기존 ViewPivot을 DOTween으로 양방향 0.2초 이동한다. HeadLookPoint 연결과 기존 사용자 캡슐/씬 Override·비율 0.65를 유지한다. Controller와 백업은 변경하지 않았다.
-- 독립 검토·최종 Unity 컴파일·읽기 전용 프리팹/씬 참조 검증을 통과했다. 새 컴파일 오류 0, 기존 파일 경고 6이다. 실제 Play의 전환 느낌·머리 자세는 사용자가 확인한다. 상세 범위·결과·수동 확인은 [카메라 높이 계획](plans/2026-10-12-player-crouch-camera.md)을 따른다.
+- 독립 검토·최종 Unity 컴파일·읽기 전용 프리팹/씬 참조 검증을 통과했다. 새 컴파일 오류 0, 기존 파일 경고 6이다. 실제 Play의 전환 느낌·머리 자세는 사용자가 확인한다. 상세 범위·결과·수동 확인은 카메라 높이 계획 (`docs/ai/plans/2026-10-12-player-crouch-camera.md`, 현재 파일 없음)을 따른다.
 
 ## 현재 상태: _Health 학습 원본 단순화
 

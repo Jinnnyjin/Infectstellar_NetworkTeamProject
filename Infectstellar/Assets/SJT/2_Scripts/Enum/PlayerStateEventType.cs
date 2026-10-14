@@ -2,6 +2,11 @@
 public enum PlayerStateEventType
 {
     Flashlight,
+    Grab,
     HandsUp,
-    LifeState
+    LifeState,
+    Drop,
+    Shoot,
+    ItemStop,
+    TakeDamage
 }

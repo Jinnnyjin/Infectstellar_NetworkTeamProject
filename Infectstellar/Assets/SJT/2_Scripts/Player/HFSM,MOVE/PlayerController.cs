@@ -17,6 +17,7 @@ public sealed class PlayerController : MonoBehaviour
     private PlayerInputReader inputReader;
     private PlayerLook playerLook;
     private FlashlightController flashlightController;
+    private PlayerGrabber playerGrabber;
     private bool isInitialized;
     private bool isLocalControlActive;
     private PlayerNetworkSync networkSync;
@@ -45,6 +46,7 @@ public sealed class PlayerController : MonoBehaviour
         inputReader = GetComponent<PlayerInputReader>();
         playerLook = GetComponent<PlayerLook>();
         flashlightController = GetComponent<FlashlightController>();
+        playerGrabber = GetComponent<PlayerGrabber>();
         networkSync = GetComponent<PlayerNetworkSync>();
         if (movementSettings == null || stateMachine == null || motor == null || inputReader == null || playerLook == null)
         {
@@ -87,6 +89,13 @@ public sealed class PlayerController : MonoBehaviour
         if (animationController != null)
         {
             animationController.SetMoveDirection(Vector2.zero);
+        }
+
+        if (playerGrabber != null)
+        {
+            playerGrabber.GrabRequested += animationController.SetHandsUp;
+            playerGrabber.DropRequested += animationController.SetHandsUp;
+            playerGrabber.ShootRequested += animationController.SetHandsUp;
         }
     }
 
@@ -184,9 +193,16 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void HandlePlayerStateChanged(PlayerState previousState, PlayerState currentState)
     {
-        if (currentState == PlayerState.Dead && flashlightController != null)
+        if (currentState == PlayerState.Dead)
         {
-            flashlightController.SetFlashlightEnabled(false);
+            if (flashlightController != null)
+            {
+                flashlightController.SetFlashlightEnabled(false);
+            }
+            if (playerGrabber != null)
+            {
+                playerGrabber.TryDrop();
+            }
         }
     }
 }
