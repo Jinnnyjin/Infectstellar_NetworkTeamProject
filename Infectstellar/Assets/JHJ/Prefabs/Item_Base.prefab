@@ -77,7 +77,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Item
   data: {fileID: 0}
-  throwForce: 10
+  throwForce: 30
 --- !u!114 &7942977940420694653
 MonoBehaviour:
   m_ObjectHideFlags: 0
