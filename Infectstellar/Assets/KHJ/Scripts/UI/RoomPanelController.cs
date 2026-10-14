@@ -29,6 +29,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (isSubscribed)
         {
             leaveRoomBtn.onClick.RemoveListener(LeaveRoomBtnClicked);
+
+            isSubscribed = false;
         }
     }
 
@@ -37,6 +39,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (!isSubscribed)
         {
             leaveRoomBtn.onClick.AddListener(LeaveRoomBtnClicked);
+
+            isSubscribed = true;
         }
     }
 
