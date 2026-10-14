@@ -209,13 +209,6 @@ public class TempPlayerNetworkSpawner : MonoBehaviourPunCallbacks // [임시]
 
             if (!player.TryGetComponent(out TempNetworkPlayer _))
                 player.AddComponent<TempNetworkPlayer>();
-
-            // F 던지기 입력 (프리팹에 이미 붙어 있으면 그대로 사용)
-            if (!player.TryGetComponent(out TempThrowInput _))
-            {
-                TempThrowInput throwInput = player.AddComponent<TempThrowInput>();
-                throwInput.SetAimPivot(player.transform.Find(viewPivotName));
-            }
         }
     }
 }
