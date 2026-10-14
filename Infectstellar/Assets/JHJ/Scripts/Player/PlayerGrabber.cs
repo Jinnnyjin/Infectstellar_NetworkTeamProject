@@ -1,4 +1,5 @@
 using Photon.Pun;
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerInteractor))]
@@ -15,6 +16,10 @@ public class PlayerGrabber : MonoBehaviour
     private Item heldItem;
     private int ownerActorNumber = -1;
     private bool isLocal = true;
+
+    public event Action GrabRequested;
+    public event Action DropRequested;
+    public event Action ShootRequested;
 
     private void Awake()
     {
@@ -169,6 +174,7 @@ public class PlayerGrabber : MonoBehaviour
             return false;
 
         target.OnGrab();
+        GrabRequested?.Invoke();
         return true;
     }
 
@@ -185,6 +191,7 @@ public class PlayerGrabber : MonoBehaviour
             return false;
 
         heldItem.Drop(pos, rot);
+        DropRequested?.Invoke();
         return true;
     }
 
@@ -211,6 +218,7 @@ public class PlayerGrabber : MonoBehaviour
 
         Vector3 direction = releasePoint.forward;
         heldItem.Shoot(pos, rot, direction);
+        ShootRequested?.Invoke();
 
         Debug.Log($"[PlayerGrabber] Shoot 요청: {heldItem.ItemData.ItemName}, 시작 {pos:F3}, 방향 {direction:F3}", this);
         return true;
