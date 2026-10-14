@@ -73,8 +73,10 @@ namespace ENZEUN.Runtime
 
             joinRoomBtn?.onClick.RemoveListener(JoinRoomBtnClicked);
             quickMatchBtn?.onClick.RemoveListener(QuickMatchBtnClicked);
+            createRoomBtn?.onClick.RemoveListener(CreateRoomBtnClicked);
 
             createBtn?.onClick.RemoveListener(CreateBtnClicked);
+            cancelBtn?.onClick.RemoveListener(CancelBtnClicked);
             roomnameEntered?.onValueChanged.RemoveListener(OnRoomnameTextChanged);
 
             isInitialized = false;
