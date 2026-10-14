@@ -1,8 +1,8 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using Photon.Pun;
 using System.Collections.Generic;
-using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 
 namespace ENZEUN.Runtime
@@ -11,8 +11,9 @@ namespace ENZEUN.Runtime
     {
         [SerializeField] private TMP_InputField chatInputField;
         [SerializeField] private TextMeshProUGUI chatLogText; // 채팅 기록을 보여줄 UI
+        [SerializeField] private ScrollRect chatScrollRect;
 
-        private const int MaxChatLines = 15; // 최대 채팅 줄 수
+        private const int MaxChatLines = 40; // 최대 채팅 줄 수
 
 
         private void Start()
@@ -49,6 +50,12 @@ namespace ENZEUN.Runtime
             chatInputField.text = "";
 
             await UniTask.DelayFrame(3);
+
+            if (chatScrollRect != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                chatScrollRect.verticalNormalizedPosition = 0f;
+            }
 
             chatInputField.ActivateInputField();
 
