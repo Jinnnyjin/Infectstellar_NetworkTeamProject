@@ -3,7 +3,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
 using System;
-using TMPro;
+using ExitGames.Client.Photon;
 
 
 namespace ENZEUN.Runtime
@@ -40,6 +40,10 @@ namespace ENZEUN.Runtime
         // 방 목록 갱신 시 호출할 수 있는 이벤트 (UI 연동용)
         public Action<List<RoomInfo>> OnRoomListUpdated;
         public Action OnJoinedLobbyCallback;
+        public Action OnJoinedRoomCallback;
+
+        // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
+        public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
 
         public void ConnectToPhotonServer()
         {
@@ -51,13 +55,21 @@ namespace ENZEUN.Runtime
 
         public override void OnConnectedToMaster()
         {
+#if UNITY_EDITOR
             Debug.Log("Connected to Master Server");
+#endif
+            PhotonNetwork.NickName = FirebaseLinkManager.CurrentPlayerData.Nickname;
+#if UNITY_EDITOR
+            Debug.Log("NickName Has Uploaded to Photon Server");
+#endif
             PhotonNetwork.JoinLobby();
         }
 
         public override void OnJoinedLobby()
         {
+#if UNITY_EDITOR
             Debug.Log("Joined Lobby");
+#endif
             photonRoomListHandler.Initialize();
             OnJoinedLobbyCallback?.Invoke();
         }
@@ -110,6 +122,7 @@ namespace ENZEUN.Runtime
 
         public override void OnJoinedRoom()
         {
+            OnJoinedRoomCallback?.Invoke();
 
 #if UNITY_EDITOR
             Debug.Log($"방 입장 성공! 방 이름: {PhotonNetwork.CurrentRoom.Name} (현재 인원: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers})");
@@ -120,7 +133,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError($"방 생성 실패: {message}");
+                ErrorPanelManager.Instance.ShowError($"Failed to create a room: {message}");
             }
 #if UNITY_EDITOR
             Debug.LogError($"방 생성 실패: {message} (코드: {returnCode})");
@@ -131,7 +144,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError($"방 입장 실패: {message}");
+                ErrorPanelManager.Instance.ShowError($"Failed to enter the room: {message}");
             }
 #if UNITY_EDITOR
             Debug.LogError($"방 입장 실패: {message} (코드: {returnCode})");
@@ -142,7 +155,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError("입장할 수 있는 랜덤 방이 없습니다.");
+                ErrorPanelManager.Instance.ShowError("There are no random rooms available to join..");
             }
 #if UNITY_EDITOR
             Debug.Log("입장할 수 있는 랜덤 방이 없습니다.");
@@ -179,9 +192,37 @@ namespace ENZEUN.Runtime
             OnRoomListUpdated?.Invoke(CachedRoomList);
         }
 
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey("IsReady"))
+            {
+                bool newReady = (bool)changedProps["IsReady"];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
+
+                // 준비 상태 변경 이벤트 발행
+                OnReadyStateChanged?.Invoke(targetPlayer, newReady);
+            }
+
+        }
+
         public override void OnDisconnected(DisconnectCause cause)
         {
             Debug.Log($"서버 연결 끊김: {cause}");
+        }
+
+        #endregion
+
+        #region Player Custom Property Edit Methods
+        /// <summary>
+        /// 내 준비 상태를 변경하고 서버에 동기화
+        /// </summary>
+        public void SetMyReadyState(bool isReady)
+        {
+            Hashtable props = new Hashtable() { { "IsReady", isReady } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
         #endregion

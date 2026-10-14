@@ -6,7 +6,6 @@ using Firebase.Database;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -24,7 +23,7 @@ namespace ENZEUN.Runtime
     /// <summary>
     /// Firebase 랭킹에 저장할 데이터 목록
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class RankingData
     {
         public string nickname;
@@ -186,13 +185,8 @@ namespace ENZEUN.Runtime
             // 로컬 데이터도 동기화
             CurrentPlayerData.Nickname = newNickname;
 
-            if (ErrorPanelManager.Instance != null)
-            {
-                ErrorPanelManager.Instance.ShowError($"닉네임 저장 완료: {newNickname}");
-            }
-
 #if UNITY_EDITOR
-            Debug.Log($"닉네임 저장 완료: {newNickname}");
+            Debug.Log($"닉네임 저장 성공: {newNickname}");
 #endif
 
             playerHasNickname = true;
@@ -223,7 +217,7 @@ namespace ENZEUN.Runtime
                     {
                         CurrentPlayerData.Nickname = loadedNickname;
 
-                        Debug.Log($"닉네임 불러오기 성공: {loadedNickname}");
+                        Debug.Log($"Nickname Loaded: {loadedNickname}");
 
                         playerHasNickname = true;
 
@@ -233,14 +227,14 @@ namespace ENZEUN.Runtime
                     }
                 }
 
-                Debug.Log("등록된 닉네임이 없거나 비어있습니다.");
+                Debug.Log("There is No Nickname.");
                 return false;
             }
             catch (System.Exception ex)
             {
                 if (ErrorPanelManager.Instance != null)
                 {
-                    ErrorPanelManager.Instance.ShowError($"닉네임을 불러오는 중 에러 발생: {ex.Message}");
+                    ErrorPanelManager.Instance.ShowError($"An error occurred while retrieving the development nickname: {ex.Message}");
                 }
                 Debug.LogError($"닉네임을 불러오는 중 에러 발생: {ex.Message}");
                 return false;
@@ -307,7 +301,7 @@ namespace ENZEUN.Runtime
                 {
                     if (ErrorPanelManager.Instance != null)
                     {
-                        ErrorPanelManager.Instance.ShowError("등록된 랭킹 데이터가 없습니다.");
+                        ErrorPanelManager.Instance.ShowError("There is no registered ranking data..");
                     }
                     Debug.Log("등록된 랭킹 데이터가 없습니다.");
                 }
@@ -317,7 +311,7 @@ namespace ENZEUN.Runtime
             {
                 if (ErrorPanelManager.Instance != null)
                 {
-                    ErrorPanelManager.Instance.ShowError($"랭킹을 불러오는 중 에러 발생: {ex.Message}");
+                    ErrorPanelManager.Instance.ShowError($"An error occurred while loading the rankings: {ex.Message}");
                 }
                 Debug.LogError($"랭킹을 불러오는 중 에러 발생: {ex.Message}");
             }
@@ -357,6 +351,7 @@ namespace ENZEUN.Runtime
 
             catch (System.Exception ex)
             {
+                ErrorPanelManager.Instance.ShowError($"An error occurred while compiling the rankings: {ex.Message}");
                 Debug.LogError($"랭킹 정리 중 에러 발생: {ex.Message}");
             }
         }
