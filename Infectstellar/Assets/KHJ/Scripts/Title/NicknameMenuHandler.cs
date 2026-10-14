@@ -91,7 +91,7 @@ namespace ENZEUN.Runtime
             {
                 if (ErrorPanelManager.Instance != null)
                 {
-                    ErrorPanelManager.Instance.ShowError("닉네임 변경에 성공했습니다.");
+                    ErrorPanelManager.Instance.ShowError("Your nickname has been successfully changed.");
                 }
 #if UNITY_EDITOR
                 Debug.Log("닉네임 변경에 성공했습니다.");
@@ -102,7 +102,7 @@ namespace ENZEUN.Runtime
             {
                 if (ErrorPanelManager.Instance != null)
                 {
-                    ErrorPanelManager.Instance.ShowError("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");
+                    ErrorPanelManager.Instance.ShowError("There was a problem changing your username. Please try again.");
                 }
 #if UNITY_EDITOR
                 Debug.Log("닉네임 변경에 문제가 생겼습니다. 다시 시도하세요");

@@ -117,19 +117,19 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOfflineBtnClicked()
         {
-            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            ErrorPanelManager.Instance?.ShowError("Under development");
             //menuFSM.ChangeState(MenuState.PlayOffline);
         }
 
         public void OnRankingBtnClicked()
         {
-            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            ErrorPanelManager.Instance?.ShowError("Under development");
             //menuFSM.ChangeState(MenuState.Ranking);
         }
 
         public void OnOptionsBtnClicked()
         {
-            ErrorPanelManager.Instance?.ShowError("아직 메뉴가 완성되지 않았습니다");
+            ErrorPanelManager.Instance?.ShowError("Under development");
             //menuFSM.ChangeState(MenuState.Options);
         }
 
