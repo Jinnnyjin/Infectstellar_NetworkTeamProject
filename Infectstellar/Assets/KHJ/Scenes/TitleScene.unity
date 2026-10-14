@@ -6641,7 +6641,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 152707.94
+      value: 160231.14
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -8040,7 +8040,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 7997.701
+      value: 13797.68
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -14264,6 +14264,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d29909d303b344699ae1fd6ee5ad99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomPanelController
+  chatManager: {fileID: 2070189581}
   playerPanels:
   - {fileID: 686141921}
   - {fileID: 1088596435}
