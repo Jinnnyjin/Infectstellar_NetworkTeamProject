@@ -4,6 +4,8 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerInteractor))]
 public class PlayerGrabber : MonoBehaviour
 {
+    public Item HeldItem => heldItem;
+
     [SerializeField] private Transform socket;
     [SerializeField] private Transform releasePoint;
 
