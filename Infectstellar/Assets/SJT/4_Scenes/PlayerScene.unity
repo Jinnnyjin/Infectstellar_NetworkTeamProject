@@ -198,9 +198,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 246080824}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa2964528f9daff4ba7816f3ba648d2e, type: 3}
+  m_Script: {fileID: 11500000, guid: f523a9644b3ed682ff666a7feaa80faa, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PhotonPlayerSpawnerForTest
+  m_EditorClassIdentifier: Assembly-CSharp::_PhotonPlayerSpawner
   manager: {fileID: 1272680474}
   spawnOrigin: {fileID: 1962119812}
   originOffset: {x: 0, y: 0, z: 0}
@@ -803,23 +803,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1272680473}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4a25da862f4d0b4c98e3f7bb006de11, type: 3}
+  m_Script: {fileID: 11500000, guid: defb8a359be823725c680b790b12c68f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerSyncRateManager
+  m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkManager
   brain: {fileID: 2051086284}
-  useDistanceRates: 1
-  useAdaptiveBuffer: 1
-  nearEnterDistance: 10
-  nearExitDistance: 12
-  middleEnterDistance: 25
-  middleExitDistance: 30
-  rateCheckInterval: 0.1
-  registeredPlayers: 0
-  currentSendRate: 30
-  nearestDistance: 0
-  pingMs: 0
-  outgoingPacketBytes: 0
-  incomingPacketBytes: 0
 --- !u!4 &1272680475
 Transform:
   m_ObjectHideFlags: 0

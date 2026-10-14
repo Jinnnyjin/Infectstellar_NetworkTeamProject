@@ -1,3 +1,4 @@
+#if false // 새 시스템 전환 검증 후 삭제할 이전 구현
 using System;
 using System.Collections.Generic;
 using Photon.Pun;
@@ -149,7 +150,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         initialItemDeadline = Time.realtimeSinceStartupAsDouble + c_itemResolveTimeout;
         RestoreInitialHeldItem();
         // 기준을 먼저 준비한 뒤 객체에 적용한다. 표시 중 발생하는 이벤트는 로컬 송신으로 이어지지 않는다.
-        stateMachine.ApplyRemoteState(snapshot.State);
+        stateMachine.SetState(snapshot.State);
         flashlight.SetFlashlightEnabled(isAlive && light);
         animationController.SetHandsUp(handsUp);
         ApplyPose(PlayerSnapshotPoseCalculator.Interpolate(snapshot, snapshot, snapshot.Time));
@@ -527,7 +528,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
                 break;
             case PlayerStateEventType.LifeState:
                 PlayerState state = isAlive ? PlayerState.Idle : PlayerState.Dead; // 새 생사 버전에서 시작할 표시 상태
-                stateMachine.ApplyRemoteState(state);
+                stateMachine.SetState(state);
                 flashlight.SetFlashlightEnabled(false);
                 break;
         }
@@ -614,7 +615,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     private void ApplyPose(PlayerSnapshotPose pose) // 보간·외삽이 계산한 표시 결과
     {
         body.SetPositionAndRotation(pose.position, Quaternion.Euler(0f, pose.yaw, 0f));
-        playerLook.ApplyRemotePitch(pose.pitch);
+        playerLook.SetPitch(pose.pitch);
         PlayerSnapshot source = pose.source; // 섞지 않고 그대로 적용할 상태·웅크림·방향의 기록
         bool matchingLifeVersion = source.LifeVersion == appliedLifeVersion; // 현재 사망·부활과 같은 버전인지 여부
         bool matchingLifeState = (source.State != PlayerState.Dead) == isAlive; // 현재 생존 여부와 기록 상태가 일치하는지 여부
@@ -623,8 +624,8 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         {
             return;
         }
-        motor.ApplyRemoteCrouch(source.Crouching);
-        stateMachine.ApplyRemoteState(source.State);
+        motor.SetCrouching(source.Crouching);
+        stateMachine.SetState(source.State);
         animationController.SetMoveDirection(source.Direction);
     }
 
@@ -647,3 +648,5 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
 
     #endregion
 }
+
+#endif

@@ -6,7 +6,7 @@ public class Health : MonoBehaviour, IDamageable
 {
     private float maxHP;
     private float hp = 100;
-    private PlayerNetworkSync networkSync;
+    private _PlayerNetworkSync networkSync;
     public float HP => hp;
     public event Action<float> D_HealthChanged;
 
@@ -14,7 +14,7 @@ public class Health : MonoBehaviour, IDamageable
     {
         hp = 100f;
         maxHP = hp;
-        networkSync = GetComponent<PlayerNetworkSync>();
+        networkSync = GetComponent<_PlayerNetworkSync>();
     }
 
     /// <summary>네트워크 플레이어는 소유자에게 피해를 요청하고, 일반 객체는 직접 적용합니다.</summary>

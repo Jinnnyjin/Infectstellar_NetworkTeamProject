@@ -1,6 +1,19 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-14 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-15 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## 현재 상태: 새 Sync의 추가 RPC 제거
+
+- 사용자 요청으로 추가한 RPC와 _PlayerStateEventPlayback을 제거하고 Snapshot/Playback을 RPC 추가 전 상태로 복원했다. 새 관리자·스포너·프리팹·씬 연결과 스냅샷 송수신/보간 적용은 유지한다.
+- Health.RequestDamage·Item.SendItemStop 호출은 남아 있으며 해당 API를 새로 만들기 전까지 컴파일 오류를 허용한다. 사용자 지시에 따라 검증과 자동 RPC 이식을 중단했다.
+- 다음 작업은 사용자가 정한 순서로 RPC를 새로 만드는 것이다. 상세 상태: [전환 계획](plans/2026-10-15-player-network-migration.md).
+
+## 현재 상태: 플레이어 공통 상태·자세 적용 메서드
+
+- 사용자 작성 중인 메서드 이름 변경을 이어서 Motor의 TrySetCrouching(로컬 일어서기 검사)과 SetCrouching(확정 자세 적용)을 분리했다. StateMachine.SetState는 CurrentState·애니메이션·StateChanged를 갱신하며 HFSM 내부 전이를 실행하지 않는다. 기존 Playback의 남은 ApplyRemoteCrouch 호출도 SetCrouching으로 맞췄다.
+- 로컬 이동은 TrySetCrouching을, 기존 원격 Playback과 새 _PlayerNetworkSync는 SetCrouching/SetState를 사용한다. 새 Sync의 올바른 공통 메서드 호출과 사용자 모델 처리·송수신 코드는 유지했다. 상세 역할은 [프로젝트 설명](PROJECT.md#플레이어의-로컬-판단과-공통-상태자세-적용)을 따른다.
+- 독립 리뷰에서 이번 변경의 오류·회귀를 찾지 못했다. 2026-10-15 03:59 KST 최종 Unity 재컴파일은 completed/failed:false/errors:[]로 통과했다. 검사 전후 3개 변경 소스의 SHA-256이 동일했고 새 오류 0건, 변경 밖 AstronautThirdPersonCamera의 미사용 필드 경고 2건이었다. Play·접속·빌드·씬/프리팹 변경은 수행하지 않았다.
+- 문서 구조 검사는 기존 HANDOFF의 누락된 계획 링크 4건으로 실패했다. 수정 전 기록에도 같은 링크가 있었고 해당 계획 파일이 없음을 대조했다. 이번 작업의 추가 참조에는 새 오류가 없으며, 과거 계획 기록은 변경하지 않았다.
 
 ## 현재 상태: 플레이어 아이템 RPC
 

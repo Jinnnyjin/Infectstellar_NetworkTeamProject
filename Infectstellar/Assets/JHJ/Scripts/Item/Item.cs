@@ -30,7 +30,7 @@ public class Item : MonoBehaviour, IInteractable
     private int shooterActorNumber;
     private bool isLocalReleaser;
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
-    private PlayerNetworkSync playerReleaseSource; // 최종 정지를 플레이어 재생 시계로 보낼 연결점
+    private _PlayerNetworkSync playerReleaseSource; // 최종 정지를 플레이어 재생 시계로 보낼 연결점
     private int playerReleaseSequence; // 최종 정지가 속한 내려놓기·발사 순서
     private bool hasPlayerActionContext; // 이미 처리한 동작보다 과거의 정지 보정을 제외할 기준
 
@@ -301,7 +301,7 @@ public class Item : MonoBehaviour, IInteractable
     }
 
     /// <summary>최종 정지가 현재 내려놓기·발사와 연결되도록 플레이어와 순서를 보관합니다.</summary>
-    public void SetPlayerReleaseContext(PlayerNetworkSync source, int releaseSequence)
+    public void SetPlayerReleaseContext(_PlayerNetworkSync source, int releaseSequence)
     {
         playerReleaseSource = source;
         playerReleaseSequence = releaseSequence;
@@ -309,7 +309,7 @@ public class Item : MonoBehaviour, IInteractable
     }
 
     /// <summary>새 잡기·발사에 과거 정지를 적용하지 않고 현재 해제의 최종 자세만 보정합니다.</summary>
-    public void ApplyPlayerStop(PlayerNetworkSync source, int releaseSequence, Vector3 position, Quaternion rotation)
+    public void ApplyPlayerStop(_PlayerNetworkSync source, int releaseSequence, Vector3 position, Quaternion rotation)
     {
         if (!isActiveAndEnabled || physics == null || CurrentState == State.Grabbed)
             return;

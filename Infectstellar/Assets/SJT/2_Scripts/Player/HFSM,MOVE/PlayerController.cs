@@ -20,7 +20,7 @@ public sealed class PlayerController : MonoBehaviour
     private PlayerGrabber playerGrabber;
     private bool isInitialized;
     private bool isLocalControlActive;
-    private PlayerNetworkSync networkSync;
+    private _PlayerNetworkSync networkSync;
 
     /// <summary>필수 이동 컴포넌트의 초기화 성공 여부입니다.</summary>
     public bool IsInitialized => isInitialized;
@@ -47,7 +47,7 @@ public sealed class PlayerController : MonoBehaviour
         playerLook = GetComponent<PlayerLook>();
         flashlightController = GetComponent<FlashlightController>();
         playerGrabber = GetComponent<PlayerGrabber>();
-        networkSync = GetComponent<PlayerNetworkSync>();
+        networkSync = GetComponent<_PlayerNetworkSync>();
         if (movementSettings == null || stateMachine == null || motor == null || inputReader == null || playerLook == null)
         {
             Debug.LogError("[PlayerController] 이동 설정, StateMachine, Motor, InputReader 또는 Look 참조가 없습니다.", this);

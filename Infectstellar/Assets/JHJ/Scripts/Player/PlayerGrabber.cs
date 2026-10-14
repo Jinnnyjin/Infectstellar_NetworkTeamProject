@@ -19,7 +19,7 @@ public class PlayerGrabber : MonoBehaviour
     private Item heldItem;
     private int ownerActorNumber = -1;
     private bool isLocal = true;
-    private PlayerNetworkSync networkSync;
+    private _PlayerNetworkSync networkSync;
     private PlayerStateMachine stateMachine;
 
     public event Action<bool> GrabRequested;
@@ -34,7 +34,7 @@ public class PlayerGrabber : MonoBehaviour
     private void Awake()
     {
         interactor = GetComponent<PlayerInteractor>();
-        networkSync = GetComponent<PlayerNetworkSync>();
+        networkSync = GetComponent<_PlayerNetworkSync>();
         stateMachine = GetComponent<PlayerStateMachine>();
 
         // 액터번호, 내 플레이어 여부 : PhotonView 없거나 방 밖이면 기본값(-1, 내 것) 유지
