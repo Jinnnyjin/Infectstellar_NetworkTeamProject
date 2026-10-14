@@ -12,6 +12,25 @@ public class ItemHit : MonoBehaviour
     private bool isLocalThrower;
     private Func<Collider, int> getOwnerActorNumber;
 
+    #region 심지태
+    private DamageSource damageSource;
+
+    private void Awake()
+    {
+        if (!gameObject.TryGetComponent<DamageSource>(out DamageSource _damageSource))
+        {
+#if UNITY_EDITOR
+            Debug.LogError($"ItemHit : 오브젝트에 DamageSource가 없습니다.");
+#endif
+            return;
+        }
+        else
+        {
+            damageSource = _damageSource;
+        }
+    }
+    #endregion
+
 
     public void Init(Func<Collider, int> GetOwnerActorNumber)
     {
@@ -35,6 +54,8 @@ public class ItemHit : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log($"collision : {collision.gameObject.name}");
+
         // 활성화 상태 아니거나 이미 맞은 경우 무시
         if (!isActive || isHit)
             return;
@@ -44,22 +65,28 @@ public class ItemHit : MonoBehaviour
             return;
 
         // 본인이 맞은 경우 무시
-        if(getOwnerActorNumber(collision.collider) == attackerActorNumber)
+        if (getOwnerActorNumber(collision.collider) == attackerActorNumber)
             return;
 
         isHit = true;
+        Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damage}, 공격자 {attackerActorNumber}", this);
 
-        // [임시] 통합 전 비활성화, 플레이어 쪽 데미지 인터페이스로 교체 후 복구
-        //ITempDamageable damageable = collision.collider.GetComponentInParent<ITempDamageable>();
-        //if (damageable == null)
-        //{
-        //    Debug.Log($"[ItemHit] 첫Hit {collision.collider.name}, 데미지 대상 아님 → 이번 Shoot 종료", this);
-        //    return;
-        //}
+        #region 심지태
+        if (damageSource == null)
+        {
+#if UNITY_EDITOR
+            Debug.LogError($"ItemHit : 오브젝트에 DamageSource가 없습니다.");
+#endif
+            return;
+        }
 
-        //damageable.TakeDamage(new TempDamageInfo(damage, attackerActorNumber));
-
-        //Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damage}, 공격자 {attackerActorNumber}", this);
-        Debug.Log($"[ItemHit] 적중 {collision.collider.name}");
+        if (collision.gameObject.TryGetComponent<IDamageable>(out IDamageable damageable))
+        {
+            damageSource.DealDamage(damageable);
+#if UNITY_EDITOR
+            Debug.Log($"때린거 : {damageSource.gameObject.name}");
+#endif
+        }
+        #endregion
     }
 }

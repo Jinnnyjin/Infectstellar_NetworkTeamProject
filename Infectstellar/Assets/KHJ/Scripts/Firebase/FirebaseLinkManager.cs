@@ -165,7 +165,6 @@ namespace ENZEUN.Runtime
         }
 
 
-
         /// <summary>
         /// 내 닉네임을 서버에 저장 (유저당 1개 고정)
         /// </summary>
