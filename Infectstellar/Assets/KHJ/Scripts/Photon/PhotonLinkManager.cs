@@ -39,6 +39,7 @@ namespace ENZEUN.Runtime
         // 방 목록 갱신 시 호출할 수 있는 이벤트 (UI 연동용)
         public Action<List<RoomInfo>> OnRoomListUpdated;
         public Action OnJoinedLobbyCallback;
+        public Action OnJoinedRoomCallback;
 
         public void ConnectToPhotonServer()
         {
@@ -50,13 +51,21 @@ namespace ENZEUN.Runtime
 
         public override void OnConnectedToMaster()
         {
+#if UNITY_EDITOR
             Debug.Log("Connected to Master Server");
+#endif
+            PhotonNetwork.NickName = FirebaseLinkManager.CurrentPlayerData.Nickname;
+#if UNITY_EDITOR
+            Debug.Log("NickName Has Uploaded to Photon Server");
+#endif
             PhotonNetwork.JoinLobby();
         }
 
         public override void OnJoinedLobby()
         {
+#if UNITY_EDITOR
             Debug.Log("Joined Lobby");
+#endif
             photonRoomListHandler.Initialize();
             OnJoinedLobbyCallback?.Invoke();
         }
@@ -109,6 +118,7 @@ namespace ENZEUN.Runtime
 
         public override void OnJoinedRoom()
         {
+            OnJoinedRoomCallback?.Invoke();
 
 #if UNITY_EDITOR
             Debug.Log($"방 입장 성공! 방 이름: {PhotonNetwork.CurrentRoom.Name} (현재 인원: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers})");
@@ -119,7 +129,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError($"방 생성 실패: {message}");
+                ErrorPanelManager.Instance.ShowError($"Failed to create a room: {message}");
             }
 #if UNITY_EDITOR
             Debug.LogError($"방 생성 실패: {message} (코드: {returnCode})");
@@ -130,7 +140,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError($"방 입장 실패: {message}");
+                ErrorPanelManager.Instance.ShowError($"Failed to enter the room: {message}");
             }
 #if UNITY_EDITOR
             Debug.LogError($"방 입장 실패: {message} (코드: {returnCode})");
@@ -141,7 +151,7 @@ namespace ENZEUN.Runtime
         {
             if (ErrorPanelManager.Instance != null)
             {
-                ErrorPanelManager.Instance.ShowError("입장할 수 있는 랜덤 방이 없습니다.");
+                ErrorPanelManager.Instance.ShowError("There are no random rooms available to join..");
             }
 #if UNITY_EDITOR
             Debug.Log("입장할 수 있는 랜덤 방이 없습니다.");

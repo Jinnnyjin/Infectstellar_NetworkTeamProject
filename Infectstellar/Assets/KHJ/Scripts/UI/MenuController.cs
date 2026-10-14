@@ -26,7 +26,7 @@ namespace ENZEUN.Runtime
 
         private MMStateMachine<MenuState> menuFSM;
 
-        private bool subscribedJoinLobby = false;
+        private bool subscribedPhotonCallbacks = false;
 
         private void Awake()
         {
@@ -40,19 +40,32 @@ namespace ENZEUN.Runtime
 
         private void OnDisable()
         {
-            if (PhotonLinkManager.Instance != null)
-            {
-                if (subscribedJoinLobby)
-                {
-                    PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
-                    subscribedJoinLobby = false;
-                }
-            }
+            UnSubscribePhotonCallbacks();
         }
 
         private void Start()
         {
             ChangeToTitleMenu();
+        }
+
+        private void SubscribePhotonCallbacks()
+        {
+            if (!subscribedPhotonCallbacks)
+            {
+                PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
+                PhotonLinkManager.Instance.OnJoinedRoomCallback += ChangeToInRoomMenu;
+                subscribedPhotonCallbacks = true;
+            }
+        }
+
+        private void UnSubscribePhotonCallbacks()
+        {
+            if (subscribedPhotonCallbacks)
+            {
+                PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
+                PhotonLinkManager.Instance.OnJoinedRoomCallback -= ChangeToInRoomMenu;
+                subscribedPhotonCallbacks = false;
+            }
         }
 
         public void ChangeToTitleMenu()
@@ -102,11 +115,7 @@ namespace ENZEUN.Runtime
             {
                 PhotonLinkManager.Instance.ConnectToPhotonServer();
 
-                if (!subscribedJoinLobby)
-                {
-                    PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
-                    subscribedJoinLobby = true;
-                }
+                SubscribePhotonCallbacks();
             }
             else
             {

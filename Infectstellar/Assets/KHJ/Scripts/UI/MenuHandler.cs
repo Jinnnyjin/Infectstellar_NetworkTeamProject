@@ -16,8 +16,10 @@ namespace ENZEUN.Runtime
         [SerializeField] private MMF_Player nicknameMenuFb;
         [SerializeField] private NicknameMenuHandler nicknameMenuHandler;
         [SerializeField] private MMF_Player connectPhotonFb;
-        [SerializeField] private MMF_Player roomMenuFb;
+        [SerializeField] private MMF_Player roomSearchMenuFb;
         [SerializeField] private TMP_Text userNickname;
+        [SerializeField] private MMF_Player roomMenuFb;
+
 
 
         public void OnEnable()
@@ -28,12 +30,23 @@ namespace ENZEUN.Runtime
         public void OnDisable()
         {
             this.MMEventStopListening<MMStateChangeEvent<MenuController.MenuState>>();
-            FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
-            FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= ChangeNicknameText;
+
+            if (FirebaseLinkManager.Instance != null)
+            {
+                FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
+                FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= ChangeNicknameText;
+            }
         }
 
         public async UniTaskVoid InitialSettings()
         {
+            if (FirebaseLinkManager.Instance == null)
+            {
+                ErrorPanelManager.Instance?.ShowError("FirebaseLinkManager has not Initialized. Please check it out");
+#if UNITY_EDITOR
+                Debug.Log("FirebaseLinkManager 가 초기화되지 않은 문제 발생.");
+#endif
+            }
             FirebaseLinkManager firebaseLinkManager = FirebaseLinkManager.Instance;
 
             firebaseLinkManager.OnNicknameLoadSucceeded += ChangeNicknameText;
@@ -93,6 +106,10 @@ namespace ENZEUN.Runtime
                     break;
 
                 case MenuController.MenuState.InLobby:
+                    roomSearchMenuFb.PlayFeedbacksTopToBottom();
+                    break;
+
+                case MenuController.MenuState.InRoom:
                     roomMenuFb.PlayFeedbacksTopToBottom();
                     break;
             }
@@ -120,9 +137,12 @@ namespace ENZEUN.Runtime
                     break;
 
                 case MenuController.MenuState.InLobby:
-                    roomMenuFb.PlayFeedbacksBottomToTop();
+                    roomSearchMenuFb.PlayFeedbacksBottomToTop();
                     break;
 
+                case MenuController.MenuState.InRoom:
+                    roomMenuFb.PlayFeedbacksBottomToTop();
+                    break;
             }
 
         }
