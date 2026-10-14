@@ -4,6 +4,7 @@ using TMPro;
 using Photon.Pun;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using MoreMountains.Feedbacks;
 
 namespace ENZEUN.Runtime
 {
@@ -12,6 +13,7 @@ namespace ENZEUN.Runtime
         [SerializeField] private TMP_InputField chatInputField;
         [SerializeField] private TextMeshProUGUI chatLogText; // 채팅 기록을 보여줄 UI
         [SerializeField] private ScrollRect chatScrollRect;
+        [SerializeField] private MMF_Player chatSoundFb;
 
         private const int MaxChatLines = 40; // 최대 채팅 줄 수
 
@@ -51,12 +53,6 @@ namespace ENZEUN.Runtime
 
             await UniTask.DelayFrame(3);
 
-            if (chatScrollRect != null)
-            {
-                Canvas.ForceUpdateCanvases();
-                chatScrollRect.verticalNormalizedPosition = 0f;
-            }
-
             chatInputField.ActivateInputField();
 
             chatInputField.Select();
@@ -95,6 +91,16 @@ namespace ENZEUN.Runtime
 
             // 다시 줄바꿈으로 합치기
             chatLogText.text = string.Join("\n", lines);
+
+            // 맨 밑에 채팅으로 정렬
+            if (chatScrollRect != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                chatScrollRect.verticalNormalizedPosition = 0f;
+            }
+
+            // 채팅 효과음 + 진동
+            chatSoundFb.PlayFeedbacks();
         }
 
         public override void OnDisable()
