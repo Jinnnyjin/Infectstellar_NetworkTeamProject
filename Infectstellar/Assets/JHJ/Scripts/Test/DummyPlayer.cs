@@ -250,7 +250,7 @@ public class DummyPlayer : MonoBehaviourPun, ITempDamageable // [임시] MonoBeh
             return; // [임시]
         }
         Debug.Log($"[DummyPlayer] 던지기 호출: {heldItem.GetInfo().ItemName} ({heldItem.CurrentState})"); // [임시]
-        heldItem.Shoot(cameraPivot.forward); // [임시]
+        //heldItem.Shoot(,cameraPivot.forward); // [임시]
     }
 
     // =============================================================
