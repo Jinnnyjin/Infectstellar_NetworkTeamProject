@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96d8cbda5ca094744a78ae597b5c84eb, type: 3}
   m_Name: PlayerMovementSettings
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementSettings
-  walkSpeed: 3
-  runSpeed: 5
-  crouchSpeed: 1.5
+  walkSpeed: 2
+  runSpeed: 3
+  crouchSpeed: 1
   jumpHeight: 1.2
   gravity: 20
   crouchHeightRatio: 0.75

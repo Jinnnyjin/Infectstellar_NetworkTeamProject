@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 아이템 적중 판정 : 히트박스 활성, isHit(1번), TakeDamage호출
 /// </summary>
+[RequireComponent(typeof(DamageSource))]
 public class ItemHit : MonoBehaviour
 {
     private bool isActive;
@@ -32,9 +33,10 @@ public class ItemHit : MonoBehaviour
     #endregion
 
 
-    public void Init(Func<Collider, int> GetOwnerActorNumber)
+    public void Init(Func<Collider, int> GetOwnerActorNumber, ItemDataSO itemDataSO)
     {
         this.getOwnerActorNumber = GetOwnerActorNumber;
+        damageSource.Init(itemDataSO.Attack);
     }
 
     public void Activate(float damage, int attackerActorNumber, bool isLocalThrower)
