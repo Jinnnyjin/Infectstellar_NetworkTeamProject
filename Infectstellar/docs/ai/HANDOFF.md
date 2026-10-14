@@ -2,6 +2,14 @@
 
 최종 갱신일: 2026-10-14 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: 플레이어 아이템 RPC
+
+- Grab·Drop·Shoot 및 대응 Stop을 기존 PlayerNetworkSync/PlayerSnapshotPlayback의 시간순 이벤트에 연결했다. 사용자 추가 Grab/참조/공개 Try 메서드를 완성했으며 손전등·HandsUp·기존 ItemNetwork API와 사용자 자산 변경은 보존했다.
+- 로컬 Try는 즉시 실행 후 이벤트를 송신하고, 원격 Try 오버로드는 확정 아이템 ViewID·월드 자세·힘을 적용한다. 초기 소지 아이템 복원, 사망 시 Drop, 해당 해제 순서에 맞는 최종 Stop이 포함된다.
+- 독립 리뷰의 발사 도중 입장 Stop 누락 경로를 수정하고 재검토했다. 최종 컴파일 결과는 검증 후 계획에 기록한다. Play/네트워크 접속/빌드는 실행하지 않는다.
+- 수동 연결: 실제 Resources/PhotonPrefabs/Player의 PlayerGrabber.releasePoint가 비어 있다. socket은 기존 HeadSocket을 유지한다. TryShoot는 새 키 바인딩 없이 호출 API로 제공한다. 씬 배치 Player (1)은 기존 PUN 생성 초기화 계약을 만족하지 않는다. 두 명의 동시 잡기 승인 정책과 이미 정지한 월드 아이템 전체의 초기 동기화는 별도 범위다.
+- 상세 구현 순서·검증·다음 확인은 [아이템 RPC 계획](plans/2026-10-14-player-item-rpc.md)을 따른다.
+
 ## 현재 상태: 플레이어 네트워크 파일 통합
 
 - 사용자 요청에 따라 6개 내부 클래스와 .meta를 정리하고 Playback(버퍼·시계·이벤트), NetworkSync(전송 예약), SyncRateManager(등록·거리 등급)에 private 메서드·필드로 통합했다. 기존 컴포넌트 4개, 순수 보간/외삽 계산, 공통 상수 파일만 유지한다. 한국어 주석·기능별 region·Inspector 설정·공개 API/RPC·전송 형식·기존 GUID를 유지했다.

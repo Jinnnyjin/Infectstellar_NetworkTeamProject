@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -25,6 +26,8 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     private PlayerMotor motor; // 실제 이동 속도와 웅크림 여부를 읽을 컴포넌트
     private PlayerLook playerLook; // 위아래 시선 각도를 읽을 컴포넌트
     private FlashlightController flashlight; // 손전등 상태를 읽고 변경을 감지할 컴포넌트
+    private PlayerGrabber playerGrabber; // 아이템 그랩 컴포넌트
+    private Health health; // 피해 요청을 적용하고 확정 HP를 읽을 컴포넌트
     private PlayerAnimationController animationController; // 이동 방향·손들기 애니메이션을 관리하는 컴포넌트
     private PlayerSnapshotPlayback playback; // 받은 이동 기록과 RPC를 시간에 맞춰 화면에 적용할 컴포넌트
     private PlayerSyncRateManager manager; // 플레이어 등록·카메라·거리별 전송 빈도를 관리하는 씬 컴포넌트
@@ -38,6 +41,10 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     private double nextSendTime; // 다음 기록 전송을 허용할 Photon 시각(초)
     private int sequence; // RPC 상태 변경마다 증가하는 순서 번호
     private int lifeVersion; // 사망·부활마다 증가해 이전 생사 상태를 구분하는 번호
+    private int damageRequestId; // 이 복제본에서 보내는 피해 요청 번호
+    private int healthRevision; // 소유자가 확정한 HP 변경 번호
+    private int lastAppliedHealthRevision = -1; // 원격에서 이미 적용한 HP 변경 번호
+    private readonly Dictionary<int, int> lastDamageRequests = new Dictionary<int, int>(); // 송신자별 중복 피해 요청 차단
     private double nextInitialRequestTime; // 초기 전체 상태를 다시 요청할 Photon 시각(초)
     private Vector3 latestPosition; // 거리 계산에 쓰는 상대의 최신 수신 위치
     private bool hasLatestPosition; // 거리 계산에 사용할 위치를 한 번 이상 받았는지 여부
@@ -111,6 +118,8 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         motor = GetComponent<PlayerMotor>();
         playerLook = GetComponent<PlayerLook>();
         flashlight = GetComponent<FlashlightController>();
+        playerGrabber = GetComponent<PlayerGrabber>();
+        health = GetComponent<Health>();
         animationController = GetComponentInChildren<PlayerAnimationController>(true);
         playback = GetComponent<PlayerSnapshotPlayback>();
         PlayerInput input = GetComponent<PlayerInput>(); // 권한 확정 전 입력을 막을 Unity 입력 컴포넌트
@@ -136,6 +145,10 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     /// <summary>객체 수명이 끝나면 구독과 관리자 등록을 해제합니다.</summary>
     private void OnDestroy()
     {
+        if (health != null)
+        {
+            health.D_HealthChanged -= HandleHealthChanged;
+        }
         if (flashlight != null)
         {
             flashlight.D_FlashlightStateChanged -= HandleFlashlightChanged;
@@ -147,6 +160,12 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         if (stateMachine != null)
         {
             stateMachine.StateChanged -= HandleStateChanged;
+        }
+        if (playerGrabber != null)
+        {
+            playerGrabber.D_Grabbed -= HandleGrabChanged;
+            playerGrabber.D_Dropped -= HandleDropChanged;
+            playerGrabber.D_Shot -= HandleShootChanged;
         }
         if (manager != null)
         {
@@ -211,7 +230,7 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         this.manager = manager;
         isLocal = view.IsMine;
         isControlSuspended = false;
-        playback.Initialize(this, stateMachine, motor, playerLook, flashlight, animationController, !isLocal);
+        playback.Initialize(this, stateMachine, motor, playerLook, flashlight, playerGrabber, animationController, !isLocal);
         isInitialized = true;
         if (!manager.Register(this))
         {
@@ -229,9 +248,19 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     /// <summary>확정된 표시·생사 변경을 RPC로 전달할 구독을 연결합니다.</summary>
     private void SubscribeStateChanges()
     {
+        if (health != null)
+        {
+            health.D_HealthChanged += HandleHealthChanged;
+        }
         flashlight.D_FlashlightStateChanged += HandleFlashlightChanged;
         animationController.D_HandsUpStateChanged += HandleHandsUpChanged;
         stateMachine.StateChanged += HandleStateChanged;
+        if (playerGrabber != null)
+        {
+            playerGrabber.D_Grabbed += HandleGrabChanged;
+            playerGrabber.D_Dropped += HandleDropChanged;
+            playerGrabber.D_Shot += HandleShootChanged;
+        }
     }
 
     /// <summary>관리자·이동·표시·PUN 생성 준비를 차례로 확인합니다.</summary>
@@ -409,6 +438,83 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
 
     #endregion
 
+    #region 피해 요청·확정 HP RPC
+
+    /// <summary>피해 대상의 복제본에서 호출하며 실제 HP 계산은 해당 플레이어의 소유자에게 맡깁니다.</summary>
+    public void RequestDamage(float amount)
+    {
+        // 공격자는 피해자의 원격 복제본으로 요청하므로 로컬 조작 권한을 요구하지 않는다.
+        if (!isInitialized || !isActiveAndEnabled || !PhotonNetwork.InRoom || health == null
+            || !health.isActiveAndEnabled || view.ViewID == 0 || !Health.IsValidDamage(amount))
+        {
+            return;
+        }
+        Player target = view.Controller;
+        if (target != null)
+        {
+            view.RPC(nameof(RpcTakeDamage), target, amount, ++damageRequestId);
+        }
+    }
+
+    /// <summary>방 참가자의 피해 요청을 소유자만 처리하며 같은 요청을 중복 적용하지 않습니다.</summary>
+    [PunRPC]
+    private void RpcTakeDamage(float amount, int requestId, PhotonMessageInfo info)
+    {
+        // 확정 상태 수신용 CanReceive는 소유자의 메시지만 받으므로 피해 요청에는 사용하지 않는다.
+        if (!IsLocalControlActive || health == null || !health.isActiveAndEnabled || !stateMachine.IsAlive
+            || health.HP <= 0f || !Health.IsValidDamage(amount) || requestId <= 0 || info.Sender == null
+            || PhotonNetwork.CurrentRoom.GetPlayer(info.Sender.ActorNumber) == null)
+        {
+            return;
+        }
+        int senderActor = info.Sender.ActorNumber;
+        if (lastDamageRequests.TryGetValue(senderActor, out int previousRequest) && requestId <= previousRequest)
+        {
+            return;
+        }
+        lastDamageRequests[senderActor] = requestId;
+        health.ApplyDamage(new DamageInfo(amount));
+        if (health.HP <= 0f)
+        {
+            // 사망 표시·손전등·소지품 정리는 기존 상태 변경과 생사 RPC 흐름을 따른다.
+            stateMachine.Die();
+        }
+    }
+
+    /// <summary>소유자가 계산한 최종 HP만 다른 복제본으로 보내며 원격 적용에서는 재송신하지 않습니다.</summary>
+    private void HandleHealthChanged(float currentHP)
+    {
+        if (IsLocalControlActive)
+        {
+            view.RPC(nameof(RpcSetHealth), RpcTarget.Others, currentHP, ++healthRevision);
+        }
+    }
+
+    /// <summary>현재 소유자가 보낸 확정 HP만 받습니다. 사망 표시는 기존 생사 재생 대기열에서 처리합니다.</summary>
+    [PunRPC]
+    private void RpcSetHealth(float currentHP, int revision, PhotonMessageInfo info)
+    {
+        if (CanReceive(info))
+        {
+            ApplyReceivedHP(currentHP, revision);
+        }
+    }
+
+    /// <summary>늦게 도착한 초기 HP나 중복 갱신이 최신 HP를 되돌리지 않도록 변경 번호를 확인합니다.</summary>
+    private void ApplyReceivedHP(float currentHP, int revision)
+    {
+        if (health == null || revision < 0 || revision <= lastAppliedHealthRevision)
+        {
+            return;
+        }
+        if (health.ApplyNetworkHP(currentHP))
+        {
+            lastAppliedHealthRevision = revision;
+        }
+    }
+
+    #endregion
+
     #region 초기 전체 상태 RPC
 
     /// <summary>초기 응답이 유실되거나 제어자 초기화보다 먼저 도착해도 다시 요청합니다.</summary>
@@ -436,7 +542,8 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
             snapshot.Time, snapshot.Position, snapshot.Velocity,
             snapshot.Yaw, snapshot.Pitch, (int)snapshot.State,
             snapshot.Direction, snapshot.Crouching, snapshot.Rate, snapshot.LifeVersion,
-            flashlight.IsOn, animationController.IsHandsUp, sequence);
+            flashlight.IsOn, animationController.IsHandsUp, playerGrabber != null ? playerGrabber.HeldItemViewId : 0, sequence,
+            health != null, health != null ? health.HP : 0f, healthRevision);
     }
 
     /// <summary>최초 전체 상태를 재생 기준과 이벤트 순서 하한으로 사용합니다.</summary>
@@ -454,12 +561,17 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         int version, // 현재 사망·부활을 구분할 생사 버전
         bool light, // 초기 응답 당시 손전등 켜짐 여부
         bool handsUp, // 초기 응답 당시 손들기 여부
+        int heldItemViewId, // 초기 응답 당시 소지한 아이템; 0이면 없음
         int changeSequence, // 초기 응답에 이미 반영된 마지막 RPC 순서
+        bool hasHealth, // 소유자에게 Health 컴포넌트가 있는지 여부
+        float currentHP, // 초기 응답 당시 확정 HP
+        int hpRevision, // 초기 응답에 반영된 마지막 HP 변경 번호
         PhotonMessageInfo info) // 송신자·생성자 정보를 확인할 PUN 메시지
     {
         var snapshot = new PlayerSnapshot(time, position, velocity, yaw, pitch,
             (PlayerState)state, direction, crouching, rate, version); // RPC의 기본 타입들을 하나의 이동 기록으로 복원한 값
-        if (!CanReceive(info) || !snapshot.IsValid() || changeSequence < 0 || playback.HasInitialState)
+        if (!CanReceive(info) || !snapshot.IsValid() || heldItemViewId < 0 || changeSequence < 0 || playback.HasInitialState
+            || hpRevision < 0 || float.IsNaN(currentHP) || float.IsInfinity(currentHP) || currentHP < 0f)
         {
             return;
         }
@@ -469,7 +581,11 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
             RecordLatestPosition(snapshot);
         }
         hasLatestPosition = true;
-        playback.SetInitialState(snapshot, light, handsUp, changeSequence, PhotonNetwork.Time);
+        if (hasHealth)
+        {
+            ApplyReceivedHP(currentHP, hpRevision);
+        }
+        playback.SetInitialState(snapshot, light, handsUp, heldItemViewId, changeSequence, PhotonNetwork.Time);
     }
 
     #endregion
@@ -493,6 +609,53 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         if (IsLocalControlActive)
         {
             view.RPC(nameof(RpcSetHandsUp), RpcTarget.Others, value, PhotonNetwork.Time, ++sequence, lifeVersion);
+        }
+    }
+
+    /// <summary>로컬에서 잡은 아이템의 식별자와 발생 순서를 전달합니다.</summary>
+    private void HandleGrabChanged(Item item)
+    {
+        PhotonView itemView = item != null ? item.GetComponent<PhotonView>() : null;
+        if (IsLocalControlActive && itemView != null && itemView.ViewID > 0)
+        {
+            view.RPC(nameof(RpcGrab), RpcTarget.Others, itemView.ViewID, PhotonNetwork.Time, ++sequence, lifeVersion);
+        }
+    }
+
+    /// <summary>내려놓기의 월드 자세와 Stop 연결 순서를 확정하여 전달합니다.</summary>
+    private void HandleDropChanged(Item item, Vector3 position, Quaternion rotation)
+    {
+        PhotonView itemView = item != null ? item.GetComponent<PhotonView>() : null;
+        if (!IsLocalControlActive || itemView == null || itemView.ViewID <= 0)
+        {
+            return;
+        }
+        int order = ++sequence;
+        item.SetPlayerReleaseContext(this, order);
+        view.RPC(nameof(RpcDrop), RpcTarget.Others, itemView.ViewID, position, rotation, PhotonNetwork.Time, order, lifeVersion);
+    }
+
+    /// <summary>발사의 월드 자세·힘과 Stop 연결 순서를 확정하여 전달합니다.</summary>
+    private void HandleShootChanged(Item item, Vector3 position, Quaternion rotation, Vector3 force)
+    {
+        PhotonView itemView = item != null ? item.GetComponent<PhotonView>() : null;
+        if (!IsLocalControlActive || itemView == null || itemView.ViewID <= 0)
+        {
+            return;
+        }
+        int order = ++sequence;
+        item.SetPlayerReleaseContext(this, order);
+        view.RPC(nameof(RpcShoot), RpcTarget.Others, itemView.ViewID, position, rotation, force, PhotonNetwork.Time, order, lifeVersion);
+    }
+
+    /// <summary>발사자가 확정한 최종 정지를 같은 이벤트 대기열에 전달합니다.</summary>
+    public void SendItemStop(Item item, int releaseSequence, Vector3 position, Quaternion rotation)
+    {
+        PhotonView itemView = item != null ? item.GetComponent<PhotonView>() : null;
+        if (IsLocalControlActive && itemView != null && itemView.ViewID > 0 && releaseSequence > 0)
+        {
+            view.RPC(nameof(RpcItemStop), RpcTarget.Others, itemView.ViewID, releaseSequence, position, rotation,
+                PhotonNetwork.Time, ++sequence, lifeVersion);
         }
     }
 
@@ -530,6 +693,41 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
     {
         QueueEvent(PlayerStateEventType.HandsUp, value, time, order, version, info);
     }
+    /// <summary>Grab rpc를 화면 재생 대기열에 넣습니다.</summary>
+    [PunRPC]
+    private void RpcGrab(
+        int itemViewId, // 모든 클라이언트에서 같은 아이템을 찾을 식별자
+        double time, // 송신자가 상태를 기록한 Photon 시각(초)
+        int order, // 중복·과거 변경을 구분할 증가 순서 번호
+        int version, // 현재 사망·부활을 구분할 생사 버전
+        PhotonMessageInfo info) // 송신자·생성자 정보를 확인할 PUN 메시지
+    {
+        QueueEvent(new PlayerStateEvent(PlayerStateEventType.Grab, itemViewId, Vector3.zero, Quaternion.identity,
+            Vector3.zero, time, order, version), info);
+    }
+
+    /// <summary>내려놓기의 확정된 자세를 원격 재생 대기열에 넣습니다.</summary>
+    [PunRPC]
+    private void RpcDrop(int itemViewId, Vector3 position, Quaternion rotation, double time, int order, int version, PhotonMessageInfo info)
+    {
+        QueueEvent(new PlayerStateEvent(PlayerStateEventType.Drop, itemViewId, position, rotation, Vector3.zero, time, order, version), info);
+    }
+
+    /// <summary>발사의 확정된 자세와 힘을 원격 재생 대기열에 넣습니다.</summary>
+    [PunRPC]
+    private void RpcShoot(int itemViewId, Vector3 position, Quaternion rotation, Vector3 force, double time, int order, int version, PhotonMessageInfo info)
+    {
+        QueueEvent(new PlayerStateEvent(PlayerStateEventType.Shoot, itemViewId, position, rotation, force, time, order, version), info);
+    }
+
+    /// <summary>지정 Drop/Shoot의 최종 정지를 원격 재생 대기열에 넣습니다.</summary>
+    [PunRPC]
+    private void RpcItemStop(int itemViewId, int releaseSequence, Vector3 position, Quaternion rotation, double time, int order, int version, PhotonMessageInfo info)
+    {
+        QueueEvent(new PlayerStateEvent(PlayerStateEventType.ItemStop, itemViewId, position, rotation, Vector3.zero,
+            time, order, version, releaseSequence), info);
+    }
+
     /// <summary>생사 RPC를 화면 재생 대기열에 넣습니다.</summary>
     [PunRPC]
     private void RpcSetLifeState(
@@ -554,6 +752,16 @@ public sealed class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInsta
         if (CanReceive(info) && order > 0 && version >= 0 && !double.IsNaN(time) && !double.IsInfinity(time))
         {
             playback.PushEvent(new PlayerStateEvent(type, value, time, order, version));
+        }
+    }
+
+    /// <summary>아이템 데이터와 제어자를 검사한 뒤 기존 시간순 대기열을 사용합니다.</summary>
+    private void QueueEvent(PlayerStateEvent stateEvent, PhotonMessageInfo info)
+    {
+        if (CanReceive(info) && stateEvent.IsValidItemData() && stateEvent.Sequence > 0 && stateEvent.LifeVersion >= 0
+            && !double.IsNaN(stateEvent.Time) && !double.IsInfinity(stateEvent.Time))
+        {
+            playback.PushEvent(stateEvent);
         }
     }
 

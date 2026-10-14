@@ -11,6 +11,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     private const int c_minSnapshotCapacity = 2; // 두 기록 사이의 보간을 유지할 최소 버퍼 크기
     private const float c_normalPlaybackSpeed = 1f; // 실제 시간과 같은 속도의 재생 배율
     private const float c_minPositivePlaybackSpeed = 0.01f; // 시계가 멈추지 않도록 제한할 양수 배율 하한
+    private const double c_itemResolveTimeout = 2d; // 생성 이벤트와 아이템 RPC의 연결을 기다릴 최대 시간(초)
 
     [Header("스냅샷 버퍼·외삽")]
     [SerializeField, Min(c_minSnapshotCapacity), Tooltip("버퍼에 보관할 스냅샷 수의 상한. 목표 지연(초) × 전송 빈도 + 1개 이상을 기준으로 도착 지연까지 고려해 여유 있게 설정")]
@@ -58,9 +59,15 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     private PlayerMotor motor; // 원격 웅크림 자세를 적용할 컴포넌트
     private PlayerLook playerLook; // 원격 상하 시선을 적용할 컴포넌트
     private FlashlightController flashlight; // 원격 손전등의 확정값을 적용할 컴포넌트
+    private PlayerGrabber playerGrabber; // 아이템을 잡고 던지는 컴포넌트
     private PlayerAnimationController animationController; // 방향·손들기 애니메이션을 표시할 컴포넌트
     private Transform body; // 계산된 월드 위치와 몸 회전을 적용할 대상
     private bool isRemote; // 다른 사람이 조종하는 복제본인지 여부
+    private int appliedItemSequence; // 아이템 동작 사이의 과거·중복 실행을 제외할 마지막 순서
+    private int initialHeldItemViewId; // 아직 생성되지 않은 초기 소지 아이템의 식별자
+    private double initialItemDeadline; // 초기 아이템 연결의 대기 종료 시각
+    private int unresolvedItemSequence; // 아직 대상 객체를 찾지 못한 동작 순서
+    private double unresolvedItemDeadline; // 현재 미해결 동작의 대기 종료 시각
 
 #if UNITY_EDITOR
     private float targetDelay; // 이번 프레임 목표 재생 지연(초)
@@ -106,6 +113,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         PlayerMotor motor, // 원격 캡슐 자세 표시 대상
         PlayerLook playerLook, // 원격 시선 표시 대상
         FlashlightController flashlight, // 원격 손전등 표시 대상
+        PlayerGrabber playerGrabber, // 원격 Grabber
         PlayerAnimationController animationController, // 원격 애니메이션 표시 대상
         bool isRemote) // 로컬 입력 대신 원격 재생을 수행할지 여부
     {
@@ -114,6 +122,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         this.motor = motor;
         this.playerLook = playerLook;
         this.flashlight = flashlight;
+        this.playerGrabber = playerGrabber;
         this.animationController = animationController;
         this.isRemote = isRemote;
         body = transform;
@@ -128,6 +137,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         PlayerSnapshot snapshot, // 최초 전체 응답에 포함된 이동 기록
         bool light, // 응답 당시 손전등 확정값
         bool handsUp, // 응답 당시 손들기 확정값
+        int heldItemViewId, // 응답 당시 소지 아이템; 0이면 없음
         int sequence, // 응답에 이미 포함된 마지막 상태 변경 순서
         double arrivalTime) // 응답을 받은 Photon 시각(초)
     {
@@ -135,6 +145,9 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
         InitializeStateEvents(snapshot, sequence);
         InitializePlaybackClock(snapshot, arrivalTime);
         hasInitialState = true;
+        initialHeldItemViewId = heldItemViewId;
+        initialItemDeadline = Time.realtimeSinceStartupAsDouble + c_itemResolveTimeout;
+        RestoreInitialHeldItem();
         // 기준을 먼저 준비한 뒤 객체에 적용한다. 표시 중 발생하는 이벤트는 로컬 송신으로 이어지지 않는다.
         stateMachine.ApplyRemoteState(snapshot.State);
         flashlight.SetFlashlightEnabled(isAlive && light);
@@ -349,6 +362,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     {
         initialSequence = sequence;
         appliedLifeVersion = snapshot.LifeVersion;
+        appliedItemSequence = sequence;
         isAlive = snapshot.State != PlayerState.Dead;
         for (int typeIndex = 0; typeIndex < appliedSequences.Length; typeIndex++) // 기준을 설정할 이벤트 종류 번호
         {
@@ -411,6 +425,7 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
     private void ProcessDueEvents(
         float deltaTime) // 한 프레임의 경과 시간(초)
     {
+        bool waitingForItem = !RestoreInitialHeldItem();
         for (int eventIndex = 0; eventIndex < events.Count;) // 제거한 위치의 다음 이벤트를 계속 검사할 인덱스
         {
             PlayerStateEvent stateEvent = events[eventIndex]; // 이번에 검사할 시간순 변경
@@ -419,23 +434,40 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
                 break;
             }
 
-            bool waitingForLifeState = stateEvent.Type != PlayerStateEventType.LifeState && stateEvent.LifeVersion > appliedLifeVersion; // 새 생사 버전이 먼저 확정되어야 하는지 여부
+            if (stateEvent.IsItemAction && waitingForItem)
+            {
+                eventIndex++;
+                continue;
+            }
+            bool waitingForLifeState = !stateEvent.IsItemAction && stateEvent.Type != PlayerStateEventType.LifeState
+                && stateEvent.LifeVersion > appliedLifeVersion; // 표시 상태는 새 생사 기준을 기다린다.
             if (waitingForLifeState)
             {
                 eventIndex++;
                 continue;
             }
 
+            if (stateEvent.IsItemAction && !CanResolveItemEvent(stateEvent))
+            {
+                waitingForItem = true;
+                eventIndex++;
+                continue;
+            }
             events.RemoveAt(eventIndex);
             int typeIndex = (int)stateEvent.Type; // 종류별 적용 순서의 위치
             bool alreadyApplied = stateEvent.Sequence <= appliedSequences[typeIndex]; // 같은 종류의 더 최신 변경을 적용했는지 여부
-            bool oldLifeVersion = stateEvent.LifeVersion < appliedLifeVersion; // 이전 생사의 변경인지 여부
+            bool oldLifeVersion = !stateEvent.IsItemAction && stateEvent.LifeVersion < appliedLifeVersion; // 확정된 발사·해제는 생사 표시와 별도로 처리한다.
+            alreadyApplied |= stateEvent.IsItemAction && stateEvent.Sequence <= appliedItemSequence;
             if (alreadyApplied || oldLifeVersion)
             {
                 continue;
             }
 
             appliedSequences[typeIndex] = stateEvent.Sequence;
+            if (stateEvent.IsItemAction)
+            {
+                appliedItemSequence = stateEvent.Sequence;
+            }
 #if UNITY_EDITOR
             if (stateEvent.Time < playbackTime - deltaTime)
             {
@@ -467,11 +499,91 @@ public sealed class PlayerSnapshotPlayback : MonoBehaviour
             case PlayerStateEventType.HandsUp:
                 animationController.SetHandsUp(stateEvent.Value);
                 break;
+            case PlayerStateEventType.Grab:
+                if (playerGrabber != null)
+                {
+                    playerGrabber.TryGrab(stateEvent.ItemViewId);
+                }
+                break;
+            case PlayerStateEventType.Drop:
+                if (playerGrabber != null && playerGrabber.TryDrop(stateEvent.ItemViewId, stateEvent.Position, stateEvent.Rotation))
+                {
+                    SetItemReleaseContext(stateEvent);
+                }
+                break;
+            case PlayerStateEventType.Shoot:
+                if (playerGrabber != null && playerGrabber.TryShoot(stateEvent.ItemViewId, stateEvent.Position, stateEvent.Rotation, stateEvent.Force))
+                {
+                    SetItemReleaseContext(stateEvent);
+                }
+                break;
+            case PlayerStateEventType.ItemStop:
+                PhotonView itemView = PhotonView.Find(stateEvent.ItemViewId);
+                Item item = itemView != null ? itemView.GetComponent<Item>() : null;
+                if (item != null)
+                {
+                    item.ApplyPlayerStop(networkSync, stateEvent.ReleaseSequence, stateEvent.Position, stateEvent.Rotation);
+                }
+                break;
             case PlayerStateEventType.LifeState:
                 PlayerState state = isAlive ? PlayerState.Idle : PlayerState.Dead; // 새 생사 버전에서 시작할 표시 상태
                 stateMachine.ApplyRemoteState(state);
                 flashlight.SetFlashlightEnabled(false);
                 break;
+        }
+    }
+
+    /// <summary>초기 소지 아이템의 생성이 늦어도 짧게 기다린 뒤 현재 소지 상태를 복원합니다.</summary>
+    private bool RestoreInitialHeldItem()
+    {
+        if (initialHeldItemViewId == 0)
+        {
+            return true;
+        }
+        if (PhotonView.Find(initialHeldItemViewId) == null && Time.realtimeSinceStartupAsDouble < initialItemDeadline)
+        {
+            return false;
+        }
+        if (playerGrabber != null)
+        {
+            playerGrabber.TryGrab(initialHeldItemViewId);
+        }
+        initialHeldItemViewId = 0;
+        return true;
+    }
+
+    /// <summary>아직 생성되지 않은 아이템 때문에 이후 아이템 동작의 순서가 바뀌지 않게 기다립니다.</summary>
+    private bool CanResolveItemEvent(PlayerStateEvent stateEvent)
+    {
+        if (PhotonView.Find(stateEvent.ItemViewId) != null)
+        {
+            unresolvedItemSequence = 0;
+            return true;
+        }
+        if (unresolvedItemSequence != stateEvent.Sequence)
+        {
+            unresolvedItemSequence = stateEvent.Sequence;
+            unresolvedItemDeadline = Time.realtimeSinceStartupAsDouble + c_itemResolveTimeout;
+        }
+        if (Time.realtimeSinceStartupAsDouble < unresolvedItemDeadline)
+        {
+            return false;
+        }
+#if UNITY_EDITOR
+        Debug.LogWarning($"[PlayerSnapshotPlayback] 아이템 ViewID {stateEvent.ItemViewId}를 찾지 못해 동작 {stateEvent.Type}을 건너뜁니다.", this);
+#endif
+        unresolvedItemSequence = 0;
+        return true;
+    }
+
+    /// <summary>원격 해제에도 동일한 플레이어·순서를 기록해 과거 정지 보정을 구분합니다.</summary>
+    private void SetItemReleaseContext(PlayerStateEvent stateEvent)
+    {
+        PhotonView itemView = PhotonView.Find(stateEvent.ItemViewId);
+        Item item = itemView != null ? itemView.GetComponent<Item>() : null;
+        if (item != null)
+        {
+            item.SetPlayerReleaseContext(networkSync, stateEvent.Sequence);
         }
     }
 
