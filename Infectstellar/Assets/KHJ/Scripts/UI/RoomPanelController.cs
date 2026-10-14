@@ -3,6 +3,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RoomPanelController : MonoBehaviourPunCallbacks
 {
@@ -10,6 +11,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     private Player[] players;
 
     [SerializeField] private PlayerPanelController[] playerPanels;
+    [SerializeField] private Button gameStartBtn;
+    [SerializeField] private Button leaveRoomBtn;
 
     public void Start()
     {
