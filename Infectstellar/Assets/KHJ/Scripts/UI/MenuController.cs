@@ -1,7 +1,6 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using MoreMountains.Tools;
-using Cysharp.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -27,7 +26,7 @@ namespace ENZEUN.Runtime
 
         private MMStateMachine<MenuState> menuFSM;
 
-        private bool subscribedJoinLobby = false;
+        private bool subscribedPhotonCallbacks = false;
 
         private void Awake()
         {
@@ -41,19 +40,32 @@ namespace ENZEUN.Runtime
 
         private void OnDisable()
         {
-            if (PhotonLinkManager.Instance != null)
-            {
-                if (subscribedJoinLobby)
-                {
-                    PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
-                    subscribedJoinLobby = false;
-                }
-            }
+            UnSubscribePhotonCallbacks();
         }
 
         private void Start()
         {
             ChangeToTitleMenu();
+        }
+
+        private void SubscribePhotonCallbacks()
+        {
+            if (!subscribedPhotonCallbacks)
+            {
+                PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
+                PhotonLinkManager.Instance.OnJoinedRoomCallback += ChangeToInRoomMenu;
+                subscribedPhotonCallbacks = true;
+            }
+        }
+
+        private void UnSubscribePhotonCallbacks()
+        {
+            if (subscribedPhotonCallbacks)
+            {
+                PhotonLinkManager.Instance.OnJoinedLobbyCallback -= ChangeToRoomSearchMenu;
+                PhotonLinkManager.Instance.OnJoinedRoomCallback -= ChangeToInRoomMenu;
+                subscribedPhotonCallbacks = false;
+            }
         }
 
         public void ChangeToTitleMenu()
@@ -103,11 +115,7 @@ namespace ENZEUN.Runtime
             {
                 PhotonLinkManager.Instance.ConnectToPhotonServer();
 
-                if (!subscribedJoinLobby)
-                {
-                    PhotonLinkManager.Instance.OnJoinedLobbyCallback += ChangeToRoomSearchMenu;
-                    subscribedJoinLobby = true;
-                }
+                SubscribePhotonCallbacks();
             }
             else
             {
@@ -118,28 +126,20 @@ namespace ENZEUN.Runtime
 
         public void OnPlayOfflineBtnClicked()
         {
-            //더미
-            menuFSM.ChangeState(MenuState.PlayOffline);
+            ErrorPanelManager.Instance?.ShowError("Under development");
+            //menuFSM.ChangeState(MenuState.PlayOffline);
         }
 
         public void OnRankingBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Ranking);
+            ErrorPanelManager.Instance?.ShowError("Under development");
+            //menuFSM.ChangeState(MenuState.Ranking);
         }
 
         public void OnOptionsBtnClicked()
         {
-            menuFSM.ChangeState(MenuState.Options);
-        }
-
-        public void OnCreateRoomClicked()
-        {
-
-        }
-
-        public void OnJoinRoomClicked()
-        {
-
+            ErrorPanelManager.Instance?.ShowError("Under development");
+            //menuFSM.ChangeState(MenuState.Options);
         }
 
         public void OnQuitBtnClicked()

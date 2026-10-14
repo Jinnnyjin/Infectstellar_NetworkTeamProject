@@ -9,6 +9,7 @@ public class ItemDataSO : ScriptableObject
     [Tooltip("1부터 시작, 0은 미지정")] [Min(1)]
     [SerializeField] private int id;
     [SerializeField] private string itemName;
+    [SerializeField] private ItemRarity rarity;
     [SerializeField] private int price;
     [SerializeField] private float attack;
     [Tooltip("단위 kg")] [Range(MIN_WEIGHT, MAX_WEIGHT)]
@@ -16,6 +17,7 @@ public class ItemDataSO : ScriptableObject
 
     public int Id => id;
     public string ItemName => itemName;
+    public ItemRarity Rarity => rarity;
     public int Price => price;
     public float Attack => attack;
     public float Weight => weight;
