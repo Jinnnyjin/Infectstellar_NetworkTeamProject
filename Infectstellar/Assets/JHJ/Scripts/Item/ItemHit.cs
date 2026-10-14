@@ -49,15 +49,17 @@ public class ItemHit : MonoBehaviour
 
         isHit = true;
 
-        ITempDamageable damageable = collision.collider.GetComponentInParent<ITempDamageable>();
-        if (damageable == null)
-        {
-            Debug.Log($"[ItemHit] 첫Hit {collision.collider.name}, 데미지 대상 아님 → 이번 Shoot 종료", this);
-            return;
-        }
+        // [임시] 통합 전 비활성화, 플레이어 쪽 데미지 인터페이스로 교체 후 복구
+        //ITempDamageable damageable = collision.collider.GetComponentInParent<ITempDamageable>();
+        //if (damageable == null)
+        //{
+        //    Debug.Log($"[ItemHit] 첫Hit {collision.collider.name}, 데미지 대상 아님 → 이번 Shoot 종료", this);
+        //    return;
+        //}
 
-        damageable.TakeDamage(new TempDamageInfo(damage, attackerActorNumber));
+        //damageable.TakeDamage(new TempDamageInfo(damage, attackerActorNumber));
 
-        Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damage}, 공격자 {attackerActorNumber}", this);
+        //Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damage}, 공격자 {attackerActorNumber}", this);
+        Debug.Log($"[ItemHit] 적중 {collision.collider.name}");
     }
 }
