@@ -179,34 +179,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7234587060052361611, guid: 9329d60a2c0975c4c8589b7ee27d84b3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 246080825}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9329d60a2c0975c4c8589b7ee27d84b3, type: 3}
---- !u!1 &246080824 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7234587060052361611, guid: 9329d60a2c0975c4c8589b7ee27d84b3, type: 3}
-  m_PrefabInstance: {fileID: 246080823}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &246080825
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 246080824}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f523a9644b3ed682ff666a7feaa80faa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_PhotonPlayerSpawner
-  manager: {fileID: 1272680474}
-  spawnOrigin: {fileID: 1962119812}
-  originOffset: {x: 0, y: 0, z: 0}
-  slotSpacing: 1.5
-  spawnWaitTimeout: 10
-  spawnCheckInterval: 0.1
 --- !u!1 &471079283
 GameObject:
   m_ObjectHideFlags: 0
@@ -232,7 +206,7 @@ Transform:
   m_GameObject: {fileID: 471079283}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -7.5, y: 0, z: 0}
+  m_LocalPosition: {x: -2.625, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -532,7 +506,7 @@ Transform:
   m_GameObject: {fileID: 994412583}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 7.5}
+  m_LocalPosition: {x: 0, y: 0, z: 2.625}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -563,7 +537,7 @@ Transform:
   m_GameObject: {fileID: 1073307697}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -7.5}
+  m_LocalPosition: {x: 0, y: 0, z: -2.625}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -786,7 +760,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1272680475}
-  - component: {fileID: 1272680474}
   m_Layer: 0
   m_Name: PlayerSyncRateManager
   m_TagString: Untagged
@@ -794,19 +767,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1272680474
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1272680473}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: defb8a359be823725c680b790b12c68f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkManager
-  brain: {fileID: 2051086284}
 --- !u!4 &1272680475
 Transform:
   m_ObjectHideFlags: 0
@@ -1014,7 +974,7 @@ Transform:
   m_GameObject: {fileID: 1711388898}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.5, y: 0, z: 0}
+  m_LocalPosition: {x: 2.625, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1160,6 +1120,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1962119812}
   - component: {fileID: 1962119811}
+  - component: {fileID: 1962119813}
   m_Layer: 0
   m_Name: PlayerSpawnPoints
   m_TagString: Untagged
@@ -1208,6 +1169,19 @@ Transform:
   - {fileID: 1073307698}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1962119813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1962119810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa2964528f9daff4ba7816f3ba648d2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PhotonPlayerSpawnerForTest
+  playerSpawnPoints: {fileID: 1962119812}
 --- !u!1001 &1986071444
 PrefabInstance:
   m_ObjectHideFlags: 0

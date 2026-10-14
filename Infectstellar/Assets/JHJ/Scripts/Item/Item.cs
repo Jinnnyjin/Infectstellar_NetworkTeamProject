@@ -6,8 +6,6 @@ public class Item : MonoBehaviour, IInteractable
 {
     public enum State { None, Placed, Grabbed, Dropped, Thrown }
     public State CurrentState { get; private set; }
-    /// <summary>모든 복제본에서 동일하게 기록할 현재 소지자의 ActorNumber입니다.</summary>
-    public int HoldingActorNumber { get; private set; } = -1;
     public ItemDataSO ItemData => data;
     /// <summary>
     /// 똑바로 선 기준 루트 → 콜라이더 바닥면 가운데 지점 (루트 로컬 위치). 소켓 배치용
@@ -30,14 +28,11 @@ public class Item : MonoBehaviour, IInteractable
     private int shooterActorNumber;
     private bool isLocalReleaser;
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
-    private _PlayerNetworkSync playerReleaseSource; // 최종 정지를 플레이어 재생 시계로 보낼 연결점
-    private int playerReleaseSequence; // 최종 정지가 속한 내려놓기·발사 순서
-    private bool hasPlayerActionContext; // 이미 처리한 동작보다 과거의 정지 보정을 제외할 기준
 
 
     private void Awake()
     {
-        if(data == null)
+        if (data == null)
         {
             Debug.LogError($"{gameObject.name} ItemDataSO가 연결되지 않음", this);
             gameObject.SetActive(false);
@@ -46,7 +41,7 @@ public class Item : MonoBehaviour, IInteractable
 
         // 아이템 물리 Init
         physics = GetComponent<ItemPhysics>();
-        if(!physics.Init(data.Weight))
+        if (!physics.Init(data.Weight))
         {
             Debug.LogError($"{gameObject.name} 켜진 콜라이더가 없음", this);
             gameObject.SetActive(false);
@@ -86,10 +81,7 @@ public class Item : MonoBehaviour, IInteractable
                 // 판정 컴퓨터만 최종 위치를 나머지에게 보냄 (자신은 이미 그 위치)
                 if (isLocalReleaser)
                 {
-                    if (playerReleaseSource != null)
-                        playerReleaseSource.SendItemStop(this, playerReleaseSequence, transform.position, transform.rotation);
-                    else
-                        network.SendStop(transform.position, transform.rotation);
+                    network.SendStop(transform.position, transform.rotation);
                 }
             }
         }
@@ -103,7 +95,7 @@ public class Item : MonoBehaviour, IInteractable
     // 상태 전환
     private void ChangeState(State newState)
     {
-        if(newState == CurrentState)
+        if (newState == CurrentState)
         {
             Debug.LogWarning($"[Item] {data.ItemName} 이미 {CurrentState} 상태, 전환 무시", this);
             return;
@@ -112,7 +104,7 @@ public class Item : MonoBehaviour, IInteractable
         State prevState = CurrentState;
         CurrentState = newState;
 
-        switch(newState)
+        switch (newState)
         {
             case State.Placed:
                 physics.SetPhysics(false);
@@ -135,9 +127,9 @@ public class Item : MonoBehaviour, IInteractable
                 break;
 
             case State.Thrown:
-                physics.SetColliders(true); 
+                physics.SetColliders(true);
                 physics.SetPhysics(true);
-                hit.Activate(data.Attack, shooterActorNumber,isLocalReleaser);
+                hit.Activate(data.Attack, shooterActorNumber, isLocalReleaser);
                 stopTimer = 0f;
                 break;
 
@@ -155,13 +147,13 @@ public class Item : MonoBehaviour, IInteractable
     {
         if (CurrentState != State.Grabbed)
         {
-            Debug.LogWarning($"[Item] Shoot 불가 : {data.ItemName} 상태 = {CurrentState}",this);
+            Debug.LogWarning($"[Item] Shoot 불가 : {data.ItemName} 상태 = {CurrentState}", this);
             return;
         }
 
-        Vector3 force = CalculateThrowForce(direction);
+        Vector3 force = direction.normalized * throwForce;
 
-        network.SendShoot(startPos,startRot,force);
+        network.SendShoot(startPos, startRot, force);
     }
 
     /// <summary>
@@ -169,9 +161,6 @@ public class Item : MonoBehaviour, IInteractable
     /// </summary>
     private void ExecuteShoot(Vector3 startPos, Quaternion startRot, Vector3 force, int shooterActorNumber, bool isLocalReleaser)
     {
-        playerReleaseSource = null;
-        playerReleaseSequence = 0;
-        HoldingActorNumber = -1;
         this.shooterActorNumber = shooterActorNumber;
         this.isLocalReleaser = isLocalReleaser;
 
@@ -229,9 +218,6 @@ public class Item : MonoBehaviour, IInteractable
     /// </summary>
     private void ExecuteDrop(Vector3 startPos, Quaternion startRot, bool isLocalReleaser)
     {
-        playerReleaseSource = null;
-        playerReleaseSequence = 0;
-        HoldingActorNumber = -1;
         this.isLocalReleaser = isLocalReleaser;
         transform.SetPositionAndRotation(startPos, startRot);
         ChangeState(State.Dropped);
@@ -250,74 +236,21 @@ public class Item : MonoBehaviour, IInteractable
         return CurrentState == State.Placed;
     }
 
+    /// <summary>로컬 플레이어가 아이템을 집도록 적용합니다.</summary>
     public void OnGrab()
     {
-        if (!CanGrab())
-        {
-            Debug.LogWarning($"[Item] OnGrab 불가 :{data.ItemName}, 상태 {CurrentState}", this);
-            return;
-        }
-
         ApplyGrab(network.GetLocalActorNumber());
     }
 
-    /// <summary>기존 Inspector 발사 힘으로 방향을 확정된 충격량으로 바꿉니다.</summary>
-    public Vector3 CalculateThrowForce(Vector3 direction) => direction.normalized * throwForce;
-
-    /// <summary>지정 소지자의 잡기 상태를 적용하며 RPC를 송신하지 않습니다.</summary>
-    public bool ApplyGrab(int holderActorNumber)
+    /// <summary>지정한 플레이어가 아이템을 집은 상태를 RPC 송신 없이 적용합니다.</summary>
+    public void ApplyGrab(int holderActorNumber)
     {
-        if (!isActiveAndEnabled || physics == null || (CurrentState != State.Placed
-            && !(CurrentState == State.Grabbed && HoldingActorNumber == holderActorNumber)))
-            return false;
-        if (CurrentState == State.Grabbed)
-            return true;
+        if (!isActiveAndEnabled || !CanGrab())
+        {
+            return;
+        }
 
-        playerReleaseSource = null;
-        playerReleaseSequence = 0;
-        HoldingActorNumber = holderActorNumber;
-        hasPlayerActionContext = true;
         ChangeState(State.Grabbed);
         Grabbed?.Invoke(this, holderActorNumber);
-        return true;
-    }
-
-    /// <summary>소지자가 확정한 내려놓기를 기존 ItemNetwork RPC 없이 적용합니다.</summary>
-    public bool ApplyPlayerDrop(Vector3 position, Quaternion rotation, int holderActorNumber, bool localReleaser)
-    {
-        if (!isActiveAndEnabled || CurrentState != State.Grabbed || HoldingActorNumber != holderActorNumber)
-            return false;
-        ExecuteDrop(position, rotation, localReleaser);
-        return true;
-    }
-
-    /// <summary>소지자가 확정한 발사를 적용하고 발사 클라이언트에만 적중 판정을 허용합니다.</summary>
-    public bool ApplyPlayerShoot(Vector3 position, Quaternion rotation, Vector3 force, int holderActorNumber, bool localReleaser)
-    {
-        if (!isActiveAndEnabled || CurrentState != State.Grabbed || HoldingActorNumber != holderActorNumber)
-            return false;
-        ExecuteShoot(position, rotation, force, holderActorNumber, localReleaser);
-        return true;
-    }
-
-    /// <summary>최종 정지가 현재 내려놓기·발사와 연결되도록 플레이어와 순서를 보관합니다.</summary>
-    public void SetPlayerReleaseContext(_PlayerNetworkSync source, int releaseSequence)
-    {
-        playerReleaseSource = source;
-        playerReleaseSequence = releaseSequence;
-        hasPlayerActionContext = true;
-    }
-
-    /// <summary>새 잡기·발사에 과거 정지를 적용하지 않고 현재 해제의 최종 자세만 보정합니다.</summary>
-    public void ApplyPlayerStop(_PlayerNetworkSync source, int releaseSequence, Vector3 position, Quaternion rotation)
-    {
-        if (!isActiveAndEnabled || physics == null || CurrentState == State.Grabbed)
-            return;
-        // 발사 도중 입장해 아직 동작 이력이 없는 복제본도 마지막 위치를 맞춘다.
-        if (!hasPlayerActionContext)
-            SetPlayerReleaseContext(source, releaseSequence);
-        if (playerReleaseSource != source || playerReleaseSequence != releaseSequence)
-            return;
-        ApplyStopSync(position, rotation);
     }
 }

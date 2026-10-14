@@ -1,67 +1,73 @@
 using System;
-using Photon.Pun;
 using UnityEngine;
 
+/// <summary>체력을 관리하고 최초 피해 적용 결과를 알립니다.</summary>
 public class Health : MonoBehaviour, IDamageable
 {
     private float maxHP;
-    private float hp = 100;
-    private _PlayerNetworkSync networkSync;
-    public float HP => hp;
-    public event Action<float> D_HealthChanged;
+    private float hp = 100f;
 
+    /// <summary>현재 체력입니다.</summary>
+    public float HP => hp;
+
+    /// <summary>TakeDamage로 피해가 실제 적용된 뒤 알립니다.</summary>
+    public event Action<DamageInfo> D_DamageApplied;
+    /// <summary>피해로 체력이 0이 되었을 때 한 번 알립니다.</summary>
+    public event Action<DamageInfo> D_Died;
+
+    /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()
     {
         hp = 100f;
         maxHP = hp;
-        networkSync = GetComponent<_PlayerNetworkSync>();
     }
 
-    /// <summary>네트워크 플레이어는 소유자에게 피해를 요청하고, 일반 객체는 직접 적용합니다.</summary>
+    /// <summary>피해를 적용하고 성공했을 때 RPC 송신용 알림을 발생시킵니다.</summary>
     public void TakeDamage(DamageInfo damageInfo)
     {
-        if (networkSync != null && PhotonNetwork.InRoom)
+        if (!ApplyDamage(damageInfo))
         {
-            networkSync.RequestDamage(damageInfo.Amount);
             return;
         }
-        ApplyDamage(damageInfo);
+
+        D_DamageApplied?.Invoke(damageInfo);
     }
 
-    /// <summary>소유자가 확정한 피해를 한 번 적용하고 HP 변경을 알립니다. RPC를 다시 요청하지 않습니다.</summary>
-    internal void ApplyDamage(DamageInfo damageInfo)
+    /// <summary>송신용 알림 없이 피해를 적용하고, 체력이 0이 되면 사망을 알립니다.</summary>
+    internal bool ApplyDamage(DamageInfo damageInfo)
     {
         float amount = damageInfo.Amount;
-        if (!isActiveAndEnabled || hp <= 0f || !IsValidDamage(amount))
-        {
-            return;
-        }
-        hp = Mathf.Max(0f, hp - amount);
-        D_HealthChanged?.Invoke(hp);
-#if UNITY_EDITOR
-        Debug.Log($"[Health] 플레이어 {(networkSync != null ? networkSync.ActorNumber : 0)}이 {amount}만큼 공격 받음. 현재 체력 : {hp}/{maxHP}", this);
-#endif
-    }
 
-    /// <summary>원격에서는 피해를 재계산하지 않고 소유자가 보낸 최종 HP를 적용합니다.</summary>
-    internal bool ApplyNetworkHP(float value)
-    {
-        if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f || value > maxHP)
+        if (!isActiveAndEnabled || hp <= 0f || !IsValidDamage(amount))
         {
             return false;
         }
-        if (hp == value)
+
+        float nextHP = Mathf.Max(0f, hp - amount);
+        if (nextHP == hp)
         {
-            return true;
+            return false;
         }
-        hp = value;
-        D_HealthChanged?.Invoke(hp);
+
+        hp = nextHP;
+
+#if UNITY_EDITOR
+        Debug.Log($"[Health] {amount}만큼 공격 받음. 현재 체력 : {hp}/{maxHP}", this);
+#endif
+
+        if (hp <= 0f)
+        {
+            D_Died?.Invoke(damageInfo);
+        }
+
         return true;
     }
 
-    /// <summary>피해량은 유한한 양수만 허용합니다.</summary>
+    /// <summary>피해량이 유한한 양수인지 확인합니다.</summary>
     internal static bool IsValidDamage(float amount)
     {
-        return !float.IsNaN(amount) && !float.IsInfinity(amount) && amount > 0f;
+        return !float.IsNaN(amount)
+            && !float.IsInfinity(amount)
+            && amount > 0f;
     }
 }

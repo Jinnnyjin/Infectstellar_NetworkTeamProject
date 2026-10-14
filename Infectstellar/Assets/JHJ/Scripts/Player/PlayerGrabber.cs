@@ -6,9 +6,6 @@ using UnityEngine;
 public class PlayerGrabber : MonoBehaviour
 {
     public Item HeldItem => heldItem;
-    /// <summary>초기 동기화에 현재 소지한 아이템만 전달할 네트워크 식별자입니다.</summary>
-    public int HeldItemViewId => heldItem != null && heldItem.CurrentState == Item.State.Grabbed
-        && heldItem.HoldingActorNumber == ownerActorNumber ? GetItemViewId(heldItem) : 0;
 
     [SerializeField] private Transform socket;
 
@@ -19,22 +16,15 @@ public class PlayerGrabber : MonoBehaviour
     private Item heldItem;
     private int ownerActorNumber = -1;
     private bool isLocal = true;
-    private _PlayerNetworkSync networkSync;
     private PlayerStateMachine stateMachine;
 
     public event Action<bool> GrabRequested;
     public event Action<bool> DropRequested;
     public event Action<bool> ShootRequested;
-    #region 심지태 수정
-    public event Action<Item> D_Grabbed;
-    public event Action<Item, Vector3, Quaternion> D_Dropped;
-    public event Action<Item, Vector3, Quaternion, Vector3> D_Shot;
-    #endregion
 
     private void Awake()
     {
         interactor = GetComponent<PlayerInteractor>();
-        networkSync = GetComponent<_PlayerNetworkSync>();
         stateMachine = GetComponent<PlayerStateMachine>();
 
         // 액터번호, 내 플레이어 여부 : PhotonView 없거나 방 밖이면 기본값(-1, 내 것) 유지
@@ -73,7 +63,7 @@ public class PlayerGrabber : MonoBehaviour
 
     private void Update()
     {
-        if (!isLocal || (networkSync != null && !networkSync.IsLocalControlActive))
+        if (!isLocal)
             return;
 
         // [임시] 입력 액션(Interact) 추가 전까지 키 직접 읽기
@@ -94,7 +84,7 @@ public class PlayerGrabber : MonoBehaviour
         if (heldItem == null)
             return;
 
-        if (heldItem.CurrentState != Item.State.Grabbed || heldItem.HoldingActorNumber != ownerActorNumber)
+        if (heldItem.CurrentState != Item.State.Grabbed)
         {
             Debug.Log($"[PlayerGrabber] 들기 해제: {heldItem.ItemData.ItemName} ({heldItem.CurrentState})");
             heldItem = null;
@@ -148,19 +138,17 @@ public class PlayerGrabber : MonoBehaviour
 
     private bool CanHandleRequest(string requestName)
     {
-        if (!isActiveAndEnabled)
+        if(!isActiveAndEnabled)
         {
             Debug.LogWarning($"[PlayerGrabber] {requestName} 무시: 컴포넌트 꺼짐", this);
             return false;
         }
 
-        if (!isLocal)
+        if(!isLocal)
         {
             Debug.LogWarning($"[PlayerGrabber] {requestName} 무시: 내 플레이어 아님", this);
             return false;
         }
-        if (networkSync != null && !networkSync.IsLocalControlActive)
-            return false;
 
         return true;
     }
@@ -189,13 +177,7 @@ public class PlayerGrabber : MonoBehaviour
         if (target == null || !target.CanGrab())
             return false;
 
-        Item item = target as Item;
-        if (item == null || (networkSync != null && GetItemViewId(item) <= 0) || !ApplyGrab(item))
-            return false;
-
-        #region 심지태
-        D_Grabbed?.Invoke(item);
-        #endregion
+        target.OnGrab();
         GrabRequested?.Invoke(true);
         return true;
     }
@@ -212,15 +194,7 @@ public class PlayerGrabber : MonoBehaviour
         if (!TryGetReleasePose(out Vector3 pos, out Quaternion rot))
             return false;
 
-        Item item = heldItem;
-        if (networkSync == null)
-            item.Drop(pos, rot);
-        else if (!ApplyDrop(item, pos, rot))
-            return false;
-
-        #region 심지태
-        D_Dropped?.Invoke(item, pos, rot);
-        #endregion
+        heldItem.Drop(pos, rot);
         DropRequested?.Invoke(false);
         return true;
     }
@@ -249,71 +223,10 @@ public class PlayerGrabber : MonoBehaviour
         }
 
         Vector3 direction = releasePoint.forward;
-        Item item = heldItem;
-        Vector3 force = item.CalculateThrowForce(direction);
-        if (networkSync == null)
-            item.Shoot(pos, rot, direction);
-        else if (!ApplyShoot(item, pos, rot, force))
-            return false;
-
-        #region 심지태
-        D_Shot?.Invoke(item, pos, rot, force);
-        #endregion
+        heldItem.Shoot(pos, rot, direction);
         ShootRequested?.Invoke(false);
 
-        Debug.Log($"[PlayerGrabber] Shoot 요청: {item.ItemData.ItemName}, 시작 {pos:F3}, 방향 {direction:F3}", this);
+        Debug.Log($"[PlayerGrabber] Shoot 요청: {heldItem.ItemData.ItemName}, 시작 {pos:F3}, 방향 {direction:F3}", this);
         return true;
-    }
-
-    /// <summary>RPC가 지정한 아이템을 잡으며 로컬 요청·송신 이벤트는 발생시키지 않습니다.</summary>
-    public bool TryGrab(int itemViewId) => ApplyGrab(FindItem(itemViewId));
-
-    /// <summary>RPC의 확정된 시작 위치·회전으로 내려놓고 재송신하지 않습니다.</summary>
-    public bool TryDrop(int itemViewId, Vector3 position, Quaternion rotation) => ApplyDrop(FindItem(itemViewId), position, rotation);
-
-    /// <summary>RPC의 확정된 시작 위치·회전·힘으로 발사하고 재송신하지 않습니다.</summary>
-    public bool TryShoot(int itemViewId, Vector3 position, Quaternion rotation, Vector3 force) => ApplyShoot(FindItem(itemViewId), position, rotation, force);
-
-    /// <summary>소지자 번호를 사용해 같은 아이템의 상태와 소켓 추적을 연결합니다.</summary>
-    private bool ApplyGrab(Item item)
-    {
-        if (!isActiveAndEnabled || item == null || heldItem != null || !item.ApplyGrab(ownerActorNumber))
-            return false;
-        heldItem = item;
-        return true;
-    }
-
-    /// <summary>현재 소지한 아이템의 내려놓기 상태·물리를 적용합니다.</summary>
-    private bool ApplyDrop(Item item, Vector3 position, Quaternion rotation)
-    {
-        if (!isActiveAndEnabled || item == null || heldItem != item
-            || !item.ApplyPlayerDrop(position, rotation, ownerActorNumber, isLocal))
-            return false;
-        heldItem = null;
-        return true;
-    }
-
-    /// <summary>현재 소지한 아이템의 발사 상태·물리와 판정 주체를 적용합니다.</summary>
-    private bool ApplyShoot(Item item, Vector3 position, Quaternion rotation, Vector3 force)
-    {
-        if (!isActiveAndEnabled || item == null || heldItem != item
-            || !item.ApplyPlayerShoot(position, rotation, force, ownerActorNumber, isLocal))
-            return false;
-        heldItem = null;
-        return true;
-    }
-
-    /// <summary>모든 클라이언트가 같은 아이템을 찾을 네트워크 식별자를 읽습니다.</summary>
-    private static int GetItemViewId(Item item)
-    {
-        PhotonView itemView = item != null ? item.GetComponent<PhotonView>() : null;
-        return itemView != null ? itemView.ViewID : 0;
-    }
-
-    /// <summary>원격 레이캐스트 없이 RPC에 지정된 아이템을 찾습니다.</summary>
-    private static Item FindItem(int itemViewId)
-    {
-        PhotonView itemView = PhotonView.Find(itemViewId);
-        return itemView != null ? itemView.GetComponent<Item>() : null;
     }
 }

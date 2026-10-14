@@ -13,7 +13,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private PlayerMotor motor;
     [SerializeField, Tooltip("StateMachine과 같은 모델의 애니메이션 컨트롤러를 연결")]
     private PlayerAnimationController animationController;
-
+    private Health health;
     private PlayerInputReader inputReader;
     private PlayerLook playerLook;
     private FlashlightController flashlightController;
@@ -43,6 +43,7 @@ public sealed class PlayerController : MonoBehaviour
             motor = GetComponent<PlayerMotor>();
         }
 
+        health = GetComponent<Health>();
         inputReader = GetComponent<PlayerInputReader>();
         playerLook = GetComponent<PlayerLook>();
         flashlightController = GetComponent<FlashlightController>();
@@ -83,6 +84,12 @@ public sealed class PlayerController : MonoBehaviour
         {
             enabled = false;
             return;
+        }
+
+        // 추가
+        if (health != null)
+        {
+            health.D_Died += HandleDied;
         }
 
         SetLocalControlActive(networkSync == null || networkSync.IsLocalControlActive);
@@ -147,6 +154,11 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void OnDisable()
     {
+        if (health != null)
+        {
+            health.D_Died -= HandleDied;
+        }
+
         if (!isLocalControlActive)
         {
             return;
@@ -162,6 +174,23 @@ public sealed class PlayerController : MonoBehaviour
             inputReader.SetControlActive(false);
         }
         isLocalControlActive = false;
+    }
+
+    /// <summary>로컬 플레이어의 체력이 0이 되면 HFSM을 사망 상태로 전환합니다.</summary>
+    private void HandleDied(DamageInfo damageInfo)
+    {
+        if (!isInitialized || stateMachine == null)
+        {
+            return;
+        }
+
+        // 원격 플레이어의 상태는 기존 스냅샷으로 재생합니다.
+        if (networkSync != null && !networkSync.IsLocalControlActive)
+        {
+            return;
+        }
+
+        stateMachine.Die();
     }
 
     /// <summary>초기화 후 로컬 입력만 시작하거나 중단합니다.</summary>

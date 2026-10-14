@@ -458,12 +458,13 @@ GameObject:
   - component: {fileID: 8150208259652946239}
   - component: {fileID: 7423901455654246401}
   - component: {fileID: 8984561690930161050}
-  - component: {fileID: 7338459547745817413}
-  - component: {fileID: 7073898250178020161}
   - component: {fileID: 2633622859778071905}
   - component: {fileID: 6521948923584864573}
   - component: {fileID: 96879955007318545}
   - component: {fileID: 3143105792460970469}
+  - component: {fileID: 7338459547745817413}
+  - component: {fileID: 7073898250178020161}
+  - component: {fileID: 3356795141544694185}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -636,48 +637,6 @@ MonoBehaviour:
   helmetMaterialIndex: 2
   onColor: {r: 1, g: 0.78431374, b: 0.29411766, a: 1}
   offColor: {r: 0.7058824, g: 0.49019608, b: 0.019607844, a: 1}
---- !u!114 &7338459547745817413
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2022546531456197676}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 2
-  OwnershipTransfer: 0
-  observableSearch: 0
-  ObservedComponents:
-  - {fileID: 7073898250178020161}
-  sceneViewId: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
---- !u!114 &7073898250178020161
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2022546531456197676}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5b9e2e75fb748c43a3b2a7313fff1be, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkSync
-  bufferDelay: 0.1
-  playerCamera: {fileID: 3151569999027386306}
-  playerLook: {fileID: 8150208259652946239}
-  playerMotor: {fileID: 6138360425593812354}
-  body: {fileID: 3556861022553636256}
-  animationController: {fileID: 5538048699541995334}
-  mineModel: {fileID: 0}
 --- !u!114 &2633622859778071905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -733,6 +692,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a80c9bca16123741871b42971db1a4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
+--- !u!114 &7338459547745817413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 2
+  OwnershipTransfer: 0
+  observableSearch: 0
+  ObservedComponents:
+  - {fileID: 7073898250178020161}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &7073898250178020161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5b9e2e75fb748c43a3b2a7313fff1be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkSync
+  bufferDelay: 0.1
+  cinemachineCamera: {fileID: 3151569999027386306}
+  playerLook: {fileID: 8150208259652946239}
+  playerMotor: {fileID: 6138360425593812354}
+  body: {fileID: 3556861022553636256}
+  animationController: {fileID: 5538048699541995334}
+  mineModel: {fileID: 2474721882481375467}
+--- !u!114 &3356795141544694185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022546531456197676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c13708fbe2e924345a272a9663081ecf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNetworkRpc
 --- !u!1 &2046005324907659218
 GameObject:
   m_ObjectHideFlags: 0
