@@ -20,13 +20,6 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         base.OnJoinedRoom();
         RefreshPlayerList();
-
-        foreach (var p in PhotonNetwork.PlayerList)
-        {
-
-            Debug.Log("00000" + p.NickName);
-        }
-
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
