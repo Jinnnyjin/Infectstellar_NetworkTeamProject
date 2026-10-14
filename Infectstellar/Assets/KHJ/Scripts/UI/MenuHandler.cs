@@ -46,6 +46,7 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
                 Debug.Log("FirebaseLinkManager 가 초기화되지 않은 문제 발생.");
 #endif
+                return;
             }
             FirebaseLinkManager firebaseLinkManager = FirebaseLinkManager.Instance;
 

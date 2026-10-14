@@ -54,7 +54,11 @@ namespace ENZEUN.Runtime
         public void RefreshThisMenu()
         {
             InitializeNicknameMenu();
+
+            cancelBtn.interactable = FirebaseLinkManager.playerHasNickname;
+
             isMenuOnScreen = true;
+
             nicknameInput.text = string.Empty;
         }
 
