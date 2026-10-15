@@ -78,15 +78,22 @@ namespace ENZEUN.Runtime
         {
             yield return MMCoroutine.WaitForFrames(1);
             //_loadDestinationAsyncOperation.allowSceneActivation = true;
+
             while (_loadDestinationAsyncOperation.progress < 1.0f)
             {
+                if (_loadDestinationAsyncOperation.progress >= 0.85f)
+                {
+                    photonLinkManager?.SetLoadSceneState(true);
+
+                    MMLoadingSceneDebug($"testtest isDone??: {_loadDestinationAsyncOperation.isDone}");
+                }
                 yield return null;
             }
+
             MMLoadingSceneDebug("MMLoadingSceneManagerAdditive : activating destination scene");
             MMSceneLoadingManager.LoadingSceneEvent.Trigger(_sceneToLoadName, MMSceneLoadingManager.LoadingStatus.DestinationSceneActivation);
-            OnDestinationSceneActivation?.Invoke();
 
-            photonLinkManager?.SetLoadSceneState(true);
+            OnDestinationSceneActivation?.Invoke();
         }
 
         private async UniTaskVoid CheckTime(CancellationToken externalToken)
