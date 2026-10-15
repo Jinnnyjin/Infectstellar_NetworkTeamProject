@@ -64,6 +64,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         base.OnJoinedRoom();
 
+        ResetMyReadyState();
+
         chatManager.ResetChatLog();
 
         RefreshPlayerList();
@@ -89,12 +91,16 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
         chatManager.ResetChatLog();
 
+        ResetMyReadyState();
+
         MenuController.Instance.ChangeToRoomSearchMenu();
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
         base.OnMasterClientSwitched(newMasterClient);
+
+        ResetMyReadyState();
 
         RefreshPlayerList();
     }
@@ -103,9 +109,9 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
 
-        if (changedProps.ContainsKey("IsReady"))
+        if (changedProps.ContainsKey(PhotonLinkManager.isReady_Customproperty))
         {
-            bool newReady = (bool)changedProps["IsReady"];
+            bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
 
 #if UNITY_EDITOR
             Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
@@ -178,7 +184,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
     public void CheckPlayerReady()
     {
-        players = PhotonNetwork.PlayerList;
+        players = PhotonNetwork.PlayerListOthers;
         bool allReady = true;
 
         if (players.Length <= 1)
@@ -189,7 +195,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         {
             foreach (var p in players)
             {
-                if (p.CustomProperties.TryGetValue("IsReady", out object obj))
+                if (p.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
                 {
                     if (!(bool)obj)
                     {
@@ -218,6 +224,17 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
                 isReady = (bool)obj;
             }
             PhotonLinkManager.Instance.SetMyReadyState(!isReady);
+        }
+    }
+
+    public void ResetMyReadyState()
+    {
+        if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
+        {
+            if ((bool)obj)
+            {
+                PhotonLinkManager.Instance.SetMyReadyState(false);
+            }
         }
     }
 
