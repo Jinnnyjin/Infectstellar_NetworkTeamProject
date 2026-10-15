@@ -2,6 +2,14 @@
 
 최종 갱신일: 2026-10-15 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: 10개 구역 메인 탐색 맵
+
+- `Assets/SJT/3_Prefabs/MainGameMap/Sectors/`의 구역 프리팹 10개, `MainGameMap.prefab`, `Assets/SJT/4_Scenes/MainGameMapPreview.unity`를 완성했다. Sci-Fi Styled Modular Pack의 원본 모듈 스케일을 유지하며 단층 3,856㎡·방 30개·고정 소품 162개·조명 59개로 구성한다. 두 순환로와 04–10 샛길을 연결했다.
+- 확인용 씬의 베이스캠프 인스턴스만 문짝을 열고 `(10,0,-5)`에 배치해 연결 기준점과 메인맵 입구를 `(10,0,0)`에 맞췄다. 기존 BaseCamp.prefab은 닫힘을 유지한다. 플레이어·줍는 아이템·적·스폰·게임 기능·런타임 생성기는 추가하지 않았다.
+- 독립 리뷰 후 최종 정적 검증 `mainmap-static-20261015T050923539Z`를 통과했다. 바닥·천장 각 2,169점, 외벽 2,955점, 사람 크기 캡슐 경로 172개·겹침 326개에 실패 0. 241셀 전체 도달·30문/방 접근·13포털·저장11프리팹 참조·활성Animator0을 확인했다. 구역별 실내 시점과 전체 배치도 확인했다.
+- 저장 과정에서 함께 바뀐 원본 머티리얼 13개는 시작 SHA256과 정확히 같은 바이트로 복원했다. 보호 대상 893개 파일이 전부 시작 시점과 일치한다. 새 컴파일 코드가 없고 맵의 기존 테스트가 없어 프로젝트 재컴파일·EditMode는 실행하지 않았으며, 실제 플레이 이동·멀티플레이·빌드·성능은 별도 확인이 필요하다. 문서 구조 검사는 기존 누락 계획 링크 4건으로 실패했다.
+- 경로·접속 구조는 [프로젝트 설명](PROJECT.md#10개-구역-메인-탐색-맵), 상세 제작·최종 검증·한계는 [메인맵 계획](plans/2026-10-15-main-game-map.md)을 따른다. 임시 조립/검증 코드는 Temp/MainGameMap에만 있으며 영구 Unity 스크립트가 아니다.
+
 ## 현재 상태: PlayerNetworkRpc의 피해량 전달
 
 - 사용자가 적용한 Health.D_DamageApplied/ApplyDamage를 재사용해 PlayerNetworkRpc에 Health 참조·구독/해제·피해 RPC를 추가했다. 최초 TakeDamage의 로컬 적용 이후 피해 대상 PhotonView로 Others에 float 피해량을 전송하고, 수신은 ApplyDamage만 호출해 재송신하지 않는다.
@@ -269,6 +277,18 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 - 게임 컴파일·실행은 이 적용 작업의 확인 대상이 아니다.
 <!-- harness:status:end -->
 
+## 로컬 모듈러 맵 제작 스킬 (2026-10-15)
+
+- [assemble-modular-map](../../.agents/skills/assemble-modular-map/SKILL.md)을 추가했다. 샘플 씬 기준 분석, Unity Search 스킬 연결, 모듈 규격·접합 확인, 시험 조립·전체 배치·시각/구조 검증을 안내한다. AGENTS의 작업별 참고 표와 한국어 UI를 연결했다.
+- 이 프로젝트의 로컬 하네스에만 추가했으며 실제 에셋 팩·샘플 씬 경로와 맵 구조는 제작 요청 시 확인한다. 게임 코드·자산·공통 원본은 변경하지 않았다. 자동 선택과 실제 Editor 맵 제작은 아직 검증하지 않았다.
+- 독립 정적 시나리오 검토에서 확정 문제를 찾지 못했다. 새 스킬과 연결 파일의 제한된 메타데이터/UI 형식·로컬 링크/앵커 검사는 통과했다. skill-creator의 quick_validate.py는 PyYAML 부재로 실행 불가이며 전체 하네스 검사는 기존 누락 계획 링크 4건이 남아 있다.
+
+## 베이스캠프 제작 (2026-10-15)
+
+- 사용자가 승인한 8×8·높이 4.4·scale 1의 빈 방을 Modular_SciFi_Pack Metal로 조립했다. 결과는 `Assets/SJT/3_Prefabs/BaseCamp/BaseCamp.prefab`과 `Assets/SJT/4_Scenes/BaseCampPreview.unity`다. 기존 MapMakingScene과 원본 팩은 보존했다.
+- 정면 +Z의 Door4와 상부 창·환기구·발광 벽·천장 패널·문 옆 패널을 배치했다. 원본 뒤판을 보정한 문틀 및 양면 문짝 메시만 SJT에 파생했다. 메인맵은 연결하지 않았고 출입문 주변 외벽까지만 마감했다.
+- 세부 구성·수정 후 검증·남은 범위는 [베이스캠프 계획](plans/2026-10-15-basecamp.md)을 따른다. 문은 닫힌 상태로 저장했으며 개폐·판매·네트워크·스폰 기능은 없다. PlayMode·실제 이동·빌드는 수행하지 않는다.
+
 ## C# 리팩토링 공통 스킬
 
 - csharp-refactor 스킬·한국어 UI·참고 문서 4개와 AGENTS 연결을 이 프로젝트와 공통 원본에 추가했다. 공통 원본 main의 v1.1.5, 커밋 c6d091b7421a01ff9bacb3d916fe792a92f268c8로 게시했다.
@@ -283,3 +303,8 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 사용자 요청으로 델리게이트 멤버의 기본을 public event와 D_ + PascalCase로 정했다. 반드시 내부 전용이어야 할 때만 private/protected와 d_ + camelCase를 사용한다. 로컬 컨벤션 두 절과 예시를 맞췄으며 게임 코드·공통 원본은 변경하지 않았다.
 
 공통 원본에도 동일한 기준을 병합했으며 UnityHarness main의 v1.1.6, 커밋 a728a1d3b076570895aadd2be0b1f1bc702c905f로 게시했다. 게시 파일은 VERSION·공통 코딩 컨벤션·예시 3개이며 다른 프로젝트는 자동 갱신하지 않았다.
+
+## 모듈러 맵 스킬 공통 원본 게시 (2026-10-15)
+
+- 로컬 assemble-modular-map 스킬을 공통 원본에 병합했다. SJT 배치 문구를 대상 프로젝트 규칙으로 일반화했고, AGENTS 연결·한국어 UI·README 스킬 수 9개·VERSION 1.1.7을 맞췄다. UnityHarness main의 커밋 622e6915eddc0e7a0d81d5cbeaf5144fc37387f9로 게시했다.
+- 공통 템플릿 구조·새 스킬의 제한된 형식/UI·상대 참조/앵커·변경 보호 검사와 독립 정적 검토를 통과했다. 로컬 전체 검사는 기존 HANDOFF 누락 계획 링크 4건으로 실패했고 quick_validate.py는 PyYAML 부재로 실행하지 못했다. 실제 자동 선택·Editor 조립·시각/이동 동작은 미검증이다. 게임 코드·자산·설치 기준과 다른 프로젝트는 이번 작업에서 변경하지 않았다.
