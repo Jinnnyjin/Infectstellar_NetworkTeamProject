@@ -287,8 +287,9 @@ namespace ENZEUN.Runtime
             if (changedProps.ContainsKey(isReady_Customproperty))
             {
                 bool newReady = (bool)changedProps[isReady_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
-
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 준비 상태가 변경됨: {newReady}");
+#endif
                 // 준비 상태 변경 이벤트 발행
                 OnReadyStateChanged?.Invoke(targetPlayer, newReady);
             }
@@ -297,7 +298,9 @@ namespace ENZEUN.Runtime
             if (changedProps.ContainsKey(myColor_Customproperty))
             {
                 int MyColorIndex = (int)changedProps[myColor_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {MyColorIndex}");
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 플레이어 색이 변경됨: {MyColorIndex}");
+#endif
 
                 // 준비 상태 변경 이벤트 발행
                 OnMyColorChanged?.Invoke(targetPlayer, MyColorIndex);
@@ -307,7 +310,9 @@ namespace ENZEUN.Runtime
             if (changedProps.ContainsKey(sceneLoading_Customproperty))
             {
                 bool sceneLoadingState = (bool)changedProps[sceneLoading_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {sceneLoadingState}");
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 로딩 씬 상태가 변경됨: {sceneLoadingState}");
+#endif
 
                 // 준비 상태 변경 이벤트 발행
                 CheckAllPlayerSceneLoaded();
@@ -368,7 +373,6 @@ namespace ENZEUN.Runtime
             Debug.LogError($"모든 플레이어가 준비되었습니다.");
 #endif
             OnAllPlayerReadyToNextScene?.Invoke();
-
         }
 
         #endregion
