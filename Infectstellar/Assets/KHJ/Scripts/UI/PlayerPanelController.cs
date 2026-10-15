@@ -14,12 +14,17 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nickNameTextGrid;
     [SerializeField] private Image colorGrid;
     [SerializeField] private MMF_Player fb;
+    [SerializeField] private CanvasGroup masterIconCanvas;
+    [SerializeField] private CanvasGroup readyIconCanvas;
+
+
 
     private bool isShowing = false;
 
 
     public void RefreshPlayerPanel()
     {
+        // 1. 플레이어가 존재하지 않을 경우
         if (player == null)
         {
             if (isShowing)
@@ -28,21 +33,54 @@ public class PlayerPanelController : MonoBehaviour
                 isShowing = false;
                 gameObject.SetActive(false);
             }
+            return;
+        }
+
+        // 2. 존재할 경우
+        if (!isShowing)
+        {
+            gameObject.SetActive(true);
+            fb.PlayFeedbacksTopToBottom();
+            isShowing = true;
+        }
+
+        // 패널의 닉네임과 일치하지 않으면 변경
+        if (nickNameTextGrid.text != player.NickName)
+        {
+            nickNameTextGrid.SetText(player.NickName);
+        }
+
+        // 마스터면 아이콘 보여주기
+        if (player.IsMasterClient)
+        {
+            masterIconCanvas.alpha = 1f;
+            readyIconCanvas.alpha = 0f;
         }
         else
         {
-            if (!isShowing)
-            {
-                gameObject.SetActive(true);
-                fb.PlayFeedbacksTopToBottom();
-                isShowing = true;
-            }
+            masterIconCanvas.alpha = 0f;
 
-            // 패널의 닉네임과 일치하지 않으면 변경
-            if (nickNameTextGrid.text != player.NickName)
+            // 현재 Ready 상태 보여주기 (마스터가 아닌 애들만 표시)
+            if (player.CustomProperties.TryGetValue("IsReady", out object obj))
             {
-                nickNameTextGrid.SetText(player.NickName);
+                bool show = (bool)obj;
+
+                float alpha;
+
+                if (show)
+                {
+                    alpha = 1f;
+                }
+                else
+                {
+                    alpha = 0f;
+                }
+                readyIconCanvas.alpha = alpha;
             }
         }
+
+
+
     }
+
 }
