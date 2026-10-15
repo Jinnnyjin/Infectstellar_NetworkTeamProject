@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 3
   itemName: Gemstone(Copper)
   rarity: 0
-  price: 40
+  price: 400
   attack: 20
   weight: 5
