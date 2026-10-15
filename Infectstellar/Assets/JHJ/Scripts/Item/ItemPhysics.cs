@@ -10,7 +10,7 @@ public class ItemPhysics : MonoBehaviour
     private Collider[] colliders;
 
     /// <summary>
-    /// 최하단 오프셋 계산에서 읽기 전용으로 사용
+    /// 바닥 중심 계산에서 읽기 전용으로 사용
     /// </summary>
     public Collider[] Colliders => colliders;
 
@@ -27,7 +27,7 @@ public class ItemPhysics : MonoBehaviour
     public bool Init(float mass)
     {
         rb = GetComponent<Rigidbody>();
-        colliders = GetComponentsInChildren<Collider>();
+        colliders = GetColliders(transform);
 
         if (!HasEnabledCollider())
             return false;
@@ -77,6 +77,15 @@ public class ItemPhysics : MonoBehaviour
         bool isAngularStopped = rb.angularVelocity.sqrMagnitude < stopAngularSpeed * stopAngularSpeed;
 
         return isLinearStopped && isAngularStopped;
+    }
+
+    /// <summary>
+    /// 아이템 물리 콜라이더 수집 규칙.
+    /// Init과 스포너(프리팹 에셋)가 같은 규칙을 쓰도록 static으로 분리
+    /// </summary>
+    public static Collider[] GetColliders(Transform root)
+    {
+        return root.GetComponentsInChildren<Collider>();
     }
 
     /// <summary>
