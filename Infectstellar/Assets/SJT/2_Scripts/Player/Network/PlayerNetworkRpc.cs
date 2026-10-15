@@ -10,6 +10,7 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
     private FlashlightController flashlightController;
     private PlayerGrabber playerGrabber;
     private Health health;
+    private PlayerAnimationController playerAnimationController;
 
     /// <summary>RPC 송수신에 필요한 같은 객체의 컴포넌트를 확보합니다.</summary>
     private void Awake()
@@ -19,11 +20,12 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         flashlightController = GetComponent<FlashlightController>();
         playerGrabber = GetComponent<PlayerGrabber>();
         health = GetComponent<Health>();
+        playerAnimationController = GetComponentInChildren<PlayerAnimationController>();
 
-        if (photonView == null || networkSync == null || flashlightController == null || playerGrabber == null || health == null)
+        if (photonView == null || networkSync == null || flashlightController == null || playerGrabber == null || health == null || playerAnimationController == null)
         {
 #if UNITY_EDITOR
-            Debug.LogError("[PlayerNetworkRpc] PhotonView, NetworkSync, FlashlightController, PlayerGrabber 또는 Health가 없습니다.", this);
+            Debug.LogError("[PlayerNetworkRpc] PhotonView, NetworkSync, FlashlightController, PlayerGrabber, playerAnimationController 또는 Health가 없습니다.", this);
 #endif
             enabled = false;
             return;
@@ -47,6 +49,11 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         {
             health.D_DamageApplied += HandleDamageApplied;
         }
+
+        if (playerAnimationController != null)
+        {
+            playerAnimationController.D_HandsUpStateChanged += HandleHandsUpStateChanged;
+        }
     }
 
     /// <summary>손전등 상태 변경·아이템 잡기·피해 적용 알림의 구독을 해제합니다.</summary>
@@ -65,6 +72,11 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         if (health != null)
         {
             health.D_DamageApplied -= HandleDamageApplied;
+        }
+
+        if (playerAnimationController != null)
+        {
+            playerAnimationController.D_HandsUpStateChanged -= HandleHandsUpStateChanged;
         }
     }
 
@@ -142,6 +154,8 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         }
 
         item.ApplyGrab(info.Sender.ActorNumber);
+
+        playerAnimationController.SetHandsUp(item.CurrentState == Item.State.Grabbed);
     }
 
     /// <summary>이 클라이언트에서 적용한 피해를 다른 클라이언트에 전달합니다.</summary>
@@ -167,5 +181,31 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
 
         // 발신자는 피해 대상의 제어 주체와 다를 수 있으며, 유효한 피해량 검사는 Health가 담당합니다.
         health.ApplyDamage(new DamageInfo(amount));
+    }
+
+    private void HandleHandsUpStateChanged(bool isHandsup)
+    {
+        if (!isActiveAndEnabled || photonView == null || networkSync == null || !networkSync.IsLocalControlActive)
+        {
+            return;
+        }
+
+        photonView.RPC(nameof(RpcSetHandsUp), RpcTarget.Others, isHandsup);
+    }
+
+    [PunRPC]
+    private void RpcSetHandsUp(bool isHandsUp, PhotonMessageInfo info)
+    {
+        if (!isActiveAndEnabled || photonView == null || playerAnimationController == null || info.Sender == null)
+        {
+            return;
+        }
+
+        if (info.Sender.ActorNumber != photonView.ControllerActorNr)
+        {
+            return;
+        }
+
+        playerAnimationController.SetHandsUp(isHandsUp);
     }
 }

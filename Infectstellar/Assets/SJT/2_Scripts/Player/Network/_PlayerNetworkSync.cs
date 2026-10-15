@@ -25,6 +25,9 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     private PlayerAnimationController animationController;
     [SerializeField] private GameObject mineModel;
 
+    [SerializeField] private GameObject playerViewCamera;
+    [SerializeField] private GameObject thirdPersonViewCamera;
+
     public int ActorNumber => actorNumber;
 
     /// <summary>현재 클라이언트가 이 플레이어를 제어하는지 반환합니다.</summary>
@@ -32,6 +35,8 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 
     /// <summary>네트워크 생성이 완료되고 내 제어 권한이 유효한지 반환합니다.</summary>
     public bool IsLocalControlActive => isInitialized && isActiveAndEnabled && PhotonNetwork.InRoom && IsMine && photonView.ControllerActorNr == actorNumber;
+    public GameObject PlayerViewCamera => playerViewCamera;
+    public GameObject ThirdPersonViewCamera => thirdPersonViewCamera;
 
     /// <summary>송수신과 원격 자세 적용에 필요한 참조를 확보합니다.</summary>
     private void Awake()
