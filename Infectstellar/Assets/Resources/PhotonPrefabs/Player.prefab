@@ -653,7 +653,7 @@ MonoBehaviour:
   interactDistance: 3
   interactMask:
     serializedVersion: 2
-    m_Bits: 63
+    m_Bits: 127
 --- !u!114 &6521948923584864573
 MonoBehaviour:
   m_ObjectHideFlags: 0
