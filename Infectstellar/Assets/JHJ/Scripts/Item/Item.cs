@@ -28,6 +28,7 @@ public class Item : MonoBehaviour, IInteractable
     private int shooterActorNumber;
     private bool isLocalReleaser;
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
+    private bool isSold;
 
 
     private void Awake()
@@ -221,6 +222,24 @@ public class Item : MonoBehaviour, IInteractable
         this.isLocalReleaser = isLocalReleaser;
         transform.SetPositionAndRotation(startPos, startRot);
         ChangeState(State.Dropped);
+    }
+
+    // =============================================================
+    // Sold
+
+    /// <summary>
+    /// 판매 처리 표시, 이미 판매됐다면 false
+    /// Master 판매구역에서만 사용 (콜라이더가 여러개면 중복 판매될까봐)
+    /// </summary>
+    public bool TryMarkSold()
+    {
+        if(isSold)
+        {
+            return false;
+        }
+
+        isSold = true;
+        return true;
     }
 
     // =============================================================
