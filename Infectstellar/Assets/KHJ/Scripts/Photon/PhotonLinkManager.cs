@@ -118,7 +118,22 @@ namespace ENZEUN.Runtime
             PhotonNetwork.JoinRandomRoom();
         }
 
+        /// <summary>
+        /// 게임 시작 하면 Room 을 닫는 로직
+        /// </summary>
+        public void HideRoomWhenGameStarted()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // 더 이상 목록에 뜨지 않도록 숨김 처리
+                PhotonNetwork.CurrentRoom.IsVisible = false;
 
+                // 새로운 플레이어의 입장을 막기
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+            }
+        }
+
+        //=================================================================================================
         #region Photon Callbacks
 
         public override void OnJoinedRoom()
@@ -247,5 +262,19 @@ namespace ENZEUN.Runtime
         }
 
         #endregion
+
+        #region Room Custom Property Edit Methods
+
+        public void SetRoomMapType(string mapName)
+        {
+            // ExitGames.Client.Photon.Hashtable 사용
+            Hashtable props = new Hashtable() { { "GameStarted", mapName } };
+
+            // 현재 방(Room)에 커스텀 속성 설정
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
+        #endregion
+
     }
 }
