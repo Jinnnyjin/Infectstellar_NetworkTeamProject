@@ -1,3 +1,4 @@
+#if false // 새 시스템 전환 검증 후 삭제할 이전 구현
 using System.Collections.Generic;
 using Photon.Pun;
 using Unity.Cinemachine;
@@ -329,3 +330,5 @@ public sealed class PlayerSyncRateManager : MonoBehaviour
 
     #endregion
 }
+
+#endif
