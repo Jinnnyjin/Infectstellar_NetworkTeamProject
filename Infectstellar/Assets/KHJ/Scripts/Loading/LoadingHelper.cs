@@ -61,10 +61,9 @@ namespace ENZEUN.Runtime
         {
             SetCancelCondition(true);
 
-            PhotonNetwork.AutomaticallySyncScene = true;
+            Debug.Write("AllPlayerReady@@@@@@@@@@");
 
-            if (PhotonNetwork.LocalPlayer.IsMasterClient)
-                ActivateScene();
+            ActivateScene();
         }
 
         public void ActivateScene()

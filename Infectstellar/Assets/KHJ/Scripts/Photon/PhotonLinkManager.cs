@@ -29,7 +29,7 @@ namespace ENZEUN.Runtime
 
         public static int MaxPlayer = 4;
 
-        [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
+        private PhotonRoomListHandler photonRoomListHandler;
 
         /// <summary>
         /// Instance 는 하나만 존재하도록 (싱글턴)
@@ -66,7 +66,6 @@ namespace ENZEUN.Runtime
         public Action OnAllPlayerReadyToNextScene;
 
 
-
         public void ConnectToPhotonServer()
         {
             if (!PhotonNetwork.IsConnected)
@@ -92,7 +91,8 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("Joined Lobby");
 #endif
-            photonRoomListHandler.Initialize();
+            photonRoomListHandler = FindFirstObjectByType<PhotonRoomListHandler>();
+            photonRoomListHandler?.Initialize();
             OnJoinedLobbyCallback?.Invoke();
         }
 
@@ -187,7 +187,7 @@ namespace ENZEUN.Runtime
                 return;
             }
 
-            OnAllPlayerReadyToNextScene?.Invoke();
+            photonView.RPC(nameof(LoadSceneRPC), RpcTarget.All);
         }
 
         //=================================================================================================
@@ -355,6 +355,20 @@ namespace ENZEUN.Runtime
 
             // 현재 방(Room)에 커스텀 속성 설정
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
+        #endregion
+
+
+        #region Photon RPC Method
+        [PunRPC]
+        private void LoadSceneRPC()
+        {
+#if UNITY_EDITOR
+            Debug.LogError($"모든 플레이어가 준비되었습니다.");
+#endif
+            OnAllPlayerReadyToNextScene?.Invoke();
+
         }
 
         #endregion
