@@ -12,6 +12,21 @@ namespace ENZEUN.Runtime
     {
         public static PhotonLinkManager Instance;
 
+
+        /// <summary>
+        /// 포톤 Player Custom Property 의 대기실 준비 상태
+        /// </summary>
+        public static string isReady_Customproperty = "IsReady";
+        /// <summary>
+        /// 포톤 Player Custom Property 의 캐릭터 색깔
+        /// </summary>
+        public static string myColor_Customproperty = "MyColor";
+        /// <summary>
+        /// 포톤 Player Custom Property 의 다음 씬으로의 로딩이 완료되었는지
+        /// </summary>
+        public static string sceneLoading_Customproperty = "SceneLoaded";
+
+
         public static int MaxPlayer = 4;
 
         [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
@@ -41,9 +56,16 @@ namespace ENZEUN.Runtime
         public Action<List<RoomInfo>> OnRoomListUpdated;
         public Action OnJoinedLobbyCallback;
         public Action OnJoinedRoomCallback;
+        public Action<Player> OnMasterChangedCallback;
 
         // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
         public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
+        public Action<Player, int> OnMyColorChanged; // 플레이어, 바뀐 색 상태
+
+
+        public Action OnAllPlayerReadyToNextScene;
+
+
 
         public void ConnectToPhotonServer()
         {
@@ -117,7 +139,58 @@ namespace ENZEUN.Runtime
             PhotonNetwork.JoinRandomRoom();
         }
 
+        /// <summary>
+        /// 게임 시작 하면 Room 을 닫는 로직
+        /// </summary>
+        public void HideRoomWhenGameStarted()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // 더 이상 목록에 뜨지 않도록 숨김 처리
+                PhotonNetwork.CurrentRoom.IsVisible = false;
 
+                // 새로운 플레이어의 입장을 막기
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+            }
+        }
+
+
+        private void CheckAllPlayerSceneLoaded()
+        {
+            // 마스터만 가능하도록 설정
+            if (!PhotonNetwork.LocalPlayer.IsMasterClient)
+            {
+                return;
+            }
+
+            Player[] players = PhotonNetwork.PlayerList;
+
+            bool isAllReady = true;
+
+            foreach (var p in players)
+            {
+                if (p.CustomProperties.TryGetValue(sceneLoading_Customproperty, out object obj))
+                {
+                    if (!(bool)obj)
+                    {
+                        isAllReady = false;
+                    }
+                }
+                else
+                {
+                    isAllReady = false;
+                }
+            }
+
+            if (!isAllReady)
+            {
+                return;
+            }
+
+            OnAllPlayerReadyToNextScene?.Invoke();
+        }
+
+        //=================================================================================================
         #region Photon Callbacks
 
         public override void OnJoinedRoom()
@@ -192,20 +265,11 @@ namespace ENZEUN.Runtime
             OnRoomListUpdated?.Invoke(CachedRoomList);
         }
 
-        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        public override void OnMasterClientSwitched(Player newMasterClient)
         {
-            base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+            base.OnMasterClientSwitched(newMasterClient);
 
-            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
-            if (changedProps.ContainsKey("IsReady"))
-            {
-                bool newReady = (bool)changedProps["IsReady"];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
-
-                // 준비 상태 변경 이벤트 발행
-                OnReadyStateChanged?.Invoke(targetPlayer, newReady);
-            }
-
+            OnMasterChangedCallback?.Invoke(newMasterClient);
         }
 
         public override void OnDisconnected(DisconnectCause cause)
@@ -215,16 +279,85 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(isReady_Customproperty))
+            {
+                bool newReady = (bool)changedProps[isReady_Customproperty];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
+
+                // 준비 상태 변경 이벤트 발행
+                OnReadyStateChanged?.Invoke(targetPlayer, newReady);
+            }
+
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(myColor_Customproperty))
+            {
+                int MyColorIndex = (int)changedProps[myColor_Customproperty];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {MyColorIndex}");
+
+                // 준비 상태 변경 이벤트 발행
+                OnMyColorChanged?.Invoke(targetPlayer, MyColorIndex);
+            }
+
+            // "SceneLoaded" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(sceneLoading_Customproperty))
+            {
+                bool sceneLoadingState = (bool)changedProps[sceneLoading_Customproperty];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {sceneLoadingState}");
+
+                // 준비 상태 변경 이벤트 발행
+                CheckAllPlayerSceneLoaded();
+            }
+
+        }
+
         #region Player Custom Property Edit Methods
+
         /// <summary>
-        /// 내 준비 상태를 변경하고 서버에 동기화
+        /// 내 준비 상태 (대기실 -> 실제 게임 필드)
         /// </summary>
         public void SetMyReadyState(bool isReady)
         {
-            Hashtable props = new Hashtable() { { "IsReady", isReady } };
+            Hashtable props = new Hashtable() { { isReady_Customproperty, isReady } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        /// <summary>
+        /// 내 캐릭터 색
+        /// </summary>
+        public void SetMyColorState(int index)
+        {
+            Hashtable props = new Hashtable() { { myColor_Customproperty, index } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        /// <summary>
+        /// 씬 로딩이 완료되었는지
+        /// </summary>
+        public void SetLoadSceneState(bool loaded)
+        {
+            Hashtable props = new Hashtable() { { sceneLoading_Customproperty, loaded } };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
         #endregion
+
+        #region Room Custom Property Edit Methods
+
+        public void SetRoomMapType(string mapName)
+        {
+            // ExitGames.Client.Photon.Hashtable 사용
+            Hashtable props = new Hashtable() { { "GameStarted", mapName } };
+
+            // 현재 방(Room)에 커스텀 속성 설정
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
+        #endregion
+
     }
 }

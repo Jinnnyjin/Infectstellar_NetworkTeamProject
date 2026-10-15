@@ -73,7 +73,7 @@ namespace ENZEUN.Runtime
             }
         }
 
-        private void AddChatMessage(string senderName, string message)
+        public void AddChatMessage(string senderName, string message)
         {
             string newLog = $"<b>{senderName}</b>: {message}";
 
@@ -101,6 +101,11 @@ namespace ENZEUN.Runtime
 
             // 채팅 효과음 + 진동
             chatSoundFb.PlayFeedbacks();
+        }
+
+        public void ResetChatLog()
+        {
+            chatLogText.text = string.Empty;
         }
 
         public override void OnDisable()

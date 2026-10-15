@@ -8,40 +8,32 @@ public class ItemHit : MonoBehaviour
 {
     private bool isActive;
     private bool isHit;
-    private float damage;
     private int attackerActorNumber;
     private bool isLocalThrower;
     private Func<Collider, int> getOwnerActorNumber;
 
     #region 심지태
     private DamageSource damageSource;
-
-    private void Awake()
-    {
-        if (!gameObject.TryGetComponent<DamageSource>(out DamageSource _damageSource))
-        {
-#if UNITY_EDITOR
-            Debug.LogError($"ItemHit : 오브젝트에 DamageSource가 없습니다.");
-#endif
-            return;
-        }
-        else
-        {
-            damageSource = _damageSource;
-        }
-    }
     #endregion
 
 
     public void Init(Func<Collider, int> GetOwnerActorNumber, ItemDataSO itemDataSO)
     {
         this.getOwnerActorNumber = GetOwnerActorNumber;
+
+        if (!gameObject.TryGetComponent<DamageSource>(out damageSource))
+        {
+#if UNITY_EDITOR
+            Debug.LogError($"ItemHit : 오브젝트에 DamageSource가 없습니다.");
+#endif
+            return;
+        }
+
         damageSource.Init(itemDataSO.Attack);
     }
 
-    public void Activate(float damage, int attackerActorNumber, bool isLocalThrower)
+    public void Activate(int attackerActorNumber, bool isLocalThrower)
     {
-        this.damage = damage;
         this.attackerActorNumber = attackerActorNumber;
         this.isLocalThrower = isLocalThrower;
 
@@ -56,7 +48,7 @@ public class ItemHit : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log($"collision : {collision.gameObject.name}");
+        Debug.Log($"collision : {collision.gameObject.name}"); // [임시]
 
         // 활성화 상태 아니거나 이미 맞은 경우 무시
         if (!isActive || isHit)
@@ -71,7 +63,7 @@ public class ItemHit : MonoBehaviour
             return;
 
         isHit = true;
-        Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damage}, 공격자 {attackerActorNumber}", this);
+        Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damageSource.Damage}, 공격자 {attackerActorNumber}", this);
 
         #region 심지태
         if (damageSource == null)
