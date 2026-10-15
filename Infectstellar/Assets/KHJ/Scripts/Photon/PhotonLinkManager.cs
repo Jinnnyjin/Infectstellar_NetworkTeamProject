@@ -29,7 +29,7 @@ namespace ENZEUN.Runtime
 
         public static int MaxPlayer = 4;
 
-        [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
+        private PhotonRoomListHandler photonRoomListHandler;
 
         /// <summary>
         /// Instance 는 하나만 존재하도록 (싱글턴)
@@ -92,7 +92,8 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("Joined Lobby");
 #endif
-            photonRoomListHandler.Initialize();
+            photonRoomListHandler = FindFirstObjectByType<PhotonRoomListHandler>();
+            photonRoomListHandler?.Initialize();
             OnJoinedLobbyCallback?.Invoke();
         }
 
