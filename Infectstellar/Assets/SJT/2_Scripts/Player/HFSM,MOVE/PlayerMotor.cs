@@ -288,11 +288,10 @@ public sealed class PlayerMotor : MonoBehaviour
     }
 
     /// <summary>
-    /// 플레이어의 웅크림/서있음 상태를 설정
-    /// 발 위치를 유지하며 캡슐 높이,중심과 isCrouching을 변경합니다.
+    /// 로컬 웅크림 요청을 처리하며, 일어설 공간이 있을 때만 선 자세로 변경합니다.
     /// </summary>
     /// <param name="crouchRequested">웅크림 요청</param>
-    public void SetCrouching(bool crouchRequested)
+    public void TrySetCrouching(bool crouchRequested)
     {
         if (isCrouching == crouchRequested) // 이미 웅크린 경우 종료
         {
@@ -304,11 +303,11 @@ public sealed class PlayerMotor : MonoBehaviour
             return;
         }
 
-        ApplyRemoteCrouch(crouchRequested);
+        SetCrouching(crouchRequested);
     }
 
-    /// <summary>제어자가 확정한 캡슐 자세를 로컬 천장 검사 없이 적용합니다.</summary>
-    public void ApplyRemoteCrouch(bool crouchRequested)
+    /// <summary>확정된 웅크림 자세를 캡슐과 시점 높이에 적용합니다. 일어설 공간은 재검사하지 않습니다.</summary>
+    public void SetCrouching(bool crouchRequested)
     {
         if (settings == null || characterController == null || isCrouching == crouchRequested)
         {
@@ -340,7 +339,7 @@ public sealed class PlayerMotor : MonoBehaviour
     public void Simulate(PlayerMovementCommand command, float deltaTime)
     {
         #region 웅크림
-        SetCrouching(command.Crouch);
+        TrySetCrouching(command.Crouch);
         #endregion
 
         #region 점프
