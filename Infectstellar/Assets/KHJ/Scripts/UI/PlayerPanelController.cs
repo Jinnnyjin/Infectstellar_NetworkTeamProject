@@ -34,9 +34,14 @@ public class PlayerPanelController : MonoBehaviour
             if (!isShowing)
             {
                 gameObject.SetActive(true);
-                nickNameTextGrid.SetText(player.NickName);
                 fb.PlayFeedbacksTopToBottom();
                 isShowing = true;
+            }
+
+            // 패널의 닉네임과 일치하지 않으면 변경
+            if (nickNameTextGrid.text != player.NickName)
+            {
+                nickNameTextGrid.SetText(player.NickName);
             }
         }
     }

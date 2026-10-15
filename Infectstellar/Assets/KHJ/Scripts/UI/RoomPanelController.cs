@@ -11,6 +11,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
     private Player[] players;
 
+    [SerializeField] private ChatManager chatManager;
     [SerializeField] private PlayerPanelController[] playerPanels;
     [SerializeField] private Button gameStartBtn;
     [SerializeField] private Button leaveRoomBtn;
@@ -47,18 +48,21 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+        chatManager.ResetChatLog();
         RefreshPlayerList();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         base.OnPlayerEnteredRoom(newPlayer);
+        chatManager.AddChatMessage("System", $"player [{newPlayer.NickName}] has joined room.");
         RefreshPlayerList();
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         base.OnPlayerLeftRoom(otherPlayer);
+        chatManager.ResetChatLog();
         RefreshPlayerList();
     }
 

@@ -69,7 +69,7 @@ public sealed class PlayerStateMachine : MonoBehaviour
         // 이동해서 바뀐 몸 정보를 Graph에 다시 전달
         stateGraph.UpdateStateAfterMovement(motor.IsGrounded, motor.VerticalVelocity, motor.IsCrouching, motor.CanStand());
         // 이동 후 갱신된 웅크림 판단을 실제 캡슐 자세에 반영
-        motor.SetCrouching(stateGraph.WantsCrouch);
+        motor.TrySetCrouching(stateGraph.WantsCrouch);
         // 최종 상태가 바뀌었으면 현재 상태를 갱신하고 StateChanged 이벤트로 알림
         PublishStateChange();
     }
@@ -92,14 +92,15 @@ public sealed class PlayerStateMachine : MonoBehaviour
         PublishStateChange();
     }
 
+    /// <summary>HFSM이 결정한 최종 상태를 공통 적용 메서드에 전달합니다.</summary>
     private void PublishStateChange()
     {
         PlayerState nextState = stateGraph.CurrentState;
-        ApplyRemoteState(nextState);
+        SetState(nextState);
     }
 
-    /// <summary>HFSM과 이동을 실행하지 않고 확정된 원격 상태와 애니메이션을 적용합니다.</summary>
-    public void ApplyRemoteState(PlayerState nextState)
+    /// <summary>확정된 상태를 저장하고 애니메이션과 변경 알림에 반영합니다. HFSM의 내부 전이는 실행하지 않습니다.</summary>
+    public void SetState(PlayerState nextState)
     {
         if (currentState == nextState)
         {
