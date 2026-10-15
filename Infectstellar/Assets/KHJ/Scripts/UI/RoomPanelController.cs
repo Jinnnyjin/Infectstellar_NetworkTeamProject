@@ -58,7 +58,9 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+
         chatManager.ResetChatLog();
+
         RefreshPlayerList();
     }
 
@@ -72,13 +74,15 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         base.OnPlayerLeftRoom(otherPlayer);
-        chatManager.ResetChatLog();
+        chatManager.AddChatMessage("System", $"player [{otherPlayer.NickName}] has left room.");
         RefreshPlayerList();
     }
 
     public override void OnLeftRoom()
     {
         base.OnLeftRoom();
+
+        chatManager.ResetChatLog();
 
         MenuController.Instance.ChangeToRoomSearchMenu();
     }
