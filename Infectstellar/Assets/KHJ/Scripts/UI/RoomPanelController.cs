@@ -1,6 +1,7 @@
 using System.Linq;
 using ENZEUN.Runtime;
 using ExitGames.Client.Photon;
+using MoreMountains.Feedbacks;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -18,9 +19,11 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     [SerializeField] private Button gameStartBtn;
     [SerializeField] private Button leaveRoomBtn;
     [SerializeField] private TextMeshProUGUI gameStartText;
+    [SerializeField] private MMF_Player loadingSceneMMF;
 
     private string textGameStart = "Game Start";
     private string textReady = "Ready";
+    private bool isReady;
 
     private bool isSubscribed = false;
 
@@ -37,6 +40,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (isSubscribed)
         {
             leaveRoomBtn.onClick.RemoveListener(LeaveRoomBtnClicked);
+            gameStartBtn.onClick.RemoveListener(GameStartBtnClicked);
 
             isSubscribed = false;
         }
@@ -47,6 +51,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (!isSubscribed)
         {
             leaveRoomBtn.onClick.AddListener(LeaveRoomBtnClicked);
+            gameStartBtn.onClick.AddListener(GameStartBtnClicked);
 
             isSubscribed = true;
         }
@@ -198,6 +203,28 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
             }
         }
         gameStartBtn.interactable = allReady;
+    }
+
+    public void GameStartBtnClicked()
+    {
+        if (PhotonNetwork.LocalPlayer.IsMasterClient)
+        {
+            photonView.RPC(nameof(StartLoadScene), RpcTarget.All);
+        }
+        else
+        {
+            if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("IsReady", out object obj))
+            {
+                isReady = (bool)obj;
+            }
+            PhotonLinkManager.Instance.SetMyReadyState(!isReady);
+        }
+    }
+
+    [PunRPC]
+    public void StartLoadScene(PhotonMessageInfo info)
+    {
+        loadingSceneMMF.PlayFeedbacks();
     }
 
     public void LeaveRoomBtnClicked()
