@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 5
   itemName: Gemstone(Red)
   rarity: 4
-  price: 150
+  price: 1500
   attack: 5
   weight: 4
