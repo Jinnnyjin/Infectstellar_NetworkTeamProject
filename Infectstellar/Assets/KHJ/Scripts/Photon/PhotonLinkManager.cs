@@ -44,6 +44,7 @@ namespace ENZEUN.Runtime
 
         // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
         public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
+        public Action<Player, int> OnMyColorChanged; // 플레이어, 바뀐 색 상태
 
         public void ConnectToPhotonServer()
         {
@@ -192,6 +193,13 @@ namespace ENZEUN.Runtime
             OnRoomListUpdated?.Invoke(CachedRoomList);
         }
 
+        public override void OnDisconnected(DisconnectCause cause)
+        {
+            Debug.Log($"서버 연결 끊김: {cause}");
+        }
+
+        #endregion
+
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
         {
             base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
@@ -206,22 +214,35 @@ namespace ENZEUN.Runtime
                 OnReadyStateChanged?.Invoke(targetPlayer, newReady);
             }
 
-        }
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey("MyColor"))
+            {
+                int MyColorIndex = (int)changedProps["MyColor"];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {MyColorIndex}");
 
-        public override void OnDisconnected(DisconnectCause cause)
-        {
-            Debug.Log($"서버 연결 끊김: {cause}");
-        }
+                // 준비 상태 변경 이벤트 발행
+                OnMyColorChanged?.Invoke(targetPlayer, MyColorIndex);
+            }
 
-        #endregion
+        }
 
         #region Player Custom Property Edit Methods
+
         /// <summary>
-        /// 내 준비 상태를 변경하고 서버에 동기화
+        /// 내 준비 상태 (대기실 -> 실제 게임 필드)
         /// </summary>
         public void SetMyReadyState(bool isReady)
         {
             Hashtable props = new Hashtable() { { "IsReady", isReady } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        /// <summary>
+        /// 내 캐릭터 색
+        /// </summary>
+        public void SetMyColorState(int index)
+        {
+            Hashtable props = new Hashtable() { { "MyColor", index } };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
