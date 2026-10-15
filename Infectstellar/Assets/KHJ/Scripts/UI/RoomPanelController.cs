@@ -185,9 +185,10 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public void CheckPlayerReady()
     {
         players = PhotonNetwork.PlayerListOthers;
+
         bool allReady = true;
 
-        if (players.Length <= 1)
+        if (players == null || players.Length <= 0)
         {
             allReady = false;
         }
