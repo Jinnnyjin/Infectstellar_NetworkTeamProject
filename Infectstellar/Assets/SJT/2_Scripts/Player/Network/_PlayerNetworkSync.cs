@@ -25,6 +25,9 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     private PlayerAnimationController animationController;
     [SerializeField] private GameObject mineModel;
 
+    [SerializeField] private GameObject playerViewCamera;
+    [SerializeField] private GameObject thirdPersonViewCamera;
+
     public int ActorNumber => actorNumber;
 
     /// <summary>현재 클라이언트가 이 플레이어를 제어하는지 반환합니다.</summary>
