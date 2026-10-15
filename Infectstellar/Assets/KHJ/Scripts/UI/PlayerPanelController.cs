@@ -15,6 +15,8 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private Image colorGrid;
     [SerializeField] private MMF_Player fb;
     [SerializeField] private CanvasGroup masterIconCanvas;
+    [SerializeField] private CanvasGroup readyIconCanvas;
+
 
 
     private bool isShowing = false;
@@ -52,11 +54,33 @@ public class PlayerPanelController : MonoBehaviour
         if (player.IsMasterClient)
         {
             masterIconCanvas.alpha = 1f;
+            readyIconCanvas.alpha = 0f;
         }
         else
         {
             masterIconCanvas.alpha = 0f;
+
+            // 현재 Ready 상태 보여주기 (마스터가 아닌 애들만 표시)
+            if (player.CustomProperties.TryGetValue("IsReady", out object obj))
+            {
+                bool show = (bool)obj;
+
+                float alpha;
+
+                if (show)
+                {
+                    alpha = 1f;
+                }
+                else
+                {
+                    alpha = 0f;
+                }
+                readyIconCanvas.alpha = alpha;
+            }
         }
+
+
+
     }
 
 }

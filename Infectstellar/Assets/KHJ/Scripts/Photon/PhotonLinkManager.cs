@@ -41,6 +41,7 @@ namespace ENZEUN.Runtime
         public Action<List<RoomInfo>> OnRoomListUpdated;
         public Action OnJoinedLobbyCallback;
         public Action OnJoinedRoomCallback;
+        public Action<Player> OnMasterChangedCallback;
 
         // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
         public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
@@ -206,6 +207,13 @@ namespace ENZEUN.Runtime
 
             // UI 스크립트에서 방 목록 갱신을 감지할 수 있도록 이벤트 발행
             OnRoomListUpdated?.Invoke(CachedRoomList);
+        }
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            base.OnMasterClientSwitched(newMasterClient);
+
+            OnMasterChangedCallback?.Invoke(newMasterClient);
         }
 
         public override void OnDisconnected(DisconnectCause cause)

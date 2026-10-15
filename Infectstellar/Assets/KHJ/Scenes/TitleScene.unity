@@ -6641,7 +6641,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 380070.84
+      value: 503563.06
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -6885,34 +6885,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1381885757}
     m_Modifications:
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.b
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.g
-      value: 0.4493518
-      objectReference: {fileID: 0}
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3169074168043747990, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -6996,10 +6968,6 @@ PrefabInstance:
     - target: {fileID: 4509424419449184751, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_Name
       value: PlayerPanel (2)
-      objectReference: {fileID: 0}
-    - target: {fileID: 4509424419449184751, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7749599023113711596, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_AnchorMax.y
@@ -8056,7 +8024,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 26666.824
+      value: 341.8799
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -9597,30 +9565,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1381885757}
     m_Modifications:
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.r
-      value: 0.07006645
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3169074168043747990, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10427,26 +10371,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1381885757}
     m_Modifications:
-    - target: {fileID: 2285399144420090086, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_Color.g
-      value: 0.93442965
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2991231500976272880, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3169074168043747990, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10530,10 +10454,6 @@ PrefabInstance:
     - target: {fileID: 4509424419449184751, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_Name
       value: PlayerPanel (3)
-      objectReference: {fileID: 0}
-    - target: {fileID: 4509424419449184751, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7749599023113711596, guid: 77c09fe3fdb9ef141aa1fbc05cdb8926, type: 3}
       propertyPath: m_AnchorMax.y
@@ -14320,6 +14240,7 @@ MonoBehaviour:
   - {fileID: 1338715958}
   gameStartBtn: {fileID: 824028658}
   leaveRoomBtn: {fileID: 1910467213}
+  gameStartText: {fileID: 0}
 --- !u!114 &2070189581
 MonoBehaviour:
   m_ObjectHideFlags: 0
