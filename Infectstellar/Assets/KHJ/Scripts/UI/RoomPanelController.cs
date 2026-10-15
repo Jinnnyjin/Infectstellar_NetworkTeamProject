@@ -58,7 +58,9 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+
         chatManager.ResetChatLog();
+
         RefreshPlayerList();
     }
 
@@ -72,13 +74,15 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         base.OnPlayerLeftRoom(otherPlayer);
-        chatManager.ResetChatLog();
+        chatManager.AddChatMessage("System", $"player [{otherPlayer.NickName}] has left room.");
         RefreshPlayerList();
     }
 
     public override void OnLeftRoom()
     {
         base.OnLeftRoom();
+
+        chatManager.ResetChatLog();
 
         MenuController.Instance.ChangeToRoomSearchMenu();
     }
@@ -172,21 +176,27 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         players = PhotonNetwork.PlayerList;
         bool allReady = true;
 
-        foreach (var p in players)
+        if (players.Length <= 1)
         {
-            if (p.CustomProperties.TryGetValue("IsReady", out object obj))
+            allReady = false;
+        }
+        else
+        {
+            foreach (var p in players)
             {
-                if (!(bool)obj)
+                if (p.CustomProperties.TryGetValue("IsReady", out object obj))
+                {
+                    if (!(bool)obj)
+                    {
+                        allReady = false;
+                    }
+                }
+                else
                 {
                     allReady = false;
                 }
             }
-            else
-            {
-                allReady = false;
-            }
         }
-
         gameStartBtn.interactable = allReady;
     }
 

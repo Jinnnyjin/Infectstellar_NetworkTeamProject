@@ -3255,6 +3255,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 467988834}
   m_CullTransparentMesh: 1
+--- !u!114 &469706719 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4324369501805610832, guid: 5d6c0b993048859116f45d8156172cf6, type: 3}
+  m_PrefabInstance: {fileID: 824028656}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &486912141
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6641,7 +6652,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 503563.06
+      value: 524291.06
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -8024,7 +8035,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 341.8799
+      value: 16113.408
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -14240,7 +14251,7 @@ MonoBehaviour:
   - {fileID: 1338715958}
   gameStartBtn: {fileID: 824028658}
   leaveRoomBtn: {fileID: 1910467213}
-  gameStartText: {fileID: 0}
+  gameStartText: {fileID: 469706719}
 --- !u!114 &2070189581
 MonoBehaviour:
   m_ObjectHideFlags: 0
