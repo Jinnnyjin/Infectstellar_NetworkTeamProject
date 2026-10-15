@@ -12,6 +12,21 @@ namespace ENZEUN.Runtime
     {
         public static PhotonLinkManager Instance;
 
+
+        /// <summary>
+        /// 포톤 Player Custom Property 의 대기실 준비 상태
+        /// </summary>
+        public static string isReady_Customproperty = "IsReady";
+        /// <summary>
+        /// 포톤 Player Custom Property 의 캐릭터 색깔
+        /// </summary>
+        public static string myColor_Customproperty = "MyColor";
+        /// <summary>
+        /// 포톤 Player Custom Property 의 다음 씬으로의 로딩이 완료되었는지
+        /// </summary>
+        public static string sceneLoading_Customproperty = "SceneLoaded";
+
+
         public static int MaxPlayer = 4;
 
         [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
@@ -46,6 +61,11 @@ namespace ENZEUN.Runtime
         // Custom Property 속성 변경 시 발행할 이벤트들 (원하는 키별로 정의)
         public Action<Player, bool> OnReadyStateChanged; // 플레이어, 바뀐 준비 상태
         public Action<Player, int> OnMyColorChanged; // 플레이어, 바뀐 색 상태
+
+
+        public Action OnAllPlayerReadyToNextScene;
+
+
 
         public void ConnectToPhotonServer()
         {
@@ -132,6 +152,42 @@ namespace ENZEUN.Runtime
                 // 새로운 플레이어의 입장을 막기
                 PhotonNetwork.CurrentRoom.IsOpen = false;
             }
+        }
+
+
+        private void CheckAllPlayerSceneLoaded()
+        {
+            // 마스터만 가능하도록 설정
+            if (!PhotonNetwork.LocalPlayer.IsMasterClient)
+            {
+                return;
+            }
+
+            Player[] players = PhotonNetwork.PlayerList;
+
+            bool isAllReady = true;
+
+            foreach (var p in players)
+            {
+                if (p.CustomProperties.TryGetValue(sceneLoading_Customproperty, out object obj))
+                {
+                    if (!(bool)obj)
+                    {
+                        isAllReady = false;
+                    }
+                }
+                else
+                {
+                    isAllReady = false;
+                }
+            }
+
+            if (!isAllReady)
+            {
+                return;
+            }
+
+            OnAllPlayerReadyToNextScene?.Invoke();
         }
 
         //=================================================================================================
@@ -228,9 +284,9 @@ namespace ENZEUN.Runtime
             base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
 
             // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
-            if (changedProps.ContainsKey("IsReady"))
+            if (changedProps.ContainsKey(isReady_Customproperty))
             {
-                bool newReady = (bool)changedProps["IsReady"];
+                bool newReady = (bool)changedProps[isReady_Customproperty];
                 Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
 
                 // 준비 상태 변경 이벤트 발행
@@ -238,13 +294,23 @@ namespace ENZEUN.Runtime
             }
 
             // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
-            if (changedProps.ContainsKey("MyColor"))
+            if (changedProps.ContainsKey(myColor_Customproperty))
             {
-                int MyColorIndex = (int)changedProps["MyColor"];
+                int MyColorIndex = (int)changedProps[myColor_Customproperty];
                 Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {MyColorIndex}");
 
                 // 준비 상태 변경 이벤트 발행
                 OnMyColorChanged?.Invoke(targetPlayer, MyColorIndex);
+            }
+
+            // "SceneLoaded" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(sceneLoading_Customproperty))
+            {
+                bool sceneLoadingState = (bool)changedProps[sceneLoading_Customproperty];
+                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {sceneLoadingState}");
+
+                // 준비 상태 변경 이벤트 발행
+                CheckAllPlayerSceneLoaded();
             }
 
         }
@@ -256,7 +322,7 @@ namespace ENZEUN.Runtime
         /// </summary>
         public void SetMyReadyState(bool isReady)
         {
-            Hashtable props = new Hashtable() { { "IsReady", isReady } };
+            Hashtable props = new Hashtable() { { isReady_Customproperty, isReady } };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
@@ -265,7 +331,16 @@ namespace ENZEUN.Runtime
         /// </summary>
         public void SetMyColorState(int index)
         {
-            Hashtable props = new Hashtable() { { "MyColor", index } };
+            Hashtable props = new Hashtable() { { myColor_Customproperty, index } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        /// <summary>
+        /// 씬 로딩이 완료되었는지
+        /// </summary>
+        public void SetLoadSceneState(bool loaded)
+        {
+            Hashtable props = new Hashtable() { { sceneLoading_Customproperty, loaded } };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
