@@ -50,12 +50,10 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         if (!isSubscribed)
         {
+            isSubscribed = true;
             leaveRoomBtn.onClick.AddListener(LeaveRoomBtnClicked);
             gameStartBtn.onClick.AddListener(GameStartBtnClicked);
-
-            isSubscribed = true;
         }
-
     }
 
 
