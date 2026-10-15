@@ -6652,7 +6652,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 524291.06
+      value: 538970.75
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -8035,7 +8035,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 16113.408
+      value: 27249.08
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -14252,6 +14252,7 @@ MonoBehaviour:
   gameStartBtn: {fileID: 824028658}
   leaveRoomBtn: {fileID: 1910467213}
   gameStartText: {fileID: 469706719}
+  loadingSceneMMF: {fileID: 313395411}
 --- !u!114 &2070189581
 MonoBehaviour:
   m_ObjectHideFlags: 0
