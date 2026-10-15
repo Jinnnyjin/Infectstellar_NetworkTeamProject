@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class ItemSpawner : MonoBehaviour
 {
@@ -90,9 +89,18 @@ public class ItemSpawner : MonoBehaviour
             }
 
             Item prefab = items[Random.Range(0, items.Count)];
-            Vector3 pos = spawnPoints[i].transform.position;
 
-            Instantiate(prefab, pos, Quaternion.identity);
+            Collider[] colliders = ItemPhysics.GetColliders(prefab.transform);
+            if(!ColliderBoundsUtil.TryGetUprightBottomCenter(prefab.transform, colliders, out Vector3 bottomCenter))
+            {
+                Debug.LogWarning($"[ItemSpawner] 바닥 중심 계산 실패 / 프리팹 이름: {prefab.name}, 스폰 위치: {spawnPoints[i].name}", this);
+                continue;
+            }
+
+            Quaternion rot = Quaternion.identity;
+            Vector3 pos = spawnPoints[i].transform.position - rot * bottomCenter;
+
+            Instantiate(prefab, pos, rot);
             Debug.Log($"[ItemSpawner] 스폰: {spawnPoints[i].name}에 {prefab.ItemData.ItemName} ({rarity})", this);
         }
 
