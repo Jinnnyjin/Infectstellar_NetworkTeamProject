@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class ItemPhysics : MonoBehaviour
 {
+    private const string ITEM_LAYER_NAME = "Item";
     private Rigidbody rb;
     private Collider[] colliders;
 
@@ -31,6 +32,8 @@ public class ItemPhysics : MonoBehaviour
 
         if (!HasEnabledCollider())
             return false;
+
+        WarnIfNotItemLayer();
 
         rb.mass = mass;
         return true;
@@ -108,5 +111,29 @@ public class ItemPhysics : MonoBehaviour
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Item 레이어가 아닌 콜라이더 경고 (판매 구역 감지 누락 방지)
+    /// 들기·던지기는 정상 동작하므로 아이템을 끄지 않고 경고만
+    /// NameToLayer는 필드 초기화 시점에 호출 불가 → Init 시점에 구함
+    /// </summary>
+    private void WarnIfNotItemLayer()
+    {
+        int itemLayer = LayerMask.NameToLayer(ITEM_LAYER_NAME);
+
+        if (itemLayer == -1)
+        {
+            Debug.LogWarning($"[ItemPhysics] '{ITEM_LAYER_NAME}' 레이어가 프로젝트에 없음", this);
+            return;
+        }
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider.gameObject.layer != itemLayer)
+            {
+                Debug.LogWarning($"[ItemPhysics] {gameObject.name}의 콜라이더 오브젝트 '{collider.gameObject.name}'가 Item 레이어가 아님, 판매 구역에서 감지되지 않음", collider);
+            }
+        }
     }
 }
