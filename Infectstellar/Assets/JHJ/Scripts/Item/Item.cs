@@ -129,7 +129,7 @@ public class Item : MonoBehaviour, IInteractable
             case State.Thrown:
                 physics.SetColliders(true);
                 physics.SetPhysics(true);
-                hit.Activate(data.Attack, shooterActorNumber, isLocalReleaser);
+                hit.Activate(shooterActorNumber, isLocalReleaser);
                 stopTimer = 0f;
                 break;
 
