@@ -1,6 +1,45 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-14 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-15 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## 현재 상태: PlayerNetworkRpc의 피해량 전달
+
+- 사용자가 적용한 Health.D_DamageApplied/ApplyDamage를 재사용해 PlayerNetworkRpc에 Health 참조·구독/해제·피해 RPC를 추가했다. 최초 TakeDamage의 로컬 적용 이후 피해 대상 PhotonView로 Others에 float 피해량을 전송하고, 수신은 ApplyDamage만 호출해 재송신하지 않는다.
+- 현재 ItemHit가 던진 사람 컴퓨터에서 판정하므로 피해 대상 소유권을 송신 조건으로 요구하지 않으며, 수신에서도 발신자와 피해 대상 ControllerActorNr의 일치를 요구하지 않는다. Health·JHJ 코드·Sync·씬·프리팹은 이번 작업에서 수정하지 않았다.
+- 독립 리뷰에서 추가 범위의 확정 오류를 찾지 못했다. 2026-10-15 06:49 KST 최종 Unity 재컴파일은 completed/failed:false/compilationFailed:false/errors:[]로 통과했고 RPC와 Health의 SHA-256은 검사 전후 동일했다.
+- 컴파일 중 기존 AstronautThirdPersonCamera의 미사용 필드 경고 2건과 기존 Pipeline 포트 파일 공유 위반 로그가 재발했다. 문서 구조 검사는 기존 누락 계획 링크 4건으로 실패했다. Play·네트워크 접속·빌드는 실행하지 않았으며 사망 연결·후발 입장 HP 복원은 남은 범위다. 구조는 [프로젝트 설명](PROJECT.md#플레이어-피해-rpc)을 따른다.
+
+## 현재 상태: PlayerNetworkRpc의 최소 줍기 동기화
+
+- 사용자 작성 Item.OnGrab → ApplyGrab(int) 연결을 재사용해 SJT의 PlayerNetworkRpc에 PlayerGrabber 참조·GrabRequested 구독/해제·줍기 RPC를 추가했다. 로컬에서 채워진 HeldItem의 ViewID를 Others로 보내고, 원격에서는 Player 제어 주체를 검증한 뒤 Item.ApplyGrab(발신자 번호)을 호출한다. 기존 Item.Grabbed 구독으로 원격 HeldItem이 연결된다.
+- PlayerGrabber·Item·ItemNetwork와 씬·프리팹은 이번 작업에서 수정하지 않았다. 기존 손전등 RPC와 ItemNetwork의 Drop/Shoot/Stop 경로를 유지한다. 사용자 삭제 Manager/Spawner는 복원하지 않으며, 현재 PhotonPlayerSpawnerForTest와 Sync의 소유자 카메라 활성화 설정을 사용한다.
+- 독립 리뷰에서 추가 범위의 확정 오류를 찾지 못했다. 2026-10-15 06:39:45 KST 최종 Unity 재컴파일은 completed/failed:false/compilationFailed:false/errors:[]로 통과했고 RPC 소스 SHA-256은 검사 전후 동일했다. 새 오류 0건, 기존 AstronautThirdPersonCamera의 미사용 필드 경고 2건이었다. 문서 구조 검사는 기존 인수인계의 누락된 계획 링크 4건으로 실패했다.
+- 원격 HandsUp·동시 잡기 충돌 해결·후발 입장자의 소지품/손전등 복원은 남은 범위다. Play·접속·빌드는 실행하지 않았다. 역할과 연결은 [프로젝트 설명](PROJECT.md#jhj-아이템-동작과-플레이어-rpc-분리)을 따른다.
+
+## 현재 상태: SJT 이전 RPC 잔여 코드 제거
+
+- Health의 Sync 참조·피해 RPC 요청·원격 HP 적용·RPC 구독용 이벤트를 제거하고 로컬 피해/체력 계산을 유지했다. PlayerStateEvent·PlayerStateEventType·구형 PlayerSnapshot과 각각의 meta를 삭제했다.
+- 사용자가 이미 삭제한 이전 Sync·Playback·PoseCalculator는 복원하지 않았다. 새 _PlayerNetworkSync는 전환 전 사용자 원본이며 이번에는 새 스냅샷 및 JHJ·로컬 손전등/HandsUp 코드를 수정하지 않았다.
+- 사용자 지시에 따라 컴파일·테스트·검증은 실행하지 않았다. 상세 범위: [전환 계획](plans/2026-10-15-player-network-migration.md).
+
+## 현재 상태: JHJ 플레이어 RPC 통합 롤백
+
+- 사용자 요청으로 Item·PlayerGrabber의 이전 SJT 플레이어 RPC 통합 부분을 제거하고 JHJ 원래 동작/ItemNetwork 경로를 복원했다. 이후 JHJ의 피해 데이터 전달과 별도 HandsUp·생존 검사는 보존했다.
+- ItemHit·ItemNetwork·ItemPhysics와 Unity 자산은 수정하지 않았다. 사용자 지시에 따라 컴파일/테스트/추가 검증은 실행하지 않았고 남은 Sync 오류는 자동 보완하지 않는다.
+- 상세 범위와 다음 작업은 [전환 계획](plans/2026-10-15-player-network-migration.md)의 JHJ 롤백 절을 따른다.
+
+## 현재 상태: 새 Sync의 추가 RPC 제거
+
+- 사용자 요청으로 추가한 RPC와 _PlayerStateEventPlayback을 제거하고 Snapshot/Playback을 RPC 추가 전 상태로 복원했다. 새 관리자·스포너·프리팹·씬 연결과 스냅샷 송수신/보간 적용은 유지한다.
+- Health.RequestDamage·Item.SendItemStop 호출은 남아 있으며 해당 API를 새로 만들기 전까지 컴파일 오류를 허용한다. 사용자 지시에 따라 검증과 자동 RPC 이식을 중단했다.
+- 다음 작업은 사용자가 정한 순서로 RPC를 새로 만드는 것이다. 상세 상태: [전환 계획](plans/2026-10-15-player-network-migration.md).
+
+## 현재 상태: 플레이어 공통 상태·자세 적용 메서드
+
+- 사용자 작성 중인 메서드 이름 변경을 이어서 Motor의 TrySetCrouching(로컬 일어서기 검사)과 SetCrouching(확정 자세 적용)을 분리했다. StateMachine.SetState는 CurrentState·애니메이션·StateChanged를 갱신하며 HFSM 내부 전이를 실행하지 않는다. 기존 Playback의 남은 ApplyRemoteCrouch 호출도 SetCrouching으로 맞췄다.
+- 로컬 이동은 TrySetCrouching을, 기존 원격 Playback과 새 _PlayerNetworkSync는 SetCrouching/SetState를 사용한다. 새 Sync의 올바른 공통 메서드 호출과 사용자 모델 처리·송수신 코드는 유지했다. 상세 역할은 [프로젝트 설명](PROJECT.md#플레이어의-로컬-판단과-공통-상태자세-적용)을 따른다.
+- 독립 리뷰에서 이번 변경의 오류·회귀를 찾지 못했다. 2026-10-15 03:59 KST 최종 Unity 재컴파일은 completed/failed:false/errors:[]로 통과했다. 검사 전후 3개 변경 소스의 SHA-256이 동일했고 새 오류 0건, 변경 밖 AstronautThirdPersonCamera의 미사용 필드 경고 2건이었다. Play·접속·빌드·씬/프리팹 변경은 수행하지 않았다.
+- 문서 구조 검사는 기존 HANDOFF의 누락된 계획 링크 4건으로 실패했다. 수정 전 기록에도 같은 링크가 있었고 해당 계획 파일이 없음을 대조했다. 이번 작업의 추가 참조에는 새 오류가 없으며, 과거 계획 기록은 변경하지 않았다.
 
 ## 현재 상태: 플레이어 아이템 RPC
 

@@ -31,17 +31,6 @@ public class PlayerLook : MonoBehaviour
     // 마우스로 확정한 상하 시선 각도. 위쪽은 음수, 아래쪽은 양수이며 단위는 도.
     public float PitchDegrees => pitch;
 
-    /// <summary>입력 계산 없이 원격 플레이어의 상하 시선 각도를 적용합니다.</summary>
-    public void ApplyRemotePitch(float value)
-    {
-        if (viewPivot == null)
-        {
-            return;
-        }
-        pitch = Mathf.Clamp(value, minPitch, maxPitch);
-        viewPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-    }
-
     private void Awake()
     {
         body = transform;
@@ -112,8 +101,23 @@ public class PlayerLook : MonoBehaviour
         }
 
         yaw = Mathf.Repeat(yaw + lookDelta.x * horizontalSensitivity, 360f);
-        pitch = Mathf.Clamp(pitch - lookDelta.y * verticalSensitivity, minPitch, maxPitch);
         body.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        // pitch = Mathf.Clamp(pitch - lookDelta.y * verticalSensitivity, minPitch, maxPitch);
+        // viewPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+
+        SetPitch(pitch - lookDelta.y * verticalSensitivity);
+    }
+
+    /// <summary>상하 시선 각도를 제한 범위 안에서 설정합니다.</summary>
+    public void SetPitch(float angle)
+    {
+        if (viewPivot == null)
+        {
+            return;
+        }
+
+        pitch = Mathf.Clamp(angle, minPitch, maxPitch);
         viewPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 }
