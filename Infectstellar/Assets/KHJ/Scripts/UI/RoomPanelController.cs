@@ -112,7 +112,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
             bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
 
 #if UNITY_EDITOR
-            Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
+            Debug.Log($"[방관리자] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
 #endif
         }
 
