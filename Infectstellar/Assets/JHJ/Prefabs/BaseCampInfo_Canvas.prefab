@@ -352,7 +352,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: None
+  m_text: Not Deteced
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
   m_sharedMaterial: {fileID: 5192293977591498944, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
@@ -361,8 +361,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278255382
+  m_fontColor: {r: 0.087417364, g: 1, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -379,8 +379,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 88
-  m_fontSizeBase: 88
+  m_fontSize: 62.89
+  m_fontSizeBase: 62.89
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2135,6 +2135,7 @@ GameObject:
   - component: {fileID: 351279140666119717}
   - component: {fileID: 7057311381861581630}
   - component: {fileID: 8826675121328479893}
+  - component: {fileID: 3446713335824427488}
   m_Layer: 5
   m_Name: BaseCampInfo_Canvas
   m_TagString: Untagged
@@ -2207,7 +2208,27 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
+--- !u!114 &3446713335824427488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6429598692959834677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 305109045d95ecb4db7daca5852384d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseCampInfoView
+  goldText: {fileID: 3539972839577237055}
+  playerSlots:
+  - {fileID: 8341873479574833084}
+  - {fileID: 4271646962674455881}
+  - {fileID: 1859516473421173315}
+  - {fileID: 6953719745367916032}
+  noneInfectedText: {fileID: 8043666305894068858}
+  infectedText: {fileID: 8136451742082917266}
 --- !u!1 &7409144823444357593
 GameObject:
   m_ObjectHideFlags: 0
