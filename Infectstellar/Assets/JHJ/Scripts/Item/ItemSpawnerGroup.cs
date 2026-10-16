@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 /// <summary>
@@ -7,6 +8,15 @@ using UnityEngine;
 /// </summary>
 public class ItemSpawnerGroup : MonoBehaviour
 {
+    // 1차 빌드용 임시 스폰
+    private void Start()
+    {
+        if(PhotonNetwork.IsMasterClient)
+        {
+            SpawnAll();
+        }
+    }
+
     [ContextMenu("SpawnItem_All")]
     public void SpawnAll()
     {
