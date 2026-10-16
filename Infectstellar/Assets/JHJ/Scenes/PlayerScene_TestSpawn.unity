@@ -2374,6 +2374,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseCampInfo_Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 8826675121328479893, guid: 8662ef7d12fef7242a4200a369ea048f, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

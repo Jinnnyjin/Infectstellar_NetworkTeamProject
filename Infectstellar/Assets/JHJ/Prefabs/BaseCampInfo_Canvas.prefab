@@ -1309,6 +1309,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4307764514676994533}
+  - component: {fileID: 1859516473421173315}
   m_Layer: 5
   m_Name: PlayerSlot_3
   m_TagString: Untagged
@@ -1337,6 +1338,22 @@ RectTransform:
   m_AnchoredPosition: {x: -470.09, y: -333.4}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1859516473421173315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2707101071330057953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f6e2376bcc504541a9306e98ec3ce37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSlotView
+  playerIcon: {fileID: 6059697969313623903}
+  playerNickname: {fileID: 2953847445835371073}
+  aliveColor: {r: 1, g: 1, b: 1, a: 1}
+  downColor: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
 --- !u!1 &2842997508760204149
 GameObject:
   m_ObjectHideFlags: 0
@@ -1774,6 +1791,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2022318868537700567}
+  - component: {fileID: 8341873479574833084}
   m_Layer: 5
   m_Name: PlayerSlot_1
   m_TagString: Untagged
@@ -1802,6 +1820,22 @@ RectTransform:
   m_AnchoredPosition: {x: -470.09, y: -100.2}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &8341873479574833084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4421460035172261677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f6e2376bcc504541a9306e98ec3ce37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSlotView
+  playerIcon: {fileID: 5276873610294136879}
+  playerNickname: {fileID: 4906387214238025943}
+  aliveColor: {r: 1, g: 1, b: 1, a: 1}
+  downColor: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
 --- !u!1 &4976993954632232813
 GameObject:
   m_ObjectHideFlags: 0
@@ -2073,7 +2107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.49056602, g: 0.49056602, b: 0.49056602, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2125,7 +2159,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.1, y: 1.5}
+  m_AnchoredPosition: {x: -0.1000061, y: 1.5}
   m_SizeDelta: {x: 1600, y: 900}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &7057311381861581630
@@ -2173,7 +2207,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!1 &7409144823444357593
 GameObject:
   m_ObjectHideFlags: 0
@@ -2258,6 +2292,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 36552897433346721}
+  - component: {fileID: 6953719745367916032}
   m_Layer: 5
   m_Name: PlayerSlot_4
   m_TagString: Untagged
@@ -2286,6 +2321,22 @@ RectTransform:
   m_AnchoredPosition: {x: -470.09, y: -447.3}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6953719745367916032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7522628217505751540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f6e2376bcc504541a9306e98ec3ce37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSlotView
+  playerIcon: {fileID: 1822658045074480668}
+  playerNickname: {fileID: 6462815041506547953}
+  aliveColor: {r: 1, g: 1, b: 1, a: 1}
+  downColor: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
 --- !u!1 &7553226695615437137
 GameObject:
   m_ObjectHideFlags: 0
@@ -2295,6 +2346,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5128392083470776047}
+  - component: {fileID: 4271646962674455881}
   m_Layer: 5
   m_Name: PlayerSlot_2
   m_TagString: Untagged
@@ -2323,6 +2375,22 @@ RectTransform:
   m_AnchoredPosition: {x: -470.09, y: -216.8}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &4271646962674455881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7553226695615437137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f6e2376bcc504541a9306e98ec3ce37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSlotView
+  playerIcon: {fileID: 5727620607747478979}
+  playerNickname: {fileID: 8967525898756423611}
+  aliveColor: {r: 1, g: 1, b: 1, a: 1}
+  downColor: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 1}
 --- !u!1 &8023364634990694488
 GameObject:
   m_ObjectHideFlags: 0
