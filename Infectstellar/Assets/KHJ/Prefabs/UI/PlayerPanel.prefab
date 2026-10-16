@@ -250,7 +250,7 @@ CanvasGroup:
   m_Enabled: 1
   m_Alpha: 0
   m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!1 &1501043804994928550
 GameObject:
@@ -1271,7 +1271,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPanelController
   nickNameTextGrid: {fileID: 7406945965816452710}
-  colorGrid: {fileID: 2285399144420090086}
   colorBtn: {fileID: 8759509068705108242}
   fb: {fileID: 5351323041711254839}
   masterIconCanvas: {fileID: 6955854450408751873}
