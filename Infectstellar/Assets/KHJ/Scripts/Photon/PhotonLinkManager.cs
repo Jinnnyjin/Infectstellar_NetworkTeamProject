@@ -4,6 +4,7 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using System;
 using ExitGames.Client.Photon;
+using Unity.VisualScripting;
 
 
 namespace ENZEUN.Runtime
@@ -294,10 +295,12 @@ namespace ENZEUN.Runtime
                 OnReadyStateChanged?.Invoke(targetPlayer, newReady);
             }
 
-            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            // "MyColor" 키가 변경 목록에 포함되어 있는지 확인
             if (changedProps.ContainsKey(myColor_Customproperty))
             {
+
                 int MyColorIndex = (int)changedProps[myColor_Customproperty];
+
 #if UNITY_EDITOR
                 Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 플레이어 색이 변경됨: {MyColorIndex}");
 #endif
@@ -377,5 +380,50 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+
+        #region PlayerColor 플레이어의 색상을 쉽게 가져오도록 설계
+
+        // 색상 정의 
+        public enum PlayerColor
+        {
+            White = 0,
+            Red = 1,
+            Orange = 2,
+            Yellow = 3,
+            Green = 4,
+            Blue = 5,
+            Indigo = 6,
+            Violet = 7,
+        }
+
+        // 딕셔너리로 enum과 실제 Unity Color 매핑
+        private static readonly Dictionary<PlayerColor, Color> PlayerColorMap = new Dictionary<PlayerColor, Color>()
+        {
+            { PlayerColor.White,   Color.white },
+            { PlayerColor.Red,     Color.red },
+            { PlayerColor.Orange,  Color.orange },
+            { PlayerColor.Yellow,  Color.yellow },
+            { PlayerColor.Green,   Color.green },
+            { PlayerColor.Blue,    Color.blue },
+            { PlayerColor.Indigo,  Color.indigo },
+            { PlayerColor.Violet,  Color.violet },
+        };
+
+        /// <summary>
+        /// 외부에서 색상을 가져다 쓸 수 있는 메서드
+        /// </summary>
+        /// <returns>Color 값</returns>
+        public static Color GetIndexedColor(int index)
+        {
+            if (PlayerColorMap.TryGetValue((PlayerColor)index, out Color color))
+            {
+                return color;
+            }
+
+            // 예외 처리 (기본값 흰색 반환)
+            return Color.white;
+        }
+
+        #endregion
     }
 }

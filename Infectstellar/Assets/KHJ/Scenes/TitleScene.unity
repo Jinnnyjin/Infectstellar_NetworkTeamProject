@@ -1813,7 +1813,7 @@ MonoBehaviour:
         Owner: {fileID: 313395411}
         DebugActive: 0
         LoadingSceneName: LoadingScene
-        DestinationSceneName: PlayerScene
+        DestinationSceneName: MapTestScene
         LoadingMode: 2
         Priority: 4
         SecureLoad: 1
@@ -6719,7 +6719,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 566674.3
+      value: 701088.8
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name
@@ -8102,7 +8102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1136421697707744049, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 48498.113
+      value: 150301.5
       objectReference: {fileID: 0}
     - target: {fileID: 5387976016401938109, guid: 8a92784e6f19068632f99d9924186fe5, type: 3}
       propertyPath: m_Name

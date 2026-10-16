@@ -2,13 +2,46 @@
 
 최종 갱신일: 2026-10-15 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 현재 상태: 맵 최적화 스킬
+
+- 프로젝트 로컬 스킬 [unity-map-optimization](../../.agents/skills/unity-map-optimization/SKILL.md)은 공통 진단·측정·요청 범위 변경·전후 검증을 담당한다. 프로젝트별 대상·Before·경로·한계는 [맵 최적화 연결 자료](MAP_OPTIMIZATION.md)에 두고 공통 스킬과 분리한다. 스킬 제작으로 게임 최적화 실행을 승인한 것은 아니다.
+- 최초 개인 Codex 홈에 제작한 7개 파일을 프로젝트 로컬 하네스로 이전하고 개인 발견 경로 밖에 원본을 백업했다. UnityHarness main v1.1.8의 커밋 `3715d8b46ff64c651e96eafc96ce3ff50ee6c6e9`로 공통 스킬과 연결 문서 11파일을 게시·원격 확인했다. 이전·게시 상태와 이번 검사 통과 근거는 [로컬 이전 계획](plans/2026-10-15-map-skill-local-harness.md)을 따른다. 새 채팅의 자동 선택·실제 맵 최적화는 미검증이다.
+- 범위·검증·기존누락문서6건은 [스킬 제작 계획](plans/2026-10-15-unity-map-optimization-skill.md)에 기록한다. 기존 Before 보고서·게임 자산·패키지는 이번 제작에서 변경하지 않았다.
+
+## 현재 상태: MapTestScene 최적화 전 Profiler 기록
+
+- 사용자 승인으로 Editor Play·PC·실제1920×1080·Photon 1인에서 BaseCamp와 MainGameMap 10지점을 측정했다. Supply·Arrival·Power는 30초×3회 반복했다. 최적화·게임 소스·씬·프리팹·머티리얼·패키지 변경은 하지 않았다.
+- [초보자용 보고서](../../Assets/SJT/7_Docs/MapOptimization/Before/2026-10-15/README.md)에 실제 장면26장·Profiler20장·CSV·연속 원시로그27개(gzip 약2.19GB)를 연결했다. 평상시 평균60FPS 이상이지만 p99 초과와 최초 ON의8.3초 정지가 관측됐다. Physics 표식·렌더 대기가 동반됐고 원인은 미확정이며 Editor/GPU 계측 한계를 분리했다.
+- 종료 Play 정지·씬dirty=false·Profiler/GameView 설정 복구 및 게임 추적 파일 무변경을 확인했다. 원시 재열기·gzip 원본SHA·수치/프레임/포커스/링크 검증 완료. 상세 범위·미측정·다음 비교는 [측정 계획](plans/2026-10-15-map-profiling-before.md)과 보고서를 따른다.
+
+### 비용 관찰·최적화 후보와 수정 가능 여부
+
+아래는 기존 1920×1080·Photon 1인 Editor 측정의 요약이다. 목표는 60 FPS/16.67ms이며, p95는 표본의 95%가 해당 시간 이내라는 뜻이다. 실제 시간이 관측된 항목과 구조상 후보를 구분한다. 수정 가능은 개선량·원인 확정을 의미하지 않는다. 상세 수치·프레임 근거는 [전체 비교 표](../../Assets/SJT/7_Docs/MapOptimization/Before/2026-10-15/RESULTS.md)를 따른다.
+
+| 항목 | 확인한 사실·현재 판단 | 수정·개선 가능 여부 |
+| --- | --- | --- |
+| 첫 손전등 사용 구간의 큰 정지 | 약 8.3초 정지 1회. Physics.Simulate 약 8.24초와 렌더 명령 대기가 동반됐다. GPU 상세 타임스탬프는 비정상이며 워밍업 후 같은 큰 정지는 재관측되지 않았다. | 원인 추가 조사 필요. 물리 내부 대기·충돌 구조·드라이버·계측 등 원인을 분리하기 전 해결이나 MeshCollider 원인을 확정하지 않는다. |
+| 평상시 화면 그리기 비용 | BaseCamp 정지 GPU 표시 중앙값 10.44ms/p95 16.40ms, Power 상세 2회차 GPU p95 16.70ms로 예산에 근접했다. GPU 경과 값에는 대기 영향도 있다. | 최적화 가능성 있음. 같은 시야의 실제 패스·조명·그림자·재질 비용부터 분리한다. |
+| Editor 자체 CPU 비용 | 메인맵 survey EditorLoop 중앙값 약 5.6–5.8ms. 선택한 Power의 느린 프레임에서는 약 20.42ms였다. | 게임 비용과 분리 가능. 요청받은 실행 범위에서 Player 빌드와 비교하며 전부 맵 코드 문제로 취급하지 않는다. |
+| 간헐적인 GC 처리 | 일부 평상시 프레임에서 GC 관련 표식 약 11–13.5ms가 관측됐다. 첫 8.3초 정지에는 수집 표식이 없었다. | 게임 경로가 원인이면 개선 가능. Editor·관측 도구 할당과 게임 할당을 먼저 구분한다. |
+| 많은 렌더링 호출 | BaseCamp 정지의 Rendering counter는 Draw Calls 약 4,808회, SetPass 약 71회였다. Editor 집계이며 GPU 일부 표식의 draw 수·오브젝트 수와 범위가 다르다. | 개선 후보. 재질 공유·렌더 제출·그림자·가시성을 조사하되 숫자 하나로 주 병목을 확정하지 않는다. |
+| 실시간 조명·그림자 | 구조상 BaseCamp는 그림자 있는 실시간 Spot 4개+Point 1개, MainGameMap은 그림자 없는 실시간 Point 59개다. 개별 손실량은 미분리 상태다. | 조정 가능. 광원 겹침·그림자 범위 등을 비교하고 손전등·어둠·맵 분위기와 동작을 보존한다. |
+| 투명 재질 | MainGameMap의 window·glass가 Transparent이며 BaseCamp Metal은 이미 Opaque다. 개별 비용은 미확정이다. | 일부 개선 가능. 실제 유리/투명 표현의 필요성과 겹침을 확인하며 일괄 Opaque 전환은 하지 않는다. |
+| 가시성·렌더러 | MainGameMap renderer 1,384개는 모든 LOD를 포함한 구조상 개수이며 동시에 보이는 수가 아니다. | 가시성 최적화 후보. 가려진 방·불필요 제출 여부와 culling 비용을 확인한 뒤 효과를 판단한다. |
+| LOD 구성 | MainGameMap에는 이미 LODGroup 316개가 있다. LOD 미구성 상태로 표현하지 않는다. | 기존 선택 단계·전환 시점 조정 가능. 실제 시야와 형상·팝핑을 검증한다. |
+| MeshCollider·충돌 형태 | BaseCamp MeshCollider 58개, MainGameMap 108개지만 평상시 survey Physics p95는 약 0.12–0.13ms로 작았다. 지속적인 주 병목 근거는 약하다. | 단순 벽·바닥 등은 대체 후보. 충돌·문·경사·레이캐스트를 보존하며 큰 FPS 향상을 보장하지 않는다. |
+
+- 메모리 한계: 평상시 Unity 추적 Used는 대략 4GiB 부근이지만 Editor·Profiler·도구가 포함된다. 게임 단독 RAM/VRAM 사용량이나 누수로 판정하지 않는다.
+- 다음 우선순위: **큰 정지 재현·원인 확인 → Editor 비용 분리 → 렌더링·조명·그림자 비교 → GC 발생 경로 확인 → 충돌·LOD·가시성 조정**. 실제 후속 측정 결과에 따라 순서를 조정한다.
+- 현재는 관찰과 후보 정리까지 완료했다. 최적화는 아직 실행하지 않았으며 이 기록 자체를 게임 자산 변경·빌드·추가 Play의 포괄 승인으로 해석하지 않는다.
+
 ## 현재 상태: 10개 구역 메인 탐색 맵
 
 - `Assets/SJT/3_Prefabs/MainGameMap/Sectors/`의 구역 프리팹 10개, `MainGameMap.prefab`, `Assets/SJT/4_Scenes/MainGameMapPreview.unity`를 완성했다. Sci-Fi Styled Modular Pack의 원본 모듈 스케일을 유지하며 단층 3,856㎡·방 30개·고정 소품 162개·조명 59개로 구성한다. 두 순환로와 04–10 샛길을 연결했다.
 - 확인용 씬의 베이스캠프 인스턴스만 문짝을 열고 `(10,0,-5)`에 배치해 연결 기준점과 메인맵 입구를 `(10,0,0)`에 맞췄다. 기존 BaseCamp.prefab은 닫힘을 유지한다. 플레이어·줍는 아이템·적·스폰·게임 기능·런타임 생성기는 추가하지 않았다.
 - 독립 리뷰 후 최종 정적 검증 `mainmap-static-20261015T050923539Z`를 통과했다. 바닥·천장 각 2,169점, 외벽 2,955점, 사람 크기 캡슐 경로 172개·겹침 326개에 실패 0. 241셀 전체 도달·30문/방 접근·13포털·저장11프리팹 참조·활성Animator0을 확인했다. 구역별 실내 시점과 전체 배치도 확인했다.
 - 저장 과정에서 함께 바뀐 원본 머티리얼 13개는 시작 SHA256과 정확히 같은 바이트로 복원했다. 보호 대상 893개 파일이 전부 시작 시점과 일치한다. 새 컴파일 코드가 없고 맵의 기존 테스트가 없어 프로젝트 재컴파일·EditMode는 실행하지 않았으며, 실제 플레이 이동·멀티플레이·빌드·성능은 별도 확인이 필요하다. 문서 구조 검사는 기존 누락 계획 링크 4건으로 실패했다.
-- 경로·접속 구조는 [프로젝트 설명](PROJECT.md#10개-구역-메인-탐색-맵), 상세 제작·최종 검증·한계는 [메인맵 계획](plans/2026-10-15-main-game-map.md)을 따른다. 임시 조립/검증 코드는 Temp/MainGameMap에만 있으며 영구 Unity 스크립트가 아니다.
+- 경로·접속 구조는 [프로젝트 설명](PROJECT.md#10개-구역-메인-탐색-맵), 상세 제작·최종 검증·한계는 메인맵 계획 (`docs/ai/plans/2026-10-15-main-game-map.md`, 현재 파일 없음)을 따른다. 임시 조립/검증 코드는 Temp/MainGameMap에만 있으며 영구 Unity 스크립트가 아니다.
 
 ## 현재 상태: PlayerNetworkRpc의 피해량 전달
 
@@ -28,19 +61,19 @@
 
 - Health의 Sync 참조·피해 RPC 요청·원격 HP 적용·RPC 구독용 이벤트를 제거하고 로컬 피해/체력 계산을 유지했다. PlayerStateEvent·PlayerStateEventType·구형 PlayerSnapshot과 각각의 meta를 삭제했다.
 - 사용자가 이미 삭제한 이전 Sync·Playback·PoseCalculator는 복원하지 않았다. 새 _PlayerNetworkSync는 전환 전 사용자 원본이며 이번에는 새 스냅샷 및 JHJ·로컬 손전등/HandsUp 코드를 수정하지 않았다.
-- 사용자 지시에 따라 컴파일·테스트·검증은 실행하지 않았다. 상세 범위: [전환 계획](plans/2026-10-15-player-network-migration.md).
+- 사용자 지시에 따라 컴파일·테스트·검증은 실행하지 않았다. 상세 범위: 전환 계획 (`docs/ai/plans/2026-10-15-player-network-migration.md`, 현재 파일 없음).
 
 ## 현재 상태: JHJ 플레이어 RPC 통합 롤백
 
 - 사용자 요청으로 Item·PlayerGrabber의 이전 SJT 플레이어 RPC 통합 부분을 제거하고 JHJ 원래 동작/ItemNetwork 경로를 복원했다. 이후 JHJ의 피해 데이터 전달과 별도 HandsUp·생존 검사는 보존했다.
 - ItemHit·ItemNetwork·ItemPhysics와 Unity 자산은 수정하지 않았다. 사용자 지시에 따라 컴파일/테스트/추가 검증은 실행하지 않았고 남은 Sync 오류는 자동 보완하지 않는다.
-- 상세 범위와 다음 작업은 [전환 계획](plans/2026-10-15-player-network-migration.md)의 JHJ 롤백 절을 따른다.
+- 상세 범위와 다음 작업은 전환 계획 (`docs/ai/plans/2026-10-15-player-network-migration.md`, 현재 파일 없음)의 JHJ 롤백 절을 따른다.
 
 ## 현재 상태: 새 Sync의 추가 RPC 제거
 
 - 사용자 요청으로 추가한 RPC와 _PlayerStateEventPlayback을 제거하고 Snapshot/Playback을 RPC 추가 전 상태로 복원했다. 새 관리자·스포너·프리팹·씬 연결과 스냅샷 송수신/보간 적용은 유지한다.
 - Health.RequestDamage·Item.SendItemStop 호출은 남아 있으며 해당 API를 새로 만들기 전까지 컴파일 오류를 허용한다. 사용자 지시에 따라 검증과 자동 RPC 이식을 중단했다.
-- 다음 작업은 사용자가 정한 순서로 RPC를 새로 만드는 것이다. 상세 상태: [전환 계획](plans/2026-10-15-player-network-migration.md).
+- 다음 작업은 사용자가 정한 순서로 RPC를 새로 만드는 것이다. 상세 상태: 전환 계획 (`docs/ai/plans/2026-10-15-player-network-migration.md`, 현재 파일 없음).
 
 ## 현재 상태: 플레이어 공통 상태·자세 적용 메서드
 
@@ -55,7 +88,7 @@
 - 로컬 Try는 즉시 실행 후 이벤트를 송신하고, 원격 Try 오버로드는 확정 아이템 ViewID·월드 자세·힘을 적용한다. 초기 소지 아이템 복원, 사망 시 Drop, 해당 해제 순서에 맞는 최종 Stop이 포함된다.
 - 독립 리뷰의 발사 도중 입장 Stop 누락 경로를 수정하고 재검토했다. 최종 컴파일 결과는 검증 후 계획에 기록한다. Play/네트워크 접속/빌드는 실행하지 않는다.
 - 수동 연결: 실제 Resources/PhotonPrefabs/Player의 PlayerGrabber.releasePoint가 비어 있다. socket은 기존 HeadSocket을 유지한다. TryShoot는 새 키 바인딩 없이 호출 API로 제공한다. 씬 배치 Player (1)은 기존 PUN 생성 초기화 계약을 만족하지 않는다. 두 명의 동시 잡기 승인 정책과 이미 정지한 월드 아이템 전체의 초기 동기화는 별도 범위다.
-- 상세 구현 순서·검증·다음 확인은 [아이템 RPC 계획](plans/2026-10-14-player-item-rpc.md)을 따른다.
+- 상세 구현 순서·검증·다음 확인은 아이템 RPC 계획 (`docs/ai/plans/2026-10-14-player-item-rpc.md`, 현재 파일 없음)을 따른다.
 
 ## 현재 상태: 플레이어 네트워크 파일 통합
 
@@ -287,7 +320,7 @@ PlayMode·게임 실행·빌드는 수행하지 않는다. 다음으로 계획�
 
 - 사용자가 승인한 8×8·높이 4.4·scale 1의 빈 방을 Modular_SciFi_Pack Metal로 조립했다. 결과는 `Assets/SJT/3_Prefabs/BaseCamp/BaseCamp.prefab`과 `Assets/SJT/4_Scenes/BaseCampPreview.unity`다. 기존 MapMakingScene과 원본 팩은 보존했다.
 - 정면 +Z의 Door4와 상부 창·환기구·발광 벽·천장 패널·문 옆 패널을 배치했다. 원본 뒤판을 보정한 문틀 및 양면 문짝 메시만 SJT에 파생했다. 메인맵은 연결하지 않았고 출입문 주변 외벽까지만 마감했다.
-- 세부 구성·수정 후 검증·남은 범위는 [베이스캠프 계획](plans/2026-10-15-basecamp.md)을 따른다. 문은 닫힌 상태로 저장했으며 개폐·판매·네트워크·스폰 기능은 없다. PlayMode·실제 이동·빌드는 수행하지 않는다.
+- 세부 구성·수정 후 검증·남은 범위는 베이스캠프 계획 (`docs/ai/plans/2026-10-15-basecamp.md`, 현재 파일 없음)을 따른다. 문은 닫힌 상태로 저장했으며 개폐·판매·네트워크·스폰 기능은 없다. PlayMode·실제 이동·빌드는 수행하지 않는다.
 
 ## C# 리팩토링 공통 스킬
 
