@@ -1,18 +1,19 @@
 using UnityEngine;
-using Photon.Pun;
 using Photon.Realtime;
-using System;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine.UI;
 using MoreMountains.Feedbacks;
+using ENZEUN.Runtime;
+using Photon.Pun;
+using System;
+using System.Collections.Generic;
 
 
 public class PlayerPanelController : MonoBehaviour
 {
     public Player player;
     [SerializeField] private TextMeshProUGUI nickNameTextGrid;
-    [SerializeField] private Image colorGrid;
+    [SerializeField] private Button colorBtn;
     [SerializeField] private MMF_Player fb;
     [SerializeField] private CanvasGroup masterIconCanvas;
     [SerializeField] private CanvasGroup readyIconCanvas;
@@ -20,6 +21,89 @@ public class PlayerPanelController : MonoBehaviour
 
 
     private bool isShowing = false;
+    private bool isInitialized = false;
+    private int currentColorIndex = -1;
+
+
+    private void Start()
+    {
+        if (!isInitialized)
+        {
+            colorBtn.onClick.AddListener(RequestChangeColor);
+
+            RequestChangeColor();
+        }
+    }
+
+    private void RequestChangeColor()
+    {
+        if (!PhotonNetwork.InRoom)
+            return;
+
+        if (!player.IsLocal)
+        {
+            return;
+        }
+
+        int colorLength = Enum.GetValues(typeof(PhotonLinkManager.PlayerColor)).Length;
+
+        int targetColorIndex = currentColorIndex;
+
+        Player[] players = PhotonNetwork.PlayerListOthers;
+
+        // 만약 자신 제외 플레이어가 0명 이라면, 다음 색상으로 변경
+        if (players == null || players.Length <= 0)
+        {
+            targetColorIndex = (targetColorIndex + 1) % colorLength;
+        }
+
+        // 플레이어가 1명 이상이면
+        else
+        {
+            bool canChange = false;
+
+            List<int> colors = new();
+            // 모든 색을 가져와서 저장 
+            foreach (var p in players)
+            {
+                if (p.CustomProperties.TryGetValue(PhotonLinkManager.myColor_Customproperty, out object obj))
+                {
+                    colors.Add((int)obj);
+                }
+            }
+
+            int safetyCounter = 0; // 무한 루프 방지용 안전장치
+
+            // 후 내 타깃 Index 와 비교, 겹치지 않도록 설정
+            while (!canChange && safetyCounter < colorLength + 10)
+            {
+                targetColorIndex = (targetColorIndex + 1) % colorLength;
+                safetyCounter++;
+
+                bool hasColor = false;
+
+                foreach (var idx in colors)
+                {
+
+                    if (idx == targetColorIndex)
+                    {
+                        hasColor = true;
+                        break;
+                    }
+                }
+                canChange = !hasColor;
+            }
+        }
+
+        PhotonLinkManager.Instance.SetMyColorState(targetColorIndex);
+
+        currentColorIndex = targetColorIndex;
+    }
+
+    private void ChangeColor()
+    {
+        colorBtn.image.color = PhotonLinkManager.GetCurrentColor();
+    }
 
 
     public void RefreshPlayerPanel()
@@ -55,6 +139,7 @@ public class PlayerPanelController : MonoBehaviour
         {
             masterIconCanvas.alpha = 1f;
             readyIconCanvas.alpha = 0f;
+            readyIconCanvas.blocksRaycasts = false;
         }
         else
         {
@@ -76,10 +161,11 @@ public class PlayerPanelController : MonoBehaviour
                     alpha = 0f;
                 }
                 readyIconCanvas.alpha = alpha;
+                readyIconCanvas.blocksRaycasts = show;
             }
         }
 
-
+        ChangeColor();
 
     }
 

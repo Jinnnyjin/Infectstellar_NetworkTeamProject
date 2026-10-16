@@ -107,13 +107,31 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
 
+        bool hasFoundChange = false;
+
         if (changedProps.ContainsKey(PhotonLinkManager.isReady_Customproperty))
         {
+            hasFoundChange = true;
             bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
 
 #if UNITY_EDITOR
             Debug.Log($"[방관리자] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
 #endif
+        }
+
+        if (changedProps.ContainsKey(PhotonLinkManager.myColor_Customproperty))
+        {
+            hasFoundChange = true;
+            int newColorindex = (int)changedProps[PhotonLinkManager.myColor_Customproperty];
+
+#if UNITY_EDITOR
+            Debug.Log($"[방관리자] {targetPlayer.NickName}의 색상이 변경됨: {newColorindex}");
+#endif
+        }
+
+        if (!hasFoundChange)
+        {
+            return;
         }
 
         RefreshPlayerList();
