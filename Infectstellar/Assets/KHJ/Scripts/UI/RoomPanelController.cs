@@ -1,11 +1,9 @@
-using System.Linq;
 using ENZEUN.Runtime;
 using ExitGames.Client.Photon;
 using MoreMountains.Feedbacks;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -233,6 +231,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (PhotonNetwork.LocalPlayer.IsMasterClient)
         {
             photonView.RPC(nameof(StartLoadScene), RpcTarget.All);
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
         }
         else
         {
@@ -252,6 +252,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
             {
                 PhotonLinkManager.Instance.SetMyReadyState(false);
             }
+
+            gameStartBtn.interactable = true;
         }
     }
 
