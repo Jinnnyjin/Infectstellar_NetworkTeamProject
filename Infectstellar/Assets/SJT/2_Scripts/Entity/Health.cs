@@ -14,6 +14,7 @@ public class Health : MonoBehaviour, IDamageable
     public event Action<DamageInfo> D_DamageApplied;
     /// <summary>피해로 체력이 0이 되었을 때 한 번 알립니다.</summary>
     public event Action<DamageInfo> D_Died;
+    public event Action D_Revived;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()

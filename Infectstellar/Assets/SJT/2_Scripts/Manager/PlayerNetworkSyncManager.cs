@@ -1,31 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerNetworkSyncManager : MonoBehaviour
 {
-    private static PlayerManager instance;
-    public static PlayerManager Instance => instance;
+    private static PlayerNetworkSyncManager instance;
+    public static PlayerNetworkSyncManager Instance => instance;
 
     private Dictionary<int, _PlayerNetworkSync> playerNetworkSyncDic;
-    private List<int> actorNumberList;
     private _PlayerNetworkSync localPlayerSync;
 
-    /// <summary>목록에 플레이어가 추가된 뒤 알립니다.</summary>
-    public event Action<_PlayerNetworkSync> D_PlayerRegistered;
-
-    /// <summary>목록에서 플레이어가 제거된 뒤 알립니다.</summary>
-    public event Action<_PlayerNetworkSync> D_PlayerUnregistered;
+    public event Action<_PlayerNetworkSync> D_Registered;
+    public event Action<_PlayerNetworkSync> D_UnRegistered;
 
     public _PlayerNetworkSync LocalPlayerSync => localPlayerSync;
 
-    public List<int> ActorNumberList => actorNumberList;
+    /// <summary>현재 등록된 플레이어 수를 반환합니다.</summary>
+    public int UserCount => playerNetworkSyncDic.Count;
 
     private void Awake()
     {
         playerNetworkSyncDic = new();
-        actorNumberList = new();
 
         if (instance != null && instance != this)
         {
@@ -60,32 +55,65 @@ public class PlayerManager : MonoBehaviour
         }
 
         playerNetworkSyncDic.Add(actorNumber, playerNetworkSync);
-        actorNumberList.Add(actorNumber);
 
         if (playerNetworkSync.IsLocalControlActive)
         {
             localPlayerSync = playerNetworkSync;
         }
 
-        D_PlayerRegistered?.Invoke(playerNetworkSync);
+        D_Registered?.Invoke(playerNetworkSync);
     }
 
-    public void UnRegister(int actorNumber)
+    /// <summary>등록된 본인을 목록에서 제거하고 퇴장을 알립니다.</summary>
+    public void UnRegister(_PlayerNetworkSync playerNetworkSync)
     {
-        if (!playerNetworkSyncDic.TryGetValue(actorNumber, out _PlayerNetworkSync player))
+        if (playerNetworkSync == null)
+        {
+            return;
+        }
+
+        int actorNumber = playerNetworkSync.ActorNumber;
+        if (!playerNetworkSyncDic.TryGetValue(actorNumber, out _PlayerNetworkSync player) || player != playerNetworkSync)
         {
             return;
         }
 
         playerNetworkSyncDic.Remove(actorNumber);
-        actorNumberList.Remove(actorNumber);
 
         if (localPlayerSync == player)
         {
             localPlayerSync = null;
         }
 
-        D_PlayerUnregistered?.Invoke(player);
+        D_UnRegistered?.Invoke(player);
+    }
+
+    /// <summary>본인을 제외하고 ActorNumber 순서로 다음 관전 대상을 반환합니다.</summary>
+    public _PlayerNetworkSync GetNextSpectateTarget(int currentActorNumber)
+    {
+        _PlayerNetworkSync firstPlayer = null;
+        _PlayerNetworkSync nextPlayer = null;
+
+        foreach (KeyValuePair<int, _PlayerNetworkSync> entry in playerNetworkSyncDic)
+        {
+            _PlayerNetworkSync player = entry.Value;
+            if (player == null || !player.isActiveAndEnabled || player == localPlayerSync || player.ThirdPersonView == null)
+            {
+                continue;
+            }
+
+            if (firstPlayer == null || entry.Key < firstPlayer.ActorNumber)
+            {
+                firstPlayer = player;
+            }
+
+            if (entry.Key > currentActorNumber && (nextPlayer == null || entry.Key < nextPlayer.ActorNumber))
+            {
+                nextPlayer = player;
+            }
+        }
+
+        return nextPlayer != null ? nextPlayer : firstPlayer;
     }
 
     public _PlayerNetworkSync GetPlayer(int actorNumber)
@@ -110,10 +138,8 @@ public class PlayerManager : MonoBehaviour
         }
 
         playerNetworkSyncDic.Clear();
-        actorNumberList.Clear();
         localPlayerSync = null;
-
-        D_PlayerRegistered = null;
-        D_PlayerUnregistered = null;
+        D_Registered = null;
+        D_UnRegistered = null;
     }
 }

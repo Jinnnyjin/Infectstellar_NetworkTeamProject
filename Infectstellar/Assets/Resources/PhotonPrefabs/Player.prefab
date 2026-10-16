@@ -728,7 +728,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkSync
   bufferDelay: 0.1
-  cinemachineCamera: {fileID: 3151569999027386306}
+  pointOfView: {fileID: 3151569999027386306}
+  thirdPersonView: {fileID: 0}
   playerLook: {fileID: 8150208259652946239}
   playerMotor: {fileID: 6138360425593812354}
   body: {fileID: 3556861022553636256}

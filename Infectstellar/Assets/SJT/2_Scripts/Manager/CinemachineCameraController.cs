@@ -1,28 +1,23 @@
 using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.InputSystem;
 
-/// <summary>본인 시점과 사망 후 다른 플레이어의 관전 시점을 전환합니다.</summary>
+/// <summary>본인 시점과 사망 중 관전 시점을 전환합니다.</summary>
 [DisallowMultipleComponent]
-[RequireComponent(typeof(PlayerManager))]
+[RequireComponent(typeof(PlayerNetworkSyncManager))]
 public sealed class CinemachineCameraController : MonoBehaviour
 {
     private static CinemachineCameraController instance;
+    private PlayerNetworkSyncManager playerNetworkSyncManager;
+    private int currentActorNumber;
+    private GameObject currentViewObj;
+
+    /// <summary>현재 씬의 카메라 관리자를 반환합니다.</summary>
     public static CinemachineCameraController Instance => instance;
-    private Dictionary<int, _PlayerNetworkSync> playerNetworkSyncDic;
-    private _PlayerNetworkSync localPlayerSync;
 
     private void Awake()
     {
-        playerNetworkSyncDic = new();
-
+        playerNetworkSyncManager = GetComponent<PlayerNetworkSyncManager>();
         if (instance != null && instance != this)
         {
-#if UNITY_EDITOR
-            Debug.LogError("[PlayerManager] 이미 등록된 관리자가 있습니다.", this);
-#endif
             enabled = false;
             return;
         }
@@ -30,51 +25,159 @@ public sealed class CinemachineCameraController : MonoBehaviour
         instance = this;
     }
 
-
-    public void Register(_PlayerNetworkSync playerNetworkSync)
+    private void OnEnable()
     {
-        if (instance != this || !isActiveAndEnabled
-            || playerNetworkSync == null || !playerNetworkSync.isActiveAndEnabled
-            || playerNetworkSync.ActorNumber <= 0
-            || playerNetworkSync.gameObject.scene != gameObject.scene)
+        playerNetworkSyncManager.D_Registered += HandleRegistered;
+        playerNetworkSyncManager.D_UnRegistered += HandleUnRegistered;
+
+        // 관리자 활성화 전에 본인이 등록된 경우에도 반영합니다.
+        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        if (localPlayer != null)
         {
-            return;
-        }
-
-        int actorNumber = playerNetworkSync.ActorNumber;
-
-        if (playerNetworkSyncDic.ContainsKey(actorNumber))
-        {
-#if UNITY_EDITOR
-            Debug.LogWarning($"actorNumber {actorNumber} 키가 이미 등록되어 있습니다.");
-#endif
-            return;
-        }
-
-        playerNetworkSyncDic.Add(actorNumber, playerNetworkSync);
-
-        if (playerNetworkSync.IsLocalControlActive)
-        {
-            localPlayerSync = playerNetworkSync;
+            HandleRegistered(localPlayer);
         }
     }
 
-    public void UnRegister(int actorNumber)
+    private void OnDisable()
     {
-        if (!playerNetworkSyncDic.TryGetValue(actorNumber, out _PlayerNetworkSync player))
+        if (playerNetworkSyncManager == null)
         {
             return;
         }
 
-        playerNetworkSyncDic.Remove(actorNumber);
+        playerNetworkSyncManager.D_Registered -= HandleRegistered;
+        playerNetworkSyncManager.D_UnRegistered -= HandleUnRegistered;
+    }
 
-        if (localPlayerSync == player)
+    private void OnDestroy()
+    {
+        if (instance == this)
         {
-            localPlayerSync = null;
+            instance = null;
         }
     }
 
-    public void ShowPointOfView()
+    /// <summary>본인 등록 시 초기 시점을 설정하고, 대상이 없던 관전을 시작합니다.</summary>
+    private void HandleRegistered(_PlayerNetworkSync player)
     {
+        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        if (localPlayer == null)
+        {
+            return;
+        }
+
+        if (player == localPlayer)
+        {
+            if (localPlayer.IsAlive)
+            {
+                ShowLocalPointOfView();
+            }
+            else
+            {
+                ShowNextThirdPersonView();
+            }
+
+            return;
+        }
+
+        // 이미 다른 사람을 관전 중이면 신규 참가자가 와도 시점을 유지합니다.
+        if (!localPlayer.IsAlive && (currentViewObj == null || currentActorNumber == localPlayer.ActorNumber))
+        {
+            ShowNextThirdPersonView();
+        }
+    }
+
+    /// <summary>본인이나 현재 관전 대상이 퇴장하면 시점을 정리합니다.</summary>
+    private void HandleUnRegistered(_PlayerNetworkSync player)
+    {
+        if (playerNetworkSyncManager.LocalPlayerSync == null)
+        {
+            if (currentViewObj != null)
+            {
+                currentViewObj.SetActive(false);
+            }
+
+            currentViewObj = null;
+            currentActorNumber = 0;
+            return;
+        }
+
+        if (player.ActorNumber == currentActorNumber)
+        {
+            ShowNextThirdPersonView();
+        }
+    }
+
+    /// <summary>본인 시점으로 복귀합니다.</summary>
+    public void ShowLocalPointOfView()
+    {
+        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        if (localPlayer == null || !localPlayer.IsLocalControlActive)
+        {
+            return;
+        }
+
+        SwitchView(localPlayer.PointOfView, localPlayer.ActorNumber);
+    }
+
+    /// <summary>사망 중 지정한 다른 플레이어의 삼인칭 시점으로 전환합니다.</summary>
+    public void ShowThirdPersonView(int actorNumber)
+    {
+        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        if (localPlayer == null || !localPlayer.IsLocalControlActive || localPlayer.IsAlive || actorNumber == localPlayer.ActorNumber)
+        {
+            return;
+        }
+
+        _PlayerNetworkSync player = playerNetworkSyncManager.GetPlayer(actorNumber);
+        if (player == null || !player.isActiveAndEnabled)
+        {
+            return;
+        }
+
+        SwitchView(player.ThirdPersonView, actorNumber);
+    }
+
+    /// <summary>다음 관전 대상을 선택하고, 대상이 없으면 본인 시점으로 복귀합니다.</summary>
+    public void ShowNextThirdPersonView()
+    {
+        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        if (localPlayer == null || !localPlayer.IsLocalControlActive)
+        {
+            return;
+        }
+
+        if (localPlayer.IsAlive)
+        {
+            ShowLocalPointOfView();
+            return;
+        }
+
+        _PlayerNetworkSync nextPlayer = playerNetworkSyncManager.GetNextSpectateTarget(currentActorNumber);
+        if (nextPlayer == null)
+        {
+            ShowLocalPointOfView();
+            return;
+        }
+
+        ShowThirdPersonView(nextPlayer.ActorNumber);
+    }
+
+    /// <summary>이전 카메라를 끄고 선택한 카메라를 켭니다.</summary>
+    private void SwitchView(GameObject nextView, int actorNumber)
+    {
+        if (nextView == null)
+        {
+            return;
+        }
+
+        if (currentViewObj != null && currentViewObj != nextView)
+        {
+            currentViewObj.SetActive(false);
+        }
+
+        currentViewObj = nextView;
+        currentActorNumber = actorNumber;
+        currentViewObj.SetActive(true);
     }
 }

@@ -927,6 +927,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3331719317402239196, guid: 8df5c5488ade34d48a6c8471e2536003, type: 3}
   m_PrefabInstance: {fileID: 1523477935}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1543389468
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1543389470}
+  - component: {fileID: 1543389469}
+  - component: {fileID: 1543389471}
+  m_Layer: 0
+  m_Name: PlayerManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1543389469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543389468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ce94235146bdf249917880eb28c5879, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNetworkSyncManager
+--- !u!4 &1543389470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543389468}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1543389471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543389468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92579ed04ed6a5419c1505b0cabceb5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CinemachineCameraController
 --- !u!1001 &1655143690
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2792,12 +2849,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::_PlayerNetworkSync
   bufferDelay: 0.1
-  cinemachineCamera: {fileID: 2166618680157800394}
+  pointOfView: {fileID: 2166618680157800394}
   playerLook: {fileID: 4951315512615745847}
   playerMotor: {fileID: 6954145283317138826}
   body: {fileID: 356138705280028072}
   animationController: {fileID: 8752422559032905550}
   mineModel: {fileID: 1727757670455576803}
+  thirdPersonView: {fileID: 1064558172}
 --- !u!4 &6455086529272170793
 Transform:
   m_ObjectHideFlags: 0
@@ -3392,3 +3450,4 @@ SceneRoots:
   - {fileID: 1272680475}
   - {fileID: 590338660}
   - {fileID: 356138705280028072}
+  - {fileID: 1543389470}
