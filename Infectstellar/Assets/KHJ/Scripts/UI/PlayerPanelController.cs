@@ -22,7 +22,7 @@ public class PlayerPanelController : MonoBehaviour
 
     private bool isShowing = false;
     private bool isInitialized = false;
-    private int currentColorIndex = -1;
+    private int currentColorIndexForLocal = -1;
 
 
     private void Start()
@@ -30,8 +30,6 @@ public class PlayerPanelController : MonoBehaviour
         if (!isInitialized)
         {
             colorBtn.onClick.AddListener(RequestChangeColor);
-
-            RequestChangeColor();
         }
     }
 
@@ -40,6 +38,7 @@ public class PlayerPanelController : MonoBehaviour
         if (!PhotonNetwork.InRoom)
             return;
 
+        // 로컬에서만 작동
         if (!player.IsLocal)
         {
             return;
@@ -47,7 +46,7 @@ public class PlayerPanelController : MonoBehaviour
 
         int colorLength = Enum.GetValues(typeof(PhotonLinkManager.PlayerColor)).Length;
 
-        int targetColorIndex = currentColorIndex;
+        int targetColorIndex = currentColorIndexForLocal;
 
         Player[] players = PhotonNetwork.PlayerListOthers;
 
@@ -97,12 +96,28 @@ public class PlayerPanelController : MonoBehaviour
 
         PhotonLinkManager.Instance.SetMyColorState(targetColorIndex);
 
-        currentColorIndex = targetColorIndex;
+        currentColorIndexForLocal = targetColorIndex;
     }
 
     private void ChangeColor()
     {
-        colorBtn.image.color = PhotonLinkManager.GetCurrentColor();
+        int index = 0;
+
+        // 플레이어의 CustomProperties 에 컬러값이 존재할 때
+        if (player.CustomProperties.TryGetValue(PhotonLinkManager.myColor_Customproperty, out object obj))
+        {
+            index = (int)obj;
+        }
+        // 컬러값이 없을 때. (최초 실행)
+        else
+        {
+            if (player.IsLocal)
+            {
+                RequestChangeColor();
+            }
+        }
+
+        colorBtn.image.color = PhotonLinkManager.GetIndexedColor(index);
     }
 
 

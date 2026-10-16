@@ -413,19 +413,11 @@ namespace ENZEUN.Runtime
         /// 외부에서 색상을 가져다 쓸 수 있는 메서드
         /// </summary>
         /// <returns>Color 값</returns>
-        public static Color GetCurrentColor()
+        public static Color GetIndexedColor(int index)
         {
-            if (!PhotonNetwork.IsConnected)
-                return Color.white;
-
-            if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(myColor_Customproperty, out object obj))
+            if (PlayerColorMap.TryGetValue((PlayerColor)index, out Color color))
             {
-                int index = (int)obj;
-
-                if (PlayerColorMap.TryGetValue((PlayerColor)index, out Color color))
-                {
-                    return color;
-                }
+                return color;
             }
 
             // 예외 처리 (기본값 흰색 반환)
