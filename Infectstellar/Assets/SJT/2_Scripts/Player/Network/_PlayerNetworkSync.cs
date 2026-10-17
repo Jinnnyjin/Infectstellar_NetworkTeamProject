@@ -7,14 +7,13 @@ using Photon.Pun;
 /// </summary>
 public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
 {
-    private PhotonView view; // 이 플레이어의 조작 권한 확인과 RPC 전송에 쓰는 PUN 컴포넌트
     [SerializeField] private float bufferDelay = 0.1f;
     private _PlayerSnapShotPlayback playerSnapShotPlayback; // 전달받은 스냅샷을 전달하여 보간/외삽을 진행할 컴포넌트
     private bool isInitialized;
     private int actorNumber;
     private PlayerNetworkSyncManager registeredManager;
 
-    private PhotonView photonView;
+    private PhotonView photonView; // 이 플레이어의 조작 권한 확인과 RPC 전송에 쓰는 PUN 컴포넌트
     [SerializeField] private PlayerLook playerLook;
     [SerializeField] private PlayerMotor playerMotor;
     [SerializeField] private Transform body;
@@ -37,6 +36,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     public bool IsLocalControlActive => isInitialized && isActiveAndEnabled && PhotonNetwork.InRoom && IsMine && photonView.ControllerActorNr == actorNumber;
     /// <summary>이 플레이어의 현재 생존 여부를 반환합니다.</summary>
     public bool IsAlive => stateMachine != null && stateMachine.IsAlive;
+    public GameObject MineModel => mineModel;
     public GameObject PointOfView => pointOfView;
     public GameObject ThirdPersonView => thirdPersonView;
 

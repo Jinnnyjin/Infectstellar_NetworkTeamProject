@@ -88,7 +88,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
         D_UnRegistered?.Invoke(player);
     }
 
-    /// <summary>본인을 제외하고 ActorNumber 순서로 다음 관전 대상을 반환합니다.</summary>
+    /// <summary>본인을 포함해 ActorNumber 순서로 다음 관전 대상을 반환합니다.</summary>
     public _PlayerNetworkSync GetNextSpectateTarget(int currentActorNumber)
     {
         _PlayerNetworkSync firstPlayer = null;
@@ -97,7 +97,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
         foreach (KeyValuePair<int, _PlayerNetworkSync> entry in playerNetworkSyncDic)
         {
             _PlayerNetworkSync player = entry.Value;
-            if (player == null || !player.isActiveAndEnabled || player == localPlayerSync || player.ThirdPersonView == null)
+            if (player == null || !player.isActiveAndEnabled || player.ThirdPersonView == null)
             {
                 continue;
             }

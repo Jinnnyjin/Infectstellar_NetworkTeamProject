@@ -118,13 +118,18 @@ public sealed class CinemachineCameraController : MonoBehaviour
         }
 
         SwitchView(localPlayer.PointOfView, localPlayer.ActorNumber);
+
+        if (localPlayer.MineModel.activeSelf)
+        {
+            localPlayer.MineModel.SetActive(false);
+        }
     }
 
-    /// <summary>사망 중 지정한 다른 플레이어의 삼인칭 시점으로 전환합니다.</summary>
+    /// <summary>사망 중 본인을 포함한 지정 플레이어의 삼인칭 시점으로 전환합니다.</summary>
     public void ShowThirdPersonView(int actorNumber)
     {
         _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
-        if (localPlayer == null || !localPlayer.IsLocalControlActive || localPlayer.IsAlive || actorNumber == localPlayer.ActorNumber)
+        if (localPlayer == null || !localPlayer.IsLocalControlActive || localPlayer.IsAlive)
         {
             return;
         }
@@ -136,6 +141,11 @@ public sealed class CinemachineCameraController : MonoBehaviour
         }
 
         SwitchView(player.ThirdPersonView, actorNumber);
+
+        if (!localPlayer.MineModel.activeSelf)
+        {
+            localPlayer.MineModel.SetActive(true);
+        }
     }
 
     /// <summary>다음 관전 대상을 선택하고, 대상이 없으면 본인 시점으로 복귀합니다.</summary>

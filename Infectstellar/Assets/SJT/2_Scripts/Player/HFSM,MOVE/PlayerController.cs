@@ -263,7 +263,7 @@ public sealed class PlayerController : MonoBehaviour
 
             if (isLocalPlayer)
             {
-                CinemachineCameraController.Instance?.ShowNextThirdPersonView();
+                CinemachineCameraController.Instance?.ShowThirdPersonView(networkSync.ActorNumber);
             }
         }
 

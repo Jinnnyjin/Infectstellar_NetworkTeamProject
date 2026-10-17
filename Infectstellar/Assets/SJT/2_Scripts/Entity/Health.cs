@@ -23,6 +23,20 @@ public class Health : MonoBehaviour, IDamageable
         maxHP = hp;
     }
 
+#if UNITY_EDITOR
+    [ContextMenu("TakeDamage 100")]
+    private void KillPlayer()
+    {
+        TakeDamage(new DamageInfo(200f));
+    }
+
+    [ContextMenu("Revive")]
+    public void RevivePlayer()
+    {
+        RevivePlayer();
+    }
+#endif
+
     /// <summary>피해를 적용하고 성공했을 때 RPC 송신용 알림을 발생시킵니다.</summary>
     public void TakeDamage(DamageInfo damageInfo)
     {
