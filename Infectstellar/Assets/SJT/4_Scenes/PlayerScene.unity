@@ -698,37 +698,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3331719317402239196, guid: 03c3e4a94759ec741a8bc9f965ec4e68, type: 3}
   m_PrefabInstance: {fileID: 1269678789}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1272680473
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1272680475}
-  m_Layer: 0
-  m_Name: PlayerSyncRateManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1272680475
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1272680473}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1523477935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -806,6 +775,7 @@ GameObject:
   - component: {fileID: 1543389470}
   - component: {fileID: 1543389469}
   - component: {fileID: 1543389471}
+  - component: {fileID: 1543389472}
   m_Layer: 0
   m_Name: PlayerManager
   m_TagString: Untagged
@@ -852,6 +822,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d92579ed04ed6a5419c1505b0cabceb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CinemachineCameraController
+--- !u!114 &1543389472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543389468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7277d0076f3799b4493b002477d83e93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSyncRateController
+  nearSerializationRate: 30
+  farRateMultiplier: 0.4
+  nearDistance: 15
+  distanceMargin: 3
+  checkInterval: 0.1
 --- !u!1001 &1655143690
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1379,6 +1366,5 @@ SceneRoots:
   - {fileID: 1797096994}
   - {fileID: 1962119812}
   - {fileID: 246080823}
-  - {fileID: 1272680475}
   - {fileID: 590338660}
   - {fileID: 1543389470}

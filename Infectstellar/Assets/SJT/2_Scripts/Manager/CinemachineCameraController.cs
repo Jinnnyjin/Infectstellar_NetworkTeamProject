@@ -7,7 +7,6 @@ public sealed class CinemachineCameraController : MonoBehaviour
 {
     private static CinemachineCameraController instance;
     private PlayerNetworkSyncManager playerNetworkSyncManager;
-    private int currentActorNumber;
     private GameObject currentViewObj;
 
     /// <summary>현재 씬의 카메라 관리자를 반환합니다.</summary>
@@ -27,15 +26,10 @@ public sealed class CinemachineCameraController : MonoBehaviour
 
     private void OnEnable()
     {
-        playerNetworkSyncManager.D_Registered += HandleRegistered;
-        playerNetworkSyncManager.D_UnRegistered += HandleUnRegistered;
+        playerNetworkSyncManager.D_FocusedPlayerChanged += ShowNextThirdPersonView;
 
-        // 관리자 활성화 전에 본인이 등록된 경우에도 반영합니다.
-        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
-        if (localPlayer != null)
-        {
-            HandleRegistered(localPlayer);
-        }
+        // 구독 전에 결정된 대상이나 비활성 중 변경된 대상도 반영합니다.
+        ShowNextThirdPersonView(playerNetworkSyncManager.FocusedPlayerSync);
     }
 
     private void OnDisable()
@@ -45,8 +39,7 @@ public sealed class CinemachineCameraController : MonoBehaviour
             return;
         }
 
-        playerNetworkSyncManager.D_Registered -= HandleRegistered;
-        playerNetworkSyncManager.D_UnRegistered -= HandleUnRegistered;
+        playerNetworkSyncManager.D_FocusedPlayerChanged -= ShowNextThirdPersonView;
     }
 
     private void OnDestroy()
@@ -54,57 +47,6 @@ public sealed class CinemachineCameraController : MonoBehaviour
         if (instance == this)
         {
             instance = null;
-        }
-    }
-
-    /// <summary>본인 등록 시 초기 시점을 설정하고, 대상이 없던 관전을 시작합니다.</summary>
-    private void HandleRegistered(_PlayerNetworkSync player)
-    {
-        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
-        if (localPlayer == null)
-        {
-            return;
-        }
-
-        if (player == localPlayer)
-        {
-            if (localPlayer.IsAlive)
-            {
-                ShowLocalPointOfView();
-            }
-            else
-            {
-                ShowNextThirdPersonView();
-            }
-
-            return;
-        }
-
-        // 이미 다른 사람을 관전 중이면 신규 참가자가 와도 시점을 유지합니다.
-        if (!localPlayer.IsAlive && (currentViewObj == null || currentActorNumber == localPlayer.ActorNumber))
-        {
-            ShowNextThirdPersonView();
-        }
-    }
-
-    /// <summary>본인이나 현재 관전 대상이 퇴장하면 시점을 정리합니다.</summary>
-    private void HandleUnRegistered(_PlayerNetworkSync player)
-    {
-        if (playerNetworkSyncManager.LocalPlayerSync == null)
-        {
-            if (currentViewObj != null)
-            {
-                currentViewObj.SetActive(false);
-            }
-
-            currentViewObj = null;
-            currentActorNumber = 0;
-            return;
-        }
-
-        if (player.ActorNumber == currentActorNumber)
-        {
-            ShowNextThirdPersonView();
         }
     }
 
@@ -117,7 +59,12 @@ public sealed class CinemachineCameraController : MonoBehaviour
             return;
         }
 
-        SwitchView(localPlayer.PointOfView, localPlayer.ActorNumber);
+        if (localPlayer.PointOfView == null)
+        {
+            return;
+        }
+
+        SwitchView(localPlayer.PointOfView);
 
         if (localPlayer.MineModel.activeSelf)
         {
@@ -125,32 +72,20 @@ public sealed class CinemachineCameraController : MonoBehaviour
         }
     }
 
-    /// <summary>사망 중 본인을 포함한 지정 플레이어의 삼인칭 시점으로 전환합니다.</summary>
-    public void ShowThirdPersonView(int actorNumber)
+    /// <summary>집중 대상에 맞춰 생존 중 일인칭 또는 사망 중 삼인칭을 적용합니다.</summary>
+    public void ShowNextThirdPersonView(_PlayerNetworkSync nextPlayer)
     {
-        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
-        if (localPlayer == null || !localPlayer.IsLocalControlActive || localPlayer.IsAlive)
+        if (nextPlayer == null)
         {
+            if (currentViewObj != null)
+            {
+                currentViewObj.SetActive(false);
+            }
+
+            currentViewObj = null;
             return;
         }
 
-        _PlayerNetworkSync player = playerNetworkSyncManager.GetPlayer(actorNumber);
-        if (player == null || !player.isActiveAndEnabled)
-        {
-            return;
-        }
-
-        SwitchView(player.ThirdPersonView, actorNumber);
-
-        if (!localPlayer.MineModel.activeSelf)
-        {
-            localPlayer.MineModel.SetActive(true);
-        }
-    }
-
-    /// <summary>다음 관전 대상을 선택하고, 대상이 없으면 본인 시점으로 복귀합니다.</summary>
-    public void ShowNextThirdPersonView()
-    {
         _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
         if (localPlayer == null || !localPlayer.IsLocalControlActive)
         {
@@ -163,18 +98,31 @@ public sealed class CinemachineCameraController : MonoBehaviour
             return;
         }
 
-        _PlayerNetworkSync nextPlayer = playerNetworkSyncManager.GetNextSpectateTarget(currentActorNumber);
-        if (nextPlayer == null)
+        if (!nextPlayer.isActiveAndEnabled)
         {
-            ShowLocalPointOfView();
             return;
         }
 
-        ShowThirdPersonView(nextPlayer.ActorNumber);
+        if (nextPlayer.ThirdPersonView == null)
+        {
+            if (nextPlayer == localPlayer)
+            {
+                ShowLocalPointOfView();
+            }
+
+            return;
+        }
+
+        SwitchView(nextPlayer.ThirdPersonView);
+
+        if (!localPlayer.MineModel.activeSelf)
+        {
+            localPlayer.MineModel.SetActive(true);
+        }
     }
 
     /// <summary>이전 카메라를 끄고 선택한 카메라를 켭니다.</summary>
-    private void SwitchView(GameObject nextView, int actorNumber)
+    private void SwitchView(GameObject nextView)
     {
         if (nextView == null)
         {
@@ -187,7 +135,9 @@ public sealed class CinemachineCameraController : MonoBehaviour
         }
 
         currentViewObj = nextView;
-        currentActorNumber = actorNumber;
-        currentViewObj.SetActive(true);
+        if (!currentViewObj.activeSelf)
+        {
+            currentViewObj.SetActive(true);
+        }
     }
 }

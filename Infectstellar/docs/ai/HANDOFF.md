@@ -1,8 +1,31 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-17 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 현재 상태: 사망 직후 본인 삼인칭과 Tab 순환
+## 현재 상태: 집중 대상 선택과 카메라 적용 분리
+
+- PlayerNetworkSyncManager의 FocusedPlayerSync·D_FocusedPlayerChanged가 대상 선택과 알림을 담당한다. 카메라는 이벤트와 현재 캐시를 받아 시점만 적용하고 PlayerController의 Tab 입력은 Manager를 호출한다.
+- 사망·부활에서는 Controller가 본인으로 집중 대상을 맞춘 뒤 카메라를 직접 호출하여 동일 대상에서도 시점 모드를 갱신한다. ShowThirdPersonView(int)와 별도 Apply 메서드는 사용하지 않는다.
+- 집중 대상 리팩토링 당시에는 PlayerSyncRateController의 사용자 주석 처리를 보존했다. 이후 승인한 Controller 교체는 아래 최신 상태를 따른다. 집중 대상 리팩토링의 독립 검토·컴파일 한계는 [집중 대상 리팩토링 계획](plans/2026-10-17-focused-player-refactor.md)에 기록한다.
+- 독립 검토에서 확정 오류는 없고 diff 검사는 통과했다. Unity 재컴파일은 응답 상충·후속 Pipeline 연결 실패로 성공 미확인이다. 최신 신규 Console 구간에 C# 오류는 없었으나 통과로 보고하지 않는다. 하네스 검사는 기존 누락 참조 13건으로 실패했으며 관련 EditMode 테스트는 없고 Play·접속·빌드는 실행하지 않았다.
+
+## 현재 상태: PlayerSyncRateController의 거리 기반 직렬화 빈도
+
+- 2026-10-17 승인한 간단한 제안으로 주석 본문을 교체했다. Controller가 현재 클라이언트의 공통 SerializationRate를 조절하며 _PlayerNetworkSync·송수신 형식·SendRate는 유지한다. Interest Groups와 사용자별 수신량 구분은 이번에 제외한다.
+- 근거리 기준 빈도와 원거리 배율은 Inspector에서 설정한다. 내 위치와 다른 사용자의 집중 대상 위치를 비교하고, 집중 대상 ActorNumber는 Player Custom Properties로 공유한다. 상세 동작·기본값·검증은 [직렬화 빈도 계획](plans/2026-10-17-player-sync-rate-controller.md)에 기록한다.
+- Manager.D_FocusedPlayerChanged는 다음 Update의 공유·검사를 예약한다. 다른 사용자의 속성 변경은 주기 검사에서 확인한다. Manager의 사용자 삭제 GetPlayer는 복원하지 않고 TryGetPlayer 조회만 추가했다. 초기화·정리는 게임 씬 컴포넌트 활성 기간으로 한정하며 룸 입퇴장 콜백은 없다.
+- 2026-10-18 최신 저장 파일에서 PlayerScene의 PlayerManager에 Controller가 사용자 변경으로 부착되어 있음을 확인했다. 값은 30회/초·0.5배·15m·3m·0.1초다. 씬 변경은 보존하며 디버깅 추가에서 씬·meta는 수정하지 않는다.
+- Editor 전용 LateUpdate에서 SJT.DebugSerializationRate를 통해 각 Editor의 설정값을 최초·변경 시 공유하고 Actor별 값을 한 Console 로그에 모아 출력한다. 메서드 전체와 디버깅 관련 선언·초기화·정리는 UNITY_EDITOR 가드 안이다. 빌드 클라이언트 등 값이 없는 대상은 미보고이며 원격 값은 마지막 보고값이다. 실제 패킷 빈도 측정과 구분한다. 다중 클라이언트의 실제 출력은 아직 미검증이다.
+- 디버깅 추가본은 독립 검토에서 확정 오류가 없고 2026-10-18 00:11:15 KST Unity 재컴파일이 completed/failed:false/errors:[]/compilationFailed:false로 통과했다. 검사 전후 소스 해시는 동일하며 변경 범위 diff 검사도 통과했다. 전체 diff 검사의 기존 사용자 씬 공백과 하네스 검사의 기존 누락 참조 13건은 보존했다. 관련 기존 EditMode 테스트가 없고 Play·다중 클라이언트 실행·빌드는 하지 않았다.
+- 향후 Interest Groups를 추가하려면 공통·추가 업데이트 일정과 구독 구역을 별도 설계해야 한다. 현재 전역 직렬화 빈도 조절과 조합할 때 원거리 업데이트가 지나치게 줄어들지 않도록 하고, 같은 PhotonView의 피해·줍기·손전등 RPC 전달 영향도 확인한다. 과거 PlayerSyncRateManager와 meta는 사용자 삭제 상태를 유지한다.
+- 독립 검토에서 확정 오류는 없었다. 2026-10-17 23:31 KST 최종 Unity 실제 재컴파일은 completed/failed:false/errors:[]/compilationFailed:false, 새 오류 0건으로 통과했다. 관련 기존 EditMode 테스트가 없고 Play·통신은 미검증이다. 문서 구조 검사는 기존 누락 참조 13건으로 실패했다. 상세 근거는 위 직렬화 빈도 계획을 따른다.
+
+## 현재 상태: 플레이어 스냅샷 외삽
+
+- 사용자 실행 승인에 따라 실제 PlayerMotor.Velocity를 8번째 항목으로 송수신하고, 기존 보간을 메서드로 분리했다. 재생 버퍼가 하나이면 XYZ 위치를 최대 0.1초 외삽하며 이후 예측 끝 위치를 유지한다. 회전·상태는 수신 값을 유지하고 예측 결과는 버퍼에 넣지 않는다.
+- 참여 클라이언트는 같은 8항목 전송 형식을 사용해야 한다. 독립 리뷰에서 확정 오류는 없었으나, 이번 Unity 재컴파일은 시간 초과 후 triggered로 남아 완료를 확인하지 못했다. 계산 검증·Play·접속·빌드도 미검증이다. 최종 검증 근거와 재개 조건은 [외삽 계획](plans/2026-10-17-player-snapshot-extrapolation.md)에 기록한다.
+
+## 이전 기록: 사망 직후 본인 삼인칭과 Tab 순환
 
 - 로컬 사망 시 본인의 ThirdPersonView를 먼저 표시하고, 기존 Tab 순환에도 본인을 포함하도록 세 클래스의 사망 호출·제외 조건만 수정했다. 사용자 MineModel 토글·MineModel 프로퍼티·입력·부활·등록·네트워크·자산 변경은 보존한다.
 - 중간 참가를 지원하지 않는 정책은 [프로젝트 전용 정책](PROJECT.md#이-프로젝트-전용-정책--공통-원본-반영-금지)에 기록했다. 이 정책과 이번 기록은 전역 하네스·공통 원본·다른 프로젝트에 반영하지 않는다.

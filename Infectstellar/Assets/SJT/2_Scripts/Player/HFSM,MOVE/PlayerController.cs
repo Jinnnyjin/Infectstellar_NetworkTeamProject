@@ -138,7 +138,7 @@ public sealed class PlayerController : MonoBehaviour
         {
             if (inputReader.NextSpectateTargetPressed)
             {
-                CinemachineCameraController.Instance?.ShowNextThirdPersonView();
+                PlayerNetworkSyncManager.Instance?.ChangeToNextFocusedPlayer();
             }
         }
 
@@ -219,6 +219,25 @@ public sealed class PlayerController : MonoBehaviour
         stateMachine.Revive();
     }
 
+#if UNITY_EDITOR
+    [ContextMenu("Player Revive")]
+#endif
+    /// <summary>직접 제어하는 플레이어의 부활을 시도합니다.</summary>
+    public bool TryRevive()
+    {
+        if (!isInitialized || !isActiveAndEnabled || health == null)
+        {
+            return false;
+        }
+
+        if (networkSync != null && !networkSync.IsLocalControlActive)
+        {
+            return false;
+        }
+
+        return health.Revive();
+    }
+
     /// <summary>초기화 후 로컬 입력만 시작하거나 중단합니다.</summary>
     public void SetLocalControlActive(bool isActive)
     {
@@ -263,13 +282,15 @@ public sealed class PlayerController : MonoBehaviour
 
             if (isLocalPlayer)
             {
-                CinemachineCameraController.Instance?.ShowThirdPersonView(networkSync.ActorNumber);
+                PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
+                CinemachineCameraController.Instance?.ShowNextThirdPersonView(networkSync);
             }
         }
 
         else if (previousState == PlayerState.Dead && isLocalPlayer)
         {
             // 내 플레이어가 부활했을 때 내 시점으로 복귀
+            PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
             CinemachineCameraController.Instance?.ShowLocalPointOfView();
         }
     }

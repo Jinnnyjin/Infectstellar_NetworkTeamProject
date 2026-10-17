@@ -13,10 +13,13 @@ public readonly struct _PlayerSnapShot
     public readonly Vector2 MoveDirection; // 이동 애니메이션 방향(X: 좌우, Y: 앞뒤).
     public readonly bool IsCrouching; // 실제 캡슐이 웅크린 자세인지 여부.
 
-    /// <summary>한 시점의 위치·회전과 이동 상태를 함께 저장합니다.</summary>
+    public readonly Vector3 Velocity; // 실제 월드 이동 속도(m/s).
+
+    /// <summary>한 시점의 자세·이동 상태와 실제 속도를 저장합니다.</summary>
     public _PlayerSnapShot(double time,
     Vector3 position, float yRotation, float viewPitch,
-    PlayerState state, Vector2 moveDirection, bool isCrouching)
+    PlayerState state, Vector2 moveDirection, bool isCrouching,
+    Vector3 velocity)
     {
         Time = time;
 
@@ -27,5 +30,7 @@ public readonly struct _PlayerSnapShot
         State = state;
         MoveDirection = moveDirection;
         IsCrouching = isCrouching;
+
+        Velocity = velocity;
     }
 }
