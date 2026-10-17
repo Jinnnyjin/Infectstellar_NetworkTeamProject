@@ -1,11 +1,9 @@
-using System.Linq;
 using ENZEUN.Runtime;
 using ExitGames.Client.Photon;
 using MoreMountains.Feedbacks;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -50,12 +48,10 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         if (!isSubscribed)
         {
+            isSubscribed = true;
             leaveRoomBtn.onClick.AddListener(LeaveRoomBtnClicked);
             gameStartBtn.onClick.AddListener(GameStartBtnClicked);
-
-            isSubscribed = true;
         }
-
     }
 
 
@@ -63,6 +59,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+
+        ResetMyReadyState();
 
         chatManager.ResetChatLog();
 
@@ -89,12 +87,16 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
         chatManager.ResetChatLog();
 
+        ResetMyReadyState();
+
         MenuController.Instance.ChangeToRoomSearchMenu();
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
         base.OnMasterClientSwitched(newMasterClient);
+
+        ResetMyReadyState();
 
         RefreshPlayerList();
     }
@@ -103,13 +105,31 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
     {
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
 
-        if (changedProps.ContainsKey("IsReady"))
+        bool hasFoundChange = false;
+
+        if (changedProps.ContainsKey(PhotonLinkManager.isReady_Customproperty))
         {
-            bool newReady = (bool)changedProps["IsReady"];
+            hasFoundChange = true;
+            bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
 
 #if UNITY_EDITOR
-            Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
+            Debug.Log($"[방관리자] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
 #endif
+        }
+
+        if (changedProps.ContainsKey(PhotonLinkManager.myColor_Customproperty))
+        {
+            hasFoundChange = true;
+            int newColorindex = (int)changedProps[PhotonLinkManager.myColor_Customproperty];
+
+#if UNITY_EDITOR
+            Debug.Log($"[방관리자] {targetPlayer.NickName}의 색상이 변경됨: {newColorindex}");
+#endif
+        }
+
+        if (!hasFoundChange)
+        {
+            return;
         }
 
         RefreshPlayerList();
@@ -178,10 +198,11 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
     public void CheckPlayerReady()
     {
-        players = PhotonNetwork.PlayerList;
+        players = PhotonNetwork.PlayerListOthers;
+
         bool allReady = true;
 
-        if (players.Length <= 1)
+        if (players == null || players.Length <= 0)
         {
             allReady = false;
         }
@@ -189,7 +210,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         {
             foreach (var p in players)
             {
-                if (p.CustomProperties.TryGetValue("IsReady", out object obj))
+                if (p.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
                 {
                     if (!(bool)obj)
                     {
@@ -210,6 +231,8 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         if (PhotonNetwork.LocalPlayer.IsMasterClient)
         {
             photonView.RPC(nameof(StartLoadScene), RpcTarget.All);
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
         }
         else
         {
@@ -218,6 +241,19 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
                 isReady = (bool)obj;
             }
             PhotonLinkManager.Instance.SetMyReadyState(!isReady);
+        }
+    }
+
+    public void ResetMyReadyState()
+    {
+        if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
+        {
+            if ((bool)obj)
+            {
+                PhotonLinkManager.Instance.SetMyReadyState(false);
+            }
+
+            gameStartBtn.interactable = true;
         }
     }
 

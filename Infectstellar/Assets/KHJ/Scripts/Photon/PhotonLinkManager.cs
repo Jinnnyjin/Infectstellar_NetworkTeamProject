@@ -4,6 +4,7 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using System;
 using ExitGames.Client.Photon;
+using Unity.VisualScripting;
 
 
 namespace ENZEUN.Runtime
@@ -29,7 +30,7 @@ namespace ENZEUN.Runtime
 
         public static int MaxPlayer = 4;
 
-        [SerializeField] private PhotonRoomListHandler photonRoomListHandler;
+        private PhotonRoomListHandler photonRoomListHandler;
 
         /// <summary>
         /// Instance 는 하나만 존재하도록 (싱글턴)
@@ -66,7 +67,6 @@ namespace ENZEUN.Runtime
         public Action OnAllPlayerReadyToNextScene;
 
 
-
         public void ConnectToPhotonServer()
         {
             if (!PhotonNetwork.IsConnected)
@@ -92,7 +92,8 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("Joined Lobby");
 #endif
-            photonRoomListHandler.Initialize();
+            photonRoomListHandler = FindFirstObjectByType<PhotonRoomListHandler>();
+            photonRoomListHandler?.Initialize();
             OnJoinedLobbyCallback?.Invoke();
         }
 
@@ -187,7 +188,7 @@ namespace ENZEUN.Runtime
                 return;
             }
 
-            OnAllPlayerReadyToNextScene?.Invoke();
+            photonView.RPC(nameof(LoadSceneRPC), RpcTarget.All);
         }
 
         //=================================================================================================
@@ -287,17 +288,22 @@ namespace ENZEUN.Runtime
             if (changedProps.ContainsKey(isReady_Customproperty))
             {
                 bool newReady = (bool)changedProps[isReady_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {newReady}");
-
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 준비 상태가 변경됨: {newReady}");
+#endif
                 // 준비 상태 변경 이벤트 발행
                 OnReadyStateChanged?.Invoke(targetPlayer, newReady);
             }
 
-            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            // "MyColor" 키가 변경 목록에 포함되어 있는지 확인
             if (changedProps.ContainsKey(myColor_Customproperty))
             {
+
                 int MyColorIndex = (int)changedProps[myColor_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {MyColorIndex}");
+
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 플레이어 색이 변경됨: {MyColorIndex}");
+#endif
 
                 // 준비 상태 변경 이벤트 발행
                 OnMyColorChanged?.Invoke(targetPlayer, MyColorIndex);
@@ -307,7 +313,9 @@ namespace ENZEUN.Runtime
             if (changedProps.ContainsKey(sceneLoading_Customproperty))
             {
                 bool sceneLoadingState = (bool)changedProps[sceneLoading_Customproperty];
-                Debug.Log($"[포톤] {targetPlayer.NickName}의 준비 상태 변경됨: {sceneLoadingState}");
+#if UNITY_EDITOR
+                Debug.Log($"[포톤링크매니저] {targetPlayer.NickName}의 로딩 씬 상태가 변경됨: {sceneLoadingState}");
+#endif
 
                 // 준비 상태 변경 이벤트 발행
                 CheckAllPlayerSceneLoaded();
@@ -359,5 +367,63 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+
+        #region Photon RPC Method
+        [PunRPC]
+        private void LoadSceneRPC()
+        {
+#if UNITY_EDITOR
+            Debug.LogError($"모든 플레이어가 준비되었습니다.");
+#endif
+            OnAllPlayerReadyToNextScene?.Invoke();
+        }
+
+        #endregion
+
+
+        #region PlayerColor 플레이어의 색상을 쉽게 가져오도록 설계
+
+        // 색상 정의 
+        public enum PlayerColor
+        {
+            White = 0,
+            Red = 1,
+            Orange = 2,
+            Yellow = 3,
+            Green = 4,
+            Blue = 5,
+            Indigo = 6,
+            Violet = 7,
+        }
+
+        // 딕셔너리로 enum과 실제 Unity Color 매핑
+        private static readonly Dictionary<PlayerColor, Color> PlayerColorMap = new Dictionary<PlayerColor, Color>()
+        {
+            { PlayerColor.White,   Color.white },
+            { PlayerColor.Red,     Color.red },
+            { PlayerColor.Orange,  Color.orange },
+            { PlayerColor.Yellow,  Color.yellow },
+            { PlayerColor.Green,   Color.green },
+            { PlayerColor.Blue,    Color.blue },
+            { PlayerColor.Indigo,  Color.indigo },
+            { PlayerColor.Violet,  Color.violet },
+        };
+
+        /// <summary>
+        /// 외부에서 색상을 가져다 쓸 수 있는 메서드
+        /// </summary>
+        /// <returns>Color 값</returns>
+        public static Color GetIndexedColor(int index)
+        {
+            if (PlayerColorMap.TryGetValue((PlayerColor)index, out Color color))
+            {
+                return color;
+            }
+
+            // 예외 처리 (기본값 흰색 반환)
+            return Color.white;
+        }
+
+        #endregion
     }
 }
