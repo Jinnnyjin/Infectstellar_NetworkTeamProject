@@ -138,7 +138,7 @@ public sealed class PlayerController : MonoBehaviour
         {
             if (inputReader.NextSpectateTargetPressed)
             {
-                CinemachineCameraController.Instance?.ShowNextThirdPersonView();
+                PlayerNetworkSyncManager.Instance?.ChangeToNextFocusedPlayer();
             }
         }
 
@@ -263,13 +263,15 @@ public sealed class PlayerController : MonoBehaviour
 
             if (isLocalPlayer)
             {
-                CinemachineCameraController.Instance?.ShowThirdPersonView(networkSync.ActorNumber);
+                PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
+                CinemachineCameraController.Instance?.ShowNextThirdPersonView(networkSync);
             }
         }
 
         else if (previousState == PlayerState.Dead && isLocalPlayer)
         {
             // 내 플레이어가 부활했을 때 내 시점으로 복귀
+            PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
             CinemachineCameraController.Instance?.ShowLocalPointOfView();
         }
     }

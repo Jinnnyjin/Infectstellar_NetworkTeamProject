@@ -1,257 +1,283 @@
-// 추가 파일:
-// C:/Users/82103/Desktop/UnityStudy/UnityProjects/Infectstellar_NetworkTeamProject/Infectstellar/Assets/SJT/2_Scripts/Manager/PlayerSyncRateController.cs
-//
-// 파일에 적용하지 않은 제안 코드이며 컴파일·통신 검증은 하지 않았습니다.
-// 거리 15m, 완충 3m, 검사 간격 0.1초, 원거리 비율 50%는 미확정 예시입니다.
-//
-// 기존 SendRate·SerializationRate·PhotonView.Group·RPC·보간·외삽은 유지합니다.
-
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+#if UNITY_EDITOR
+using System.Text;
+#endif
 
-/// <summary>다른 사용자의 시청 대상과의 거리에 따라 로컬 플레이어의 스냅샷 송신 빈도를 조절합니다.</summary>
+/// <summary>다른 사용자의 집중 대상과의 거리에 따라 현재 클라이언트의 직렬화 빈도를 조절합니다.</summary>
 [DisallowMultipleComponent]
-[RequireComponent(typeof(PlayerNetworkSyncManager), typeof(CinemachineCameraController))]
-public sealed class PlayerSyncRateController : MonoBehaviourPunCallbacks
+[RequireComponent(typeof(PlayerNetworkSyncManager))]
+public sealed class PlayerSyncRateController : MonoBehaviour
 {
-    private const string c_viewActorKey = "SJT.ViewActor";
+    private const string c_viewActorKey = "ViewActor";
     private const float c_propertyRetryInterval = 0.5f;
+#if UNITY_EDITOR
+    private const string c_debugRateKey = "DebugSerializationRate";
+#endif
 
-    [SerializeField, Min(0f), Tooltip("이 거리 안으로 들어오면 기존 송신 빈도를 유지합니다. 단위: m")]
-    private float nearDistance = 15f;
+    [SerializeField, Min(1), Tooltip("가까운 상대가 있을 때 사용할 초당 직렬화 횟수입니다.")]
+    private int nearSerializationRate = 30;
 
-    [SerializeField, Min(0f), Tooltip("원거리로 전환할 때 추가로 확보할 거리입니다. 단위: m")]
-    private float distanceMargin = 3f;
-
-    [SerializeField, Min(0.01f), Tooltip("거리별 송신 정책을 다시 판단하는 간격입니다. 단위: 초")]
-    private float checkInterval = 0.1f;
-
-    [SerializeField, Range(0.1f, 1f), Tooltip("원거리에서 사용할 기존 직렬화 빈도의 비율입니다.")]
+    [SerializeField, Range(0.1f, 1f), Tooltip("모든 상대가 멀 때 근거리 기준값에 적용할 배율입니다.")]
     private float farRateMultiplier = 0.5f;
 
-    private PlayerNetworkSyncManager syncManager;
-    private CinemachineCameraController cameraController;
-    private _PlayerNetworkSync localSync;
+    [SerializeField, Min(0f), Tooltip("이 거리 안으로 들어오면 근거리 빈도로 복귀합니다. 단위: m")]
+    private float nearDistance = 15f;
 
+    [SerializeField, Min(0f), Tooltip("원거리로 전환할 때 추가하는 완충 거리입니다. 단위: m")]
+    private float distanceMargin = 3f;
+
+    [SerializeField, Min(0.01f), Tooltip("거리 판단 간격입니다. 단위: 초")]
+    private float checkInterval = 0.1f;
+
+    private PlayerNetworkSyncManager syncManager;
+
+    // 거리별 빈도의 기준이 아니라 비활성화 시 복원할 값입니다.
+    private int previousSerializationRate;
+    private int lastRequestedViewActor = -1;
     private bool isFar;
     private float nextCheckTime;
     private float nextPropertyRetryTime;
+#if UNITY_EDITOR
+    private readonly StringBuilder debugRatesText = new StringBuilder(256);
+    private int lastRequestedDebugRate = -1;
+    private float nextDebugPropertyRetryTime;
+#endif
 
-    // 서버 캐시 반영 여부와 구분해, 전송 요청에 성공한 값을 보관합니다.
-    private int lastRequestedViewActor = -1;
-
+    /// <summary>같은 객체의 플레이어 관리자를 확인합니다.</summary>
     private void Awake()
     {
         syncManager = GetComponent<PlayerNetworkSyncManager>();
-        cameraController = GetComponent<CinemachineCameraController>();
+        if (syncManager == null)
+        {
+#if UNITY_EDITOR
+            Debug.LogError("[PlayerSyncRateController] PlayerNetworkSyncManager가 필요합니다.", this);
+#endif
+            enabled = false;
+        }
     }
 
-    public override void OnEnable()
+    /// <summary>복원할 빈도를 보관하고 집중 대상 변경 구독과 최초 처리를 예약합니다.</summary>
+    private void OnEnable()
     {
-        base.OnEnable();
-        ResetController();
+        if (syncManager == null)
+        {
+            return;
+        }
+
+        previousSerializationRate = PhotonNetwork.SerializationRate;
+        isFar = false;
+#if UNITY_EDITOR
+        lastRequestedDebugRate = -1;
+        nextDebugPropertyRetryTime = 0f;
+#endif
+
+        syncManager.D_FocusedPlayerChanged += HandleFocusedPlayerChanged;
+        HandleFocusedPlayerChanged(syncManager.FocusedPlayerSync);
+    }
+
+    /// <summary>구독을 해제하고 이전 빈도와 집중 대상 공유 상태를 정리합니다.</summary>
+    private void OnDisable()
+    {
+        if (syncManager != null)
+        {
+            syncManager.D_FocusedPlayerChanged -= HandleFocusedPlayerChanged;
+        }
+
+        if (previousSerializationRate > 0 && PhotonNetwork.SerializationRate != previousSerializationRate)
+        {
+            PhotonNetwork.SerializationRate = previousSerializationRate;
+        }
+
+        Player localPhotonPlayer = PhotonNetwork.LocalPlayer;
+        if (localPhotonPlayer == null || previousSerializationRate <= 0)
+        {
+            return;
+        }
 
         if (PhotonNetwork.InRoom)
         {
-            PublishViewActor(0);
+            // 0은 현재 집중 대상 정보를 사용할 수 없다는 뜻입니다.
+            localPhotonPlayer.SetCustomProperties(new Hashtable
+            {
+                [c_viewActorKey] = 0,
+#if UNITY_EDITOR
+                [c_debugRateKey] = 0,
+#endif
+            });
         }
         else
         {
-            ClearLocalViewProperty();
+            PhotonNetwork.RemovePlayerCustomProperties(new[] { c_viewActorKey });
+#if UNITY_EDITOR
+            PhotonNetwork.RemovePlayerCustomProperties(new[] { c_debugRateKey });
+#endif
         }
     }
 
-    public override void OnDisable()
+    /// <summary>다음 Update에서 집중 대상을 공유하고 거리를 다시 판단하도록 예약합니다.</summary>
+    private void HandleFocusedPlayerChanged(_PlayerNetworkSync player)
     {
-        RestoreLocalSendRate();
-
-        if (PhotonNetwork.InRoom)
-        {
-            // 0은 현재 시청 기준을 알 수 없다는 뜻입니다.
-            // 다른 송신자들은 이 값을 받으면 기존 빈도를 유지합니다.
-            PhotonNetwork.LocalPlayer.SetCustomProperties(
-                new Hashtable { [c_viewActorKey] = 0 });
-        }
-        else
-        {
-            ClearLocalViewProperty();
-        }
-
-        base.OnDisable();
+        // 대상 참조는 Manager에서 읽으므로 여기서는 공유와 검사 시점만 갱신합니다.
+        lastRequestedViewActor = -1;
+        nextPropertyRetryTime = 0f;
+        nextCheckTime = 0f;
     }
 
-    public override void OnJoinedRoom()
-    {
-        ResetController();
-        PublishViewActor(0);
-    }
-
-    public override void OnLeftRoom()
-    {
-        ResetController();
-        ClearLocalViewProperty();
-    }
-
+    /// <summary>집중 대상 공유와 실패 재시도, 주기적인 거리 판단을 진행합니다.</summary>
     private void Update()
     {
-        if (!PhotonNetwork.InRoom)
+        if (syncManager == null || !PhotonNetwork.InRoom)
         {
             return;
         }
 
-        _PlayerNetworkSync registeredLocal = syncManager.LocalPlayerSync;
+        _PlayerNetworkSync localPlayer = syncManager.LocalPlayerSync;
+        _PlayerNetworkSync focusedPlayer = syncManager.FocusedPlayerSync;
 
-        if (localSync != registeredLocal)
+        bool canPublishTarget = localPlayer != null && localPlayer.IsLocalControlActive && focusedPlayer != null && focusedPlayer.isActiveAndEnabled;
+        int viewActor = canPublishTarget ? focusedPlayer.ActorNumber : 0;
+        float currentTime = Time.unscaledTime;
+
+        if (viewActor != lastRequestedViewActor && currentTime >= nextPropertyRetryTime)
         {
-            RestoreLocalSendRate();
-
-            localSync = registeredLocal;
-            isFar = false;
-            nextCheckTime = 0f;
-        }
-
-        bool localReady = localSync != null && localSync.IsLocalControlActive;
-
-        int viewActor = localReady && cameraController.isActiveAndEnabled
-            ? cameraController.CurrentViewActorNumber
-            : 0;
-
-        PublishViewActor(viewActor);
-
-        if (!localReady)
-        {
-            RestoreLocalSendRate();
-            return;
-        }
-
-        if (Time.unscaledTime < nextCheckTime)
-        {
-            return;
-        }
-
-        nextCheckTime = Time.unscaledTime + Mathf.Max(0.01f, checkInterval);
-
-        UpdateSendRate();
-    }
-
-    /// <summary>다른 사용자가 보고 있는 플레이어와의 거리로 송신 빈도를 결정합니다.</summary>
-    private void UpdateSendRate()
-    {
-        Vector3 senderPosition = localSync.transform.position;
-
-        // 원거리 상태에서는 nearDistance 안으로 들어오면 기존 빈도로 복귀합니다.
-        // 근거리 상태에서는 nearDistance + distanceMargin을 넘어야 원거리로 전환합니다.
-        float threshold = isFar
-            ? nearDistance
-            : nearDistance + distanceMargin;
-
-        float thresholdSquared = threshold * threshold;
-        bool hasOtherViewer = false;
-
-        foreach (Player viewer in PhotonNetwork.CurrentRoom.Players.Values)
-        {
-            if (viewer.IsLocal || viewer.IsInactive)
+            bool requested = PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { [c_viewActorKey] = viewActor });
+            if (requested)
             {
-                continue;
+                // 서버 적용 완료가 아니라 전송 요청 성공을 기록합니다.
+                lastRequestedViewActor = viewActor;
+                nextPropertyRetryTime = 0f;
             }
-
-            hasOtherViewer = true;
-
-            // 시청 정보가 없거나 대상이 준비되지 않았으면 기존 빈도를 유지합니다.
-            if (viewer.CustomProperties[c_viewActorKey] is not int viewActor
-                || viewActor <= 0
-                || !syncManager.TryGetPlayer(viewActor, out _PlayerNetworkSync viewedPlayer))
+            else
             {
-                UseOriginalSendRate();
-                return;
-            }
-
-            Vector3 difference = viewedPlayer.transform.position - senderPosition;
-
-            // 한 명이라도 가까운 곳을 보고 있으면 모든 수신자에게 기존 빈도로 보냅니다.
-            if (difference.sqrMagnitude <= thresholdSquared)
-            {
-                UseOriginalSendRate();
-                return;
+                nextPropertyRetryTime = currentTime + c_propertyRetryInterval;
             }
         }
 
-        if (!hasOtherViewer)
-        {
-            UseOriginalSendRate();
-            return;
-        }
-
-        isFar = true;
-
-        float targetRate = PhotonNetwork.SerializationRate
-            * Mathf.Clamp(farRateMultiplier, 0.1f, 1f);
-
-        localSync.SetSnapshotSendRate(targetRate);
-    }
-
-    /// <summary>거리별 제한을 해제하고 기존 송신 빈도를 유지합니다.</summary>
-    private void UseOriginalSendRate()
-    {
-        isFar = false;
-        localSync.SetSnapshotSendRate(0f);
-    }
-
-    /// <summary>현재 보는 플레이어가 바뀌었을 때만 해당 번호를 공유합니다.</summary>
-    private void PublishViewActor(int actorNumber)
-    {
-        if (actorNumber == lastRequestedViewActor
-            || Time.unscaledTime < nextPropertyRetryTime)
+        if (currentTime < nextCheckTime)
         {
             return;
         }
 
-        bool requested = PhotonNetwork.LocalPlayer.SetCustomProperties(
-            new Hashtable { [c_viewActorKey] = actorNumber });
-
-        if (requested)
-        {
-            // true는 서버 적용 완료가 아니라 전송 요청 성공을 뜻합니다.
-            lastRequestedViewActor = actorNumber;
-            nextPropertyRetryTime = 0f;
-        }
-        else
-        {
-            nextPropertyRetryTime = Time.unscaledTime + c_propertyRetryInterval;
-        }
+        nextCheckTime = currentTime + Mathf.Max(0.01f, checkInterval);
+        UpdateSerializationRate(localPlayer);
     }
 
-    /// <summary>이전에 관리하던 플레이어의 송신 제한을 해제합니다.</summary>
-    private void RestoreLocalSendRate()
+#if UNITY_EDITOR
+    /// <summary>내 직렬화 빈도를 공유하고 모든 클라이언트의 보고값을 Console에 표시합니다.</summary>
+    private void LateUpdate()
     {
-        if (localSync != null)
+        Room room = PhotonNetwork.CurrentRoom;
+        Player localPhotonPlayer = PhotonNetwork.LocalPlayer;
+        if (room == null || localPhotonPlayer == null)
         {
-            localSync.SetSnapshotSendRate(0f);
+            return;
         }
 
-        localSync = null;
-    }
-
-    /// <summary>방 입퇴장과 재활성화 시 이전 정책 상태를 초기화합니다.</summary>
-    private void ResetController()
-    {
-        RestoreLocalSendRate();
-
-        isFar = false;
-        nextCheckTime = 0f;
-        nextPropertyRetryTime = 0f;
-        lastRequestedViewActor = -1;
-    }
-
-    /// <summary>다음 방에 이전 시청 대상이 남지 않도록 로컬 전용 속성을 제거합니다.</summary>
-    private void ClearLocalViewProperty()
-    {
-        if (PhotonNetwork.LocalPlayer != null)
+        int currentRate = PhotonNetwork.SerializationRate;
+        float currentTime = Time.unscaledTime;
+        if (currentRate != lastRequestedDebugRate && currentTime >= nextDebugPropertyRetryTime)
         {
-            PhotonNetwork.RemovePlayerCustomProperties(
-                new[] { c_viewActorKey });
+            bool requested = localPhotonPlayer.SetCustomProperties(new Hashtable { [c_debugRateKey] = currentRate });
+            if (requested)
+            {
+                lastRequestedDebugRate = currentRate;
+                nextDebugPropertyRetryTime = 0f;
+            }
+            else
+            {
+                nextDebugPropertyRetryTime = currentTime + c_propertyRetryInterval;
+            }
+        }
+
+        debugRatesText.Clear();
+        debugRatesText.Append("[PlayerSyncRateController] 직렬화 빈도(회/초): ");
+        bool isFirstPlayer = true;
+        foreach (Player player in room.Players.Values)
+        {
+            if (!isFirstPlayer)
+            {
+                debugRatesText.Append(" | ");
+            }
+
+            isFirstPlayer = false;
+            debugRatesText.Append("Actor ").Append(player.ActorNumber);
+            if (player.IsLocal)
+            {
+                debugRatesText.Append("(본인)");
+            }
+
+            debugRatesText.Append(": ");
+            if (player.IsInactive)
+            {
+                debugRatesText.Append("비활성");
+            }
+            else if (player.IsLocal)
+            {
+                debugRatesText.Append(currentRate);
+            }
+            else if (player.CustomProperties[c_debugRateKey] is int reportedRate && reportedRate > 0)
+            {
+                // 원격 값은 다른 Editor 클라이언트가 마지막으로 공유한 설정값입니다.
+                debugRatesText.Append(reportedRate);
+            }
+            else
+            {
+                debugRatesText.Append("미보고");
+            }
+        }
+
+        Debug.Log(debugRatesText.ToString(), this);
+    }
+#endif
+
+    /// <summary>다른 사용자의 집중 대상과의 거리로 빈도를 결정하고 한 번만 적용합니다.</summary>
+    private void UpdateSerializationRate(_PlayerNetworkSync localPlayer)
+    {
+        bool shouldUseFarRate = false;
+        if (localPlayer != null && localPlayer.IsLocalControlActive)
+        {
+            Vector3 senderPosition = localPlayer.transform.position;
+            float threshold = isFar ? Mathf.Max(0f, nearDistance) : Mathf.Max(0f, nearDistance) + Mathf.Max(0f, distanceMargin);
+            float thresholdSquared = threshold * threshold;
+            bool hasOtherViewer = false;
+            bool allViewersFar = true;
+
+            foreach (Player viewer in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if (viewer.IsLocal || viewer.IsInactive)
+                {
+                    continue;
+                }
+
+                hasOtherViewer = true;
+                if (viewer.CustomProperties[c_viewActorKey] is not int viewActor || viewActor <= 0 || !syncManager.TryGetPlayer(viewActor, out _PlayerNetworkSync viewedPlayer) || !viewedPlayer.isActiveAndEnabled)
+                {
+                    allViewersFar = false;
+                    break;
+                }
+
+                Vector3 difference = viewedPlayer.transform.position - senderPosition;
+                if (difference.sqrMagnitude <= thresholdSquared)
+                {
+                    allViewersFar = false;
+                    break;
+                }
+            }
+
+            shouldUseFarRate = hasOtherViewer && allViewersFar;
+        }
+
+        isFar = shouldUseFarRate;
+        int nearRate = Mathf.Max(1, nearSerializationRate);
+        int targetRate = isFar ? Mathf.Max(1, Mathf.RoundToInt(nearRate * Mathf.Clamp(farRateMultiplier, 0.1f, 1f))) : nearRate;
+
+        // 현재 클라이언트가 제어하는 모든 PhotonView의 직렬화 빈도에 적용됩니다.
+        if (PhotonNetwork.SerializationRate != targetRate)
+        {
+            PhotonNetwork.SerializationRate = targetRate;
         }
     }
 }
