@@ -1,6 +1,25 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-17 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## 완료: 원본 프리팹 Occlusion Static 설정 / Bake 미실행
+
+- 승인한 원본 47종/64개 Renderer 객체에 Occludee Static, 그중 28개에 Occluder Static도 추가했다. 문 2종은 전체 제외했고 격자 바닥·유리·열린 가구 등은 Occludee만 설정했다. 기존 Batching Static·모델·콜라이더·그림자·GUID/meta·씬 Override를 보존했다.
+- Unity 재로딩 값 불일치 0건, 독립 검토 확정 문제 없음, 보호 파일 890개 유지. 전체 변경 목록·설정별 수량과 검증 근거는 [작업 기록](plans/2026-10-18-prefab-occlusion-flags.md)을 따른다.
+- Bake·Play·자동 테스트·빌드·성능 측정·Occlusion Area/Portal·카메라/씬 설정 변경은 하지 않았다. 실제 컬링 효과와 정확성 확인은 후속 Bake 이후의 작업이다. Import 원본 14종은 기존 Git 제외 경로이며 추적/ignore 정책은 유지했다.
+
+## 완료: 원본 프리팹 Batching Static 설정
+
+- 승인한 원본 44종의 Mesh Renderer 소유 GameObject 61개에 Batching Static만 추가했다. 복도 내부·LOD별 모델을 포함했고 문 2종과 투명 모델 3종은 제외했다. 다른 Static 비트·모델·재질·충돌체·그림자·조명·프로젝트 설정·GUID/meta는 보존했다.
+- Unity 재로딩에서 44종/61객체의 설정과 제외 모델 유지, 파일 대조에서 Batching Static 비트 외 변경 없음과 보호 파일 885개 유지가 확인됐다. 사용자 요청대로 Play·테스트·빌드·성능 측정은 실행하지 않았다. 정확한 전체 목록과 독립 검토·문서 검사 결과는 [작업 기록](plans/2026-10-18-prefab-batching-static.md)을 따른다.
+- BaseCamp Import 원본 14종은 기존 Git 제외 경로 안에 있어 일반 diff에 나오지 않는다. `.gitignore`·추적 상태는 변경하지 않았다. 실행 전부터 있던 MapTestScene·cabinet·인수인계 변경은 유지했다.
+
+## 완료: 제한된 원본 프리팹 충돌체 단순화
+
+- 2026-10-18 별도 승인 계획에 따라 `Floor4_4.2` 방 바닥을 BoxCollider 1개, `cabinet`을 좌우·뒤·아래·위·중간판 BoxCollider 6개로 교체했다. `shelf`는 빈 공간을 보존하려면 6개를 초과하므로 기존 MeshCollider를 유지했다. 정확한 경로·형상 근거·검증은 [교체 계획](plans/2026-10-18-collider-simplification.md)을 따른다.
+- 문턱·의자·기타 자산은 제외했다. 기존 모델·Transform·그림자·GUID/meta·Layer·물리 재질·Trigger를 유지하고 Rigidbody는 추가하지 않았다. 바닥의 얕은 장식 홈은 평탄화했고 캐비닛의 두 수납 공간·중간판 앞 빈 공간은 유지했다. 상판 돌출부 아래 약 6.2cm는 단순화됐다.
+- Unity에서 변경 원본을 다시 로드해 Box 1개/6개, Mesh 0개와 공통 충돌 설정을 확인했다. 정적 표면·빈 공간 검사와 독립 검토를 완료했다. 사용자 요청대로 자동 테스트·Play·빌드·성능 측정은 실행하지 않았다. 실제 이동·아이템 충돌은 사용자 확인이 남는다.
+- 바닥 원본은 기존 `.gitignore`의 `/Assets/[Ii]mport` 대상이다. 로컬 파일은 변경됐지만 일반 Git diff에 포함되지 않는다. 공유 ignore 정책·추적 상태를 변경하거나 강제 추가하지 않았다.
 
 ## 완료: 모듈러 프리팹 최적화 2번 / 4번 제외
 

@@ -1638,6 +1638,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseCamp
       objectReference: {fileID: 0}
+    - target: {fileID: 5278924103637695672, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7223673194826300389, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
