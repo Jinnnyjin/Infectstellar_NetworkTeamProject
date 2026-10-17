@@ -29,12 +29,6 @@ public class Health : MonoBehaviour, IDamageable
     {
         TakeDamage(new DamageInfo(200f));
     }
-
-    [ContextMenu("Revive")]
-    public void RevivePlayer()
-    {
-        RevivePlayer();
-    }
 #endif
 
     /// <summary>피해를 적용하고 성공했을 때 RPC 송신용 알림을 발생시킵니다.</summary>
@@ -75,6 +69,19 @@ public class Health : MonoBehaviour, IDamageable
             D_Died?.Invoke(damageInfo);
         }
 
+        return true;
+    }
+
+    /// <summary>사망한 경우 체력을 회복하고 부활을 알립니다.</summary>
+    public bool Revive()
+    {
+        if (!isActiveAndEnabled || hp > 0f)
+        {
+            return false;
+        }
+
+        hp = maxHP;
+        D_Revived?.Invoke();
         return true;
     }
 
