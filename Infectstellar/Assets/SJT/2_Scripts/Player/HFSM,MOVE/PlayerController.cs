@@ -90,6 +90,7 @@ public sealed class PlayerController : MonoBehaviour
         if (health != null)
         {
             health.D_Died += HandleDied;
+            health.D_Revived += HandleRevived;
         }
 
         SetLocalControlActive(networkSync == null || networkSync.IsLocalControlActive);
@@ -125,12 +126,19 @@ public sealed class PlayerController : MonoBehaviour
         }
 
         inputReader.ReadInput();
-        if (stateMachine.IsAlive)
+        if (stateMachine.IsAlive) // 살았을 때 입력
         {
             playerLook.Rotate(inputReader.LookDelta);
             if (inputReader.FlashPressed && flashlightController != null && flashlightController.isActiveAndEnabled)
             {
                 flashlightController.ToggleFlashlight();
+            }
+        }
+        else // 죽었을 때 입력
+        {
+            if (inputReader.NextSpectateTargetPressed)
+            {
+                PlayerNetworkSyncManager.Instance?.ChangeToNextFocusedPlayer();
             }
         }
 
@@ -157,6 +165,7 @@ public sealed class PlayerController : MonoBehaviour
         if (health != null)
         {
             health.D_Died -= HandleDied;
+            health.D_Revived -= HandleRevived;
         }
 
         if (!isLocalControlActive)
@@ -193,6 +202,42 @@ public sealed class PlayerController : MonoBehaviour
         stateMachine.Die();
     }
 
+    /// <summary>로컬 플레이어의 부활 알림을 상태머신에 전달합니다.</summary>
+    private void HandleRevived()
+    {
+        if (!isInitialized || stateMachine == null)
+        {
+            return;
+        }
+
+        // 원격 플레이어의 상태는 기존 스냅샷으로 재생합니다.
+        if (networkSync != null && !networkSync.IsLocalControlActive)
+        {
+            return;
+        }
+
+        stateMachine.Revive();
+    }
+
+#if UNITY_EDITOR
+    [ContextMenu("Player Revive")]
+#endif
+    /// <summary>직접 제어하는 플레이어의 부활을 시도합니다.</summary>
+    public bool TryRevive()
+    {
+        if (!isInitialized || !isActiveAndEnabled || health == null)
+        {
+            return false;
+        }
+
+        if (networkSync != null && !networkSync.IsLocalControlActive)
+        {
+            return false;
+        }
+
+        return health.Revive();
+    }
+
     /// <summary>초기화 후 로컬 입력만 시작하거나 중단합니다.</summary>
     public void SetLocalControlActive(bool isActive)
     {
@@ -222,6 +267,8 @@ public sealed class PlayerController : MonoBehaviour
     /// </summary>
     private void HandlePlayerStateChanged(PlayerState previousState, PlayerState currentState)
     {
+        bool isLocalPlayer = networkSync != null && networkSync.IsLocalControlActive;
+
         if (currentState == PlayerState.Dead)
         {
             if (flashlightController != null)
@@ -232,6 +279,19 @@ public sealed class PlayerController : MonoBehaviour
             {
                 playerGrabber.TryDrop();
             }
+
+            if (isLocalPlayer)
+            {
+                PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
+                CinemachineCameraController.Instance?.ShowNextThirdPersonView(networkSync);
+            }
+        }
+
+        else if (previousState == PlayerState.Dead && isLocalPlayer)
+        {
+            // 내 플레이어가 부활했을 때 내 시점으로 복귀
+            PlayerNetworkSyncManager.Instance?.SetFocusedPlayer(networkSync);
+            CinemachineCameraController.Instance?.ShowLocalPointOfView();
         }
     }
 }

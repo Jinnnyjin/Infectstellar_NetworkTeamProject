@@ -14,6 +14,7 @@ public class Health : MonoBehaviour, IDamageable
     public event Action<DamageInfo> D_DamageApplied;
     /// <summary>피해로 체력이 0이 되었을 때 한 번 알립니다.</summary>
     public event Action<DamageInfo> D_Died;
+    public event Action D_Revived;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()
@@ -21,6 +22,14 @@ public class Health : MonoBehaviour, IDamageable
         hp = 100f;
         maxHP = hp;
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("TakeDamage 100")]
+    private void KillPlayer()
+    {
+        TakeDamage(new DamageInfo(200f));
+    }
+#endif
 
     /// <summary>피해를 적용하고 성공했을 때 RPC 송신용 알림을 발생시킵니다.</summary>
     public void TakeDamage(DamageInfo damageInfo)
@@ -60,6 +69,19 @@ public class Health : MonoBehaviour, IDamageable
             D_Died?.Invoke(damageInfo);
         }
 
+        return true;
+    }
+
+    /// <summary>사망한 경우 체력을 회복하고 부활을 알립니다.</summary>
+    public bool Revive()
+    {
+        if (!isActiveAndEnabled || hp > 0f)
+        {
+            return false;
+        }
+
+        hp = maxHP;
+        D_Revived?.Invoke();
         return true;
     }
 
