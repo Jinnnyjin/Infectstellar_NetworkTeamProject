@@ -2,11 +2,12 @@
 
 최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## 완료: 원본 프리팹 Occlusion Static 설정 / Bake 미실행
+## 완료: 원본 프리팹 Occlusion Static 설정 / 후속 Bake 데이터 확인
 
 - 승인한 원본 47종/64개 Renderer 객체에 Occludee Static, 그중 28개에 Occluder Static도 추가했다. 문 2종은 전체 제외했고 격자 바닥·유리·열린 가구 등은 Occludee만 설정했다. 기존 Batching Static·모델·콜라이더·그림자·GUID/meta·씬 Override를 보존했다.
 - Unity 재로딩 값 불일치 0건, 독립 검토 확정 문제 없음, 보호 파일 890개 유지. 전체 변경 목록·설정별 수량과 검증 근거는 [작업 기록](plans/2026-10-18-prefab-occlusion-flags.md)을 따른다.
 - Bake·Play·자동 테스트·빌드·성능 측정·Occlusion Area/Portal·카메라/씬 설정 변경은 하지 않았다. 실제 컬링 효과와 정확성 확인은 후속 Bake 이후의 작업이다. Import 원본 14종은 기존 Git 제외 경로이며 추적/ignore 정책은 유지했다.
+- 위 미실행 범위는 프리팹 설정 작업 당시 기준이다. 이후 사용자 작업 단계에서 MapTestScene의 베이크 데이터와 씬 참조가 확인됐다. 직전 조회에서는 카메라 미선택·Occlusion 창 비표시로 Scene 미리보기가 꺼져 있었고 실제 컬링 정확성·성능은 미검증이다. 현재까지의 기법·대표 원본·선정 기준과 확인 방법은 [SJT 맵 최적화 정리](../../Assets/SJT/7_Docs/MapOptimization.md)에 정리했다.
 
 ## 완료: 원본 프리팹 Batching Static 설정
 
