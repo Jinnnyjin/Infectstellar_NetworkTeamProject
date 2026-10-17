@@ -63,7 +63,7 @@ public class Item : MonoBehaviour, IInteractable
 
         // ItemHit
         hit = GetComponent<ItemHit>();
-        hit.Init(network.GetOwnerActorNumber, data);
+        hit.Init(network.GetOwnerActorNumber, data, OnUsed);
 
         ChangeState(State.Placed);
     }
@@ -240,6 +240,17 @@ public class Item : MonoBehaviour, IInteractable
 
         isSold = true;
         return true;
+    }
+
+    // =============================================================
+    // Use
+
+    /// <summary>
+    /// 사용 성공 시 ItemHit이 호출 (Init으로 전달). [임시]
+    /// </summary>
+    private void OnUsed()
+    {
+        Debug.Log($"[Item] OnUsed 사용 성공, 삭제 요청 예정", this);
     }
 
     // =============================================================
