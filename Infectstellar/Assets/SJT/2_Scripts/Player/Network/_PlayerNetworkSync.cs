@@ -102,7 +102,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         }
     }
 
-    /// <summary>원격 플레이어의 보간된 위치·회전을 매 프레임 적용합니다.</summary>
+    /// <summary>원격 플레이어의 보간 또는 외삽된 자세를 매 프레임 적용합니다.</summary>
     private void Update()
     {
         if (!PhotonNetwork.InRoom || IsMine || playerSnapShotPlayback == null)
@@ -160,7 +160,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         registeredManager.Register(this);
     }
 
-    /// <summary>위치·회전과 확정된 이동 상태를 같은 기록으로 송수신합니다.</summary>
+    /// <summary>자세·이동 상태와 외삽에 사용할 실제 속도를 송수신합니다.</summary>
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (!isActiveAndEnabled || playerSnapShotPlayback == null)
@@ -173,7 +173,8 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             _PlayerSnapShot sendSnapShot = new _PlayerSnapShot(
                 PhotonNetwork.Time,
                 body.position, body.eulerAngles.y, playerLook.PitchDegrees,
-                stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching);
+                stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching,
+                playerMotor.Velocity);
 
             stream.SendNext(sendSnapShot.Time);
 
@@ -184,13 +185,16 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             stream.SendNext((int)sendSnapShot.State);
             stream.SendNext(sendSnapShot.MoveDirection);
             stream.SendNext(sendSnapShot.IsCrouching);
+
+            stream.SendNext(sendSnapShot.Velocity);
         }
         else
         {
             _PlayerSnapShot receiveSnapShot = new _PlayerSnapShot(
                 (double)stream.ReceiveNext(),
                 (Vector3)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext(),
-                (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext());
+                (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext(),
+                (Vector3)stream.ReceiveNext());
 
             playerSnapShotPlayback.PushSnapShot(receiveSnapShot);
         }

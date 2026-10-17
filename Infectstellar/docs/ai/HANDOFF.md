@@ -2,6 +2,22 @@
 
 최종 갱신일: 2026-10-17 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 다음 작업: PlayerSyncRateController의 거리 기반 네트워크 LOD
+
+- 2026-10-17 사용자와 합의한 방향: **거리 기반 네트워크 LOD를 구현한다. 송신 빈도를 조절하고, Interest Groups로 상대별 수신 빈도를 나눈다.** 사용자는 이를 `PlayerSyncRateController`의 내부 역할로 구성하고 씬의 `PlayerManager`에 컴포넌트로 붙일 예정이다. 이번 요청은 다른 채팅을 위한 인수인계 작성이며 구현·컴포넌트 부착은 아직 수행하지 않았다.
+- 합의한 책임 분담: Controller가 각 클라이언트에서 로컬 플레이어 기준의 거리 판단, 송신 목표 빈도, 전송 그룹과 수신 그룹 구독을 조정하고, 기존 `_PlayerNetworkSync`가 결정에 따라 실제 스냅샷 작성·송수신을 담당한다. 현재 `Assets/SJT/4_Scenes/PlayerScene.unity`의 `PlayerManager`에는 `PlayerNetworkSyncManager`가 연결되어 있으며 `LocalPlayerSync`, 등록·해제 이벤트와 조회 기능을 제공한다. 목록 접근 방식은 구현 시 확인한다.
+- 두 제어를 함께 사용한다. 가까운 상대가 있으면 높은 빈도로 보내면서 공통 그룹과 주변 구역 그룹에 업데이트를 나누어 먼 상대의 수신 빈도를 낮추고, 모두 멀면 내 스냅샷 작성·송신 자체도 줄이는 방향이다. 가까운 상대가 계속 모든 업데이트를 받도록 구독을 구성해야 한다. 공통 업데이트의 주기와 주변 업데이트 생략은 함께 설계하며, 송신률을 낮춘 뒤 기존 그룹 분배 비율만 유지해 먼 상대의 수신률까지 의도치 않게 낮추지 않는다.
+- PUN2의 구현 수단: `OnPhotonSerializeView`에서 실제 작성 전 송신 차례를 판단하고 불필요한 스냅샷 생성·`SendNext`를 생략한다. 같은 PhotonView의 모든 관찰 대상이 데이터를 쓰지 않으면 해당 업데이트가 생략된다. `PhotonView.Group`으로 전송 그룹을 선택하고 `PhotonNetwork.SetInterestGroups`로 각 클라이언트의 수신 그룹을 관리한다. PUN이 거리별 Hz를 자동 계산하는 기능은 아니다.
+- `PhotonNetwork.SendRate`와 `SerializationRate`는 **현재 클라이언트 전체**의 설정이며 다른 클라이언트로 자동 동기화되지 않는다. 수신 빈도 제한값도 아니다. 플레이어 스냅샷만 조절할 때는 기본 직렬화 주기를 유지하고 작성 여부를 선택하는 방법을 논의했다. 기본 주기 유지 여부를 포함한 구체적인 구현은 미확정이며, `SendRate`만으로 실제 패킷 빈도의 상한을 보장하지 않는다.
+- 거리 임계값, 높은/낮은 Hz, 검사 간격, 경계 전환 완충, 그룹 번호·구역 분할·구독/해제 수명과 입퇴장 처리는 아직 미정이다. 대화의 30/10Hz·20/5Hz는 설명용 예시로 승인된 수치가 아니다. 공간 셀 기반 그룹은 정확한 플레이어 간 거리와 같지 않으므로 구역 설계도 필요하다. 실제 구현 요청 시 요구사항·작업 계획·검증 범위를 먼저 정한다.
+- 재개 시 실제 파일을 다시 확인한다. 이번 기록 시점에는 `PlayerSyncRateController`가 없고 `_PlayerNetworkSync`는 송신 콜백마다 8항목을 작성한다. 앞선 설명에서 참고한 이전 `PlayerSyncRateManager.cs`와 `.meta`는 현재 사용자 작업으로 삭제된 상태이므로 복원하지 않는다. `PlayerNetworkRpc`도 PhotonView로 이벤트를 전송하므로 그룹 변경이 줍기·피해·손전등 등의 RPC 전달이나 생성·참조에 미치는 영향을 확인하고 스냅샷 최적화가 중요한 이벤트를 누락시키지 않도록 설계한다.
+- 참고: [PUN Interest Groups 공식 문서](https://doc.photonengine.com/pun/current/gameplay/interestgroups), 동봉 `Assets/Photon/PhotonUnityNetworking/UtilityScripts/Culling/CullArea.cs`와 `CullingHandler.cs`. 네트워크 LOD는 설계 개념이고 Interest Groups는 구현 수단이다. 기존 Unity 자산·코드는 이번 인수인계에서 변경하지 않았으며 런타임·통신 성능은 미검증이다.
+
+## 현재 상태: 플레이어 스냅샷 외삽
+
+- 사용자 실행 승인에 따라 실제 PlayerMotor.Velocity를 8번째 항목으로 송수신하고, 기존 보간을 메서드로 분리했다. 재생 버퍼가 하나이면 XYZ 위치를 최대 0.1초 외삽하며 이후 예측 끝 위치를 유지한다. 회전·상태는 수신 값을 유지하고 예측 결과는 버퍼에 넣지 않는다.
+- 참여 클라이언트는 같은 8항목 전송 형식을 사용해야 한다. 독립 리뷰에서 확정 오류는 없었으나, 이번 Unity 재컴파일은 시간 초과 후 triggered로 남아 완료를 확인하지 못했다. 계산 검증·Play·접속·빌드도 미검증이다. 최종 검증 근거와 재개 조건은 [외삽 계획](plans/2026-10-17-player-snapshot-extrapolation.md)에 기록한다.
+
 ## 현재 상태: 사망 직후 본인 삼인칭과 Tab 순환
 
 - 로컬 사망 시 본인의 ThirdPersonView를 먼저 표시하고, 기존 Tab 순환에도 본인을 포함하도록 세 클래스의 사망 호출·제외 조건만 수정했다. 사용자 MineModel 토글·MineModel 프로퍼티·입력·부활·등록·네트워크·자산 변경은 보존한다.
