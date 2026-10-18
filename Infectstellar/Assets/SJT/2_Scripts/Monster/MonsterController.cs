@@ -22,6 +22,7 @@ public sealed class MonsterController : MonoBehaviour
     private NavMeshAgent agent;
     private Health health;
     private DamageSource damageSource;
+    private MonsterNetworkSync networkSync;
     private Transform cachedTransform;
     private Transform attackTransform;
     private MonsterRestrictedZone[] restrictedZones;
@@ -32,13 +33,25 @@ public sealed class MonsterController : MonoBehaviour
     private bool isInitialized;
     private bool isWaiting;
     private bool hasStruck;
+    private bool hasAuthority;
+    private MonsterState remoteState;
     private float nextDetection;
     private float stateStarted;
     private float waitUntil;
     private float stunnedUntil;
+    private float attackEndsAt;
+    private float corpseUntil;
 
     /// <summary>현재 실행 중인 행동입니다.</summary>
-    public MonsterState CurrentState => machine.ActiveStateName;
+    public MonsterState CurrentState => health != null && health.HP <= 0f ? MonsterState.Dead :
+        hasAuthority && isInitialized ? machine.ActiveStateName : remoteState;
+
+    /// <summary>실행 권한이 있는 몬스터의 현재 이동 속도입니다.</summary>
+    public Vector3 Velocity => hasAuthority && agent.enabled && agent.isOnNavMesh ? agent.velocity : Vector3.zero;
+
+    /// <summary>공격·경직·사망의 남은 시간(초)입니다.</summary>
+    public float StateTimeRemaining => Mathf.Max(0f, (CurrentState == MonsterState.Attack ? attackEndsAt :
+        CurrentState == MonsterState.Stunned ? stunnedUntil : CurrentState == MonsterState.Dead ? corpseUntil : Time.time) - Time.time);
 
     /// <summary>필수 참조를 확보하고 설정된 최대 체력을 적용합니다.</summary>
     private void Awake()
@@ -46,6 +59,12 @@ public sealed class MonsterController : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         health = GetComponent<Health>();
         damageSource = GetComponent<DamageSource>();
+        networkSync = GetComponent<MonsterNetworkSync>();
+        hasAuthority = networkSync == null;
+        if (!hasAuthority)
+        {
+            agent.enabled = false;
+        }
         cachedTransform = transform;
         if (settings == null || attackArea == null || bodyCollider == null || settings.MaxHealth <= 0f)
         {
@@ -68,7 +87,7 @@ public sealed class MonsterController : MonoBehaviour
     private void Start()
     {
         restrictedZones = FindObjectsByType<MonsterRestrictedZone>(FindObjectsSortMode.None);
-        if (!agent.isOnNavMesh || IsRestricted(cachedTransform.position))
+        if ((hasAuthority && !agent.isOnNavMesh) || IsRestricted(cachedTransform.position))
         {
 #if UNITY_EDITOR
             Debug.LogError("[MonsterController] 허용된 NavMesh 위에 몬스터를 배치하세요.", this);
@@ -85,12 +104,16 @@ public sealed class MonsterController : MonoBehaviour
         machine.SetStartState(health.HP > 0f ? MonsterState.Roam : MonsterState.Dead);
         isInitialized = true;
         machine.Init();
+        if (networkSync != null)
+        {
+            networkSync.Initialize();
+        }
     }
 
     /// <summary>일정 간격으로 감지하고 현재 행동을 갱신합니다.</summary>
     private void Update()
     {
-        if (!isInitialized)
+        if (!isInitialized || !hasAuthority)
         {
             return;
         }
@@ -105,7 +128,7 @@ public sealed class MonsterController : MonoBehaviour
     /// <summary>재활성 시 미실행 공격을 재개하지 않고 행동을 다시 결정합니다.</summary>
     private void OnEnable()
     {
-        if (isInitialized && CurrentState != MonsterState.Dead)
+        if (isInitialized && hasAuthority && CurrentState != MonsterState.Dead)
         {
             agent.isStopped = CurrentState == MonsterState.Stunned;
             agent.updateRotation = !agent.isStopped;
@@ -148,7 +171,7 @@ public sealed class MonsterController : MonoBehaviour
     /// <summary>활성 상태만 전환하며 사망 후 행동 복귀를 차단합니다.</summary>
     private void ChangeState(MonsterState state)
     {
-        if (CurrentState != MonsterState.Dead && CurrentState != state)
+        if (machine.ActiveStateName != MonsterState.Dead && machine.ActiveStateName != state)
         {
             machine.RequestStateChange(state, true);
         }
@@ -157,10 +180,17 @@ public sealed class MonsterController : MonoBehaviour
     /// <summary>행동 진입 시 경로·회전·시간을 설정합니다.</summary>
     private void EnterState(MonsterState state)
     {
+        if (!hasAuthority)
+        {
+            return;
+        }
         stateStarted = Time.time;
         isWaiting = false;
-        agent.isStopped = state == MonsterState.Attack || state == MonsterState.Stunned || state == MonsterState.Dead;
-        agent.updateRotation = !agent.isStopped;
+        if (agent.enabled && agent.isOnNavMesh)
+        {
+            agent.isStopped = state == MonsterState.Attack || state == MonsterState.Stunned || state == MonsterState.Dead;
+            agent.updateRotation = !agent.isStopped;
+        }
         switch (state)
         {
             case MonsterState.Roam:
@@ -178,6 +208,7 @@ public sealed class MonsterController : MonoBehaviour
                 break;
             case MonsterState.Attack:
                 hasStruck = false;
+                attackEndsAt = Time.time + settings.AttackWindup + settings.AttackRecovery;
                 if (targetTransform != null)
                 {
                     Vector3 facing = targetTransform.position - cachedTransform.position;
@@ -191,7 +222,10 @@ public sealed class MonsterController : MonoBehaviour
             case MonsterState.Dead:
                 bodyCollider.enabled = false;
                 agent.enabled = false;
-                Destroy(gameObject, settings.CorpseDuration);
+                if (corpseUntil <= 0f)
+                {
+                    corpseUntil = Time.time + settings.CorpseDuration;
+                }
                 break;
         }
     }
@@ -230,9 +264,15 @@ public sealed class MonsterController : MonoBehaviour
                     hasStruck = true;
                     Strike();
                 }
-                if (Time.time >= stateStarted + settings.AttackWindup + settings.AttackRecovery)
+                if (Time.time >= attackEndsAt)
                 {
                     DecideNextAction();
+                }
+                break;
+            case MonsterState.Dead:
+                if (networkSync == null && Time.time >= corpseUntil)
+                {
+                    Destroy(gameObject);
                 }
                 break;
             case MonsterState.Stunned:
@@ -421,20 +461,108 @@ public sealed class MonsterController : MonoBehaviour
     /// <summary>사망을 덮지 않고 마지막 피격부터 경직을 다시 계산합니다.</summary>
     private void HandleDamaged(DamageInfo damageInfo)
     {
+        NotifyDamageApplied();
+    }
+
+    /// <summary>RPC 수신 때도 경직 시간을 보관하되 행동 변경은 권한 주체만 실행합니다.</summary>
+    internal void NotifyDamageApplied()
+    {
         if (!isInitialized || !isActiveAndEnabled || health.HP <= 0f)
         {
             return;
         }
         stunnedUntil = Time.time + settings.StunDuration;
-        ChangeState(MonsterState.Stunned);
+        if (hasAuthority)
+        {
+            ChangeState(MonsterState.Stunned);
+        }
     }
 
     /// <summary>체력 0을 모든 생존 행동보다 우선 적용합니다.</summary>
     private void HandleDied(DamageInfo damageInfo)
     {
-        if (isInitialized)
+        corpseUntil = Time.time + settings.CorpseDuration;
+        bodyCollider.enabled = false;
+        if (isInitialized && hasAuthority)
         {
             ChangeState(MonsterState.Dead);
+        }
+        else
+        {
+            remoteState = MonsterState.Dead;
+            agent.enabled = false;
+        }
+    }
+
+    /// <summary>원격 행동과 시간만 적용하며 경로·감지·타격을 실행하지 않습니다.</summary>
+    internal void ApplyRemoteState(MonsterState state, float remaining)
+    {
+        remoteState = state;
+        if (state == MonsterState.Stunned)
+        {
+            stunnedUntil = Time.time + remaining;
+        }
+        else if (state == MonsterState.Attack)
+        {
+            attackEndsAt = Time.time + remaining;
+        }
+        else if (state == MonsterState.Dead)
+        {
+            corpseUntil = Time.time + remaining;
+            bodyCollider.enabled = false;
+        }
+    }
+
+    /// <summary>실행 주체를 바꾸고 승계 시 이동 기억·미실행 타격을 폐기합니다.</summary>
+    internal void SetSimulationAuthority(bool active)
+    {
+        MonsterState previous = CurrentState;
+        hasAuthority = false;
+        remoteState = previous;
+        hasStruck = true;
+        agent.enabled = false;
+        if (!active || !isInitialized)
+        {
+            return;
+        }
+
+        if (previous != MonsterState.Dead)
+        {
+            agent.enabled = true;
+            if (!agent.isOnNavMesh || IsRestricted(cachedTransform.position))
+            {
+#if UNITY_EDITOR
+                Debug.LogError("[MonsterController] 권한 승계 위치가 허용된 NavMesh 밖입니다.", this);
+#endif
+                agent.enabled = false;
+                return;
+            }
+            agent.ResetPath();
+        }
+        hasAuthority = true;
+        target = null;
+        targetTransform = null;
+        hasLastSeenPosition = false;
+        MonsterState next = previous == MonsterState.Dead ? MonsterState.Dead :
+            stunnedUntil > Time.time ? MonsterState.Stunned :
+            previous == MonsterState.Attack ? MonsterState.Attack : MonsterState.Roam;
+        if (machine.ActiveStateName == next)
+        {
+            EnterState(next);
+        }
+        else
+        {
+            machine.RequestStateChange(next, true);
+        }
+        if (next == MonsterState.Attack)
+        {
+            hasStruck = true;
+            attackEndsAt = Time.time + settings.AttackRecovery;
+        }
+        else if (next == MonsterState.Roam)
+        {
+            DetectPlayers();
+            DecideNextAction();
         }
     }
 }

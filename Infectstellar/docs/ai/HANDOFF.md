@@ -1,13 +1,13 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-19 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
-## Spider 공통 몬스터 구현
+## Spider 공통 몬스터·네트워크
 
 - Monster 프리팹·SpiderSettings·평면 FSM 6개 상태와 현재 씬의 NavMesh/Arrival 진입 금지를 구성했다. 첫 Spider는 Supply `(20,0,14.14)`에서 시작한다. 모델·SO·공격 박스만 바꾸는 사용법은 [몬스터 안내](../../Assets/SJT/7_Docs/Monster.md)를 따른다.
-- 기존 1인 Photon 룸 Player로 Play 확인 22개 항목이 통과했다. 독립 검토 확정 오류 없음, 최종 Unity 재컴파일 completed/failed=false/errors=[] 확인. Play 종료 후 씬 dirty=false이며 기존 시작 배치로 복원했다.
-- 애니메이션·몬스터 네트워크·스폰·풀링은 제외했다. 전체 문 보행·20마리 장시간 성능·빌드는 미검증이다. 기존 Before 보고서 누락 링크 7건으로 전체 하네스 문서 검사는 실패한다. 상세 실행 근거와 남은 확인은 [작업 기록](plans/2026-10-18-spider-monster.md)을 따른다.
-- Play에서 기존 `_PlayerNetworkSync`가 PlayerNetworkSyncManager 누락을 보고했다. 몬스터 검사와 별개인 기존 씬의 Player 네트워크 구성 문제로 남겼으며 전체 네트워크 동작을 통과로 보고하지 않는다.
+- MonsterNetworkSync/Snapshot/Playback과 공통 Network/SnapshotBuffer를 연결했다. 씬 Spider ViewID=2, Master만 AI·이동·타격을 실행한다. 피해는 공격자 로컬→Others RPC, 경직은 Master가 결정한다. Master 교체 시 공격 취소+후딜, 경직/사망 잔여 시간 유지, 룸 이탈 정지와 시체 네트워크 제거를 구현했다.
+- 최종 컴파일 성공, 버퍼 검사 93개(기존 PlayerPlayback 비교 72회 포함), 실제 두 클라이언트 검사 26개가 통과했다. 기존 Player 전송 형식은 유지했다. 현재 씬의 기존 PlayerManager가 정상 등록되어 이전 Manager 누락은 이번 실행에서 재현되지 않았다. Play 종료 후 Main/검증 VP 모두 dirty=false, Spider 시작 배치와 background=false로 복원했다.
+- 게임 전에 참가자를 모은 뒤 게임 씬을 로드한다. OnJoinedRoom·중도 입장 복구·룸 관리·애니메이션·스폰·풀링은 추가하지 않았다. 상세 근거·MPPM 씬 갱신 조치와 검증 한계는 [네트워크 기록](plans/2026-10-18-monster-network.md), 기존 1인 행동 22개 검증은 [Spider 기록](plans/2026-10-18-spider-monster.md)을 따른다. 전체 문 보행·20마리 장시간 성능·빌드는 미검증이다.
 
 ## 완료: 공유 텍스처 크기
 

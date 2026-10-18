@@ -2910,6 +2910,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1917681479173455919, guid: 8c67486c05c40d9479aa4da05e5e4d16, type: 3}
+      propertyPath: sceneViewId
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2188492386511904444, guid: 8c67486c05c40d9479aa4da05e5e4d16, type: 3}
       propertyPath: m_Name
       value: Spider

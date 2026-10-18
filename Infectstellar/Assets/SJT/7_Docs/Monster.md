@@ -4,7 +4,7 @@
 
 - [Monster 프리팹](../3_Prefabs/Monster.prefab)은 Spider 모델을 연결한 공통 몬스터다. [MapTestScene](../4_Scenes/MapTestScene.unity)의 Spider 한 개가 Supply 진입 통로 `(20,0,14.14)`, Y 회전 90도로 배치되어 있다.
 - [MonsterController](../2_Scripts/Monster/MonsterController.cs)가 UnityHFSM 평면 FSM의 배회·추적·공격·수색·경직·사망을 처리한다. 기존 Health·DamageSource를 사용한다.
-- 몬스터 AI는 오프라인이다. 애니메이션·몬스터 네트워크 동기화·스폰·풀링은 없다. 첫 데이터는 [SpiderSettings](../5_Data/SpiderSettings.asset)다.
+- PhotonView와 [MonsterNetworkSync](../2_Scripts/Monster/MonsterNetworkSync.cs)가 Master의 AI·이동·공격 판정과 원격 재생을 구분한다. 첫 데이터는 [SpiderSettings](../5_Data/SpiderSettings.asset)다. 애니메이션·스폰·풀링은 없다.
 
 ## 몬스터 종류를 바꾸는 세 단계
 
@@ -25,12 +25,17 @@
 - 구역은 몬스터 초기화 때 자동으로 찾아 캐싱한다. 몬스터마다 구역을 연결하지 않는다. 런타임 구역 생성·교체는 이번 범위에 없다.
 - 맵 또는 금지 범위를 편집하면 기존 NavMeshSurface에서 다시 Bake한다. 문은 열린 상태의 통로이며 개폐 AI는 없다. NavMesh 경계에 닿아도 배회·추적·수색 경로는 금지 구역을 통과하지 않는다.
 
-## 첫 Play 확인
+## 네트워크 동작과 Play 확인
 
-기존 Photon 게임 진입 흐름으로 1인 룸에 들어온 뒤 MapTestScene을 실행한다. 이 씬을 직접 Play하면 기존 테스트 접속은 되지만 Player 스포너의 Awake가 룸 참가보다 먼저 실행되어 Player가 없을 수 있다. 이번 변경에서 이 기존 스포너 동작은 바꾸지 않았다. 검증에서는 1인 룸 참가 후 게임 씬에 재진입해 기존 Player를 생성했다.
+게임 시작 전에 참가자를 같은 Photon 룸에 모은 뒤 MapTestScene을 실행한다. 몬스터는 게임 씬에서 한 번 초기화하며 OnJoinedRoom·중도 입장 복구를 추가하지 않는다. 이 씬을 바로 Play해 접속했다면 참가자가 모인 뒤 씬에 재진입해야 몬스터가 시작한다. 기존 접속·Player 스포너는 수정하지 않았다.
 
-현재 씬에서는 기존 Player가 PlayerNetworkSyncManager 누락 로그를 출력한다. 몬스터 행동 검증은 수행했지만 Player 네트워크 Manager 구성은 이번 작업에서 변경하지 않았다.
+- 씬 Spider의 PhotonView는 고유 sceneViewId=2, Fixed 소유권, Unreliable 전송이며 MonsterNetworkSync만 관찰한다. 프리팹의 sceneViewId=0은 정상이며 씬 배치 시 고유 ID가 필요하다. 현재 Spider는 연결되어 있다.
+- Master만 NavMeshAgent·감지·FSM·공격 박스를 실행한다. 다른 클라이언트는 [MonsterSnapshot](../2_Scripts/Monster/MonsterSnapshot.cs)의 위치·Y 회전·속도·행동·종료 시각을 [MonsterSnapshotPlayback](../2_Scripts/Monster/MonsterSnapshotPlayback.cs)으로 재생한다. 보간 지연은 기본 0.1초, 외삽은 최대 0.1초다.
+- 공격자가 몬스터 복제본에 피해를 즉시 적용하고 Others RPC로 피해량을 보낸다. 수신 피해는 재송신하지 않으며 경직은 Master가 결정한다. 이동 스냅샷은 HP를 덮어쓰지 않는다. 몬스터의 Player 타격은 기존 PlayerNetworkRpc 경로로 전파한다.
+- Master 교체 시 최신 수신 원본 위치에서 AI를 시작하고 체력·경직/사망 잔여 시간을 유지한다. 이동 기억은 버리고 주변을 다시 감지한다. 공격 중이면 미실행 타격을 폐기하고 SO의 AttackRecovery를 기다린다. 이전 송신자의 버퍼를 비운다.
+- 사망 즉시 몸체 충돌을 중단하고, Master가 남은 CorpseDuration 후 PhotonNetwork.Destroy로 제거한다. 룸 이탈·연결 종료 시 씬에 남은 몬스터는 멈춘다. MonsterNetworkSync가 없는 기존 구성은 단독 AI로 동작한다.
+- PlayerPlayback과 몬스터 Playback은 [SnapshotBuffer](../2_Scripts/Network/SnapshotBuffer.cs)의 32개 시간순 버퍼를 공유한다. Player의 전송 형식은 유지한다.
 
 모든 감지·타격 대상은 Player 레이어와 활성 Health를 갖는다. 새 대상은 10m, 기존 타깃은 20m까지 수평 시야각 120도와 벽 가림으로 확인한다. 설정은 SO에서 변경한다. 경직은 마지막 피격부터 0.5초, 사망 시 충돌 중단 후 3초 뒤 제거가 기본값이다.
 
-구현·검증 근거와 미검증 범위는 [작업 기록](../../../docs/ai/plans/2026-10-18-spider-monster.md)을 따른다.
+기본 행동의 기존 검증은 [Spider 작업 기록](../../../docs/ai/plans/2026-10-18-spider-monster.md), 네트워크 구현·두 클라이언트 검증은 [네트워크 작업 기록](../../../docs/ai/plans/2026-10-18-monster-network.md)을 따른다.
