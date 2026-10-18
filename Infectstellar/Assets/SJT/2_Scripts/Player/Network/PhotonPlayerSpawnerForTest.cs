@@ -15,11 +15,13 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
         SpawnPlayer(playerSpawnPoints);
     }
 
+#if UNITY_EDITOR
     /// <summary>룸에 입장하면 본인의 Player를 생성합니다.</summary>
-    // public override void OnJoinedRoom()
-    // {
-    //     SpawnPlayer(playerSpawnPoints);
-    // }
+    public override void OnJoinedRoom()
+    {
+        SpawnPlayer(playerSpawnPoints);
+    }
+#endif
 
     /// <summary>전달받은 부모의 자식 포인트 중 본인의 번호에 해당하는 위치를 사용합니다.</summary>
     private void SpawnPlayer(Transform spawnPoints)

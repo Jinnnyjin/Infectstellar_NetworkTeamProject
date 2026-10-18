@@ -2,6 +2,13 @@
 
 최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## Spider 공통 몬스터 구현
+
+- Monster 프리팹·SpiderSettings·평면 FSM 6개 상태와 현재 씬의 NavMesh/Arrival 진입 금지를 구성했다. 첫 Spider는 Supply `(20,0,14.14)`에서 시작한다. 모델·SO·공격 박스만 바꾸는 사용법은 [몬스터 안내](../../Assets/SJT/7_Docs/Monster.md)를 따른다.
+- 기존 1인 Photon 룸 Player로 Play 확인 22개 항목이 통과했다. 독립 검토 확정 오류 없음, 최종 Unity 재컴파일 completed/failed=false/errors=[] 확인. Play 종료 후 씬 dirty=false이며 기존 시작 배치로 복원했다.
+- 애니메이션·몬스터 네트워크·스폰·풀링은 제외했다. 전체 문 보행·20마리 장시간 성능·빌드는 미검증이다. 기존 Before 보고서 누락 링크 7건으로 전체 하네스 문서 검사는 실패한다. 상세 실행 근거와 남은 확인은 [작업 기록](plans/2026-10-18-spider-monster.md)을 따른다.
+- Play에서 기존 `_PlayerNetworkSync`가 PlayerNetworkSyncManager 누락을 보고했다. 몬스터 검사와 별개인 기존 씬의 Player 네트워크 구성 문제로 남겼으며 전체 네트워크 동작을 통과로 보고하지 않는다.
+
 ## 완료: 공유 텍스처 크기
 
 - 확정한 9장 중 사용자 설정 `base-color-normal` 1024·`window_big` 512는 바이트 그대로 유지하고 추가 7장만 TextureImporter Default Max Size로 축소했다. MainGameMap의 유리 금속성·발광 마스크 및 컴퓨터 패널 금속성 3장은 실제 1024→512, BaseCamp Metal 4장은 4096→2048이다.
