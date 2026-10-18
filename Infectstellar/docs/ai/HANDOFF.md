@@ -2,6 +2,19 @@
 
 최종 갱신일: 2026-10-18 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
 
+## 완료: 공유 텍스처 크기
+
+- 확정한 9장 중 사용자 설정 `base-color-normal` 1024·`window_big` 512는 바이트 그대로 유지하고 추가 7장만 TextureImporter Default Max Size로 축소했다. MainGameMap의 유리 금속성·발광 마스크 및 컴퓨터 패널 금속성 3장은 실제 1024→512, BaseCamp Metal 4장은 4096→2048이다.
+- 기존 압축·Mip Maps·Read/Write·플랫폼 Override와 PNG·GUID·재질·프리팹·씬·품질 설정을 보존했다. 구형 메타데이터 2장의 직렬화 버전 갱신은 동반됐으며 Unity의 해석된 설정으로 의미 변경 여부를 대조했다.
+- 실제 크기·13장 Importer 설정·14종 재질 연결을 확인했고, 기준선 1,370개 경로에서 지정 7개 meta 외 변경이 없었다. 독립 검토에서 확정 문제 없음. 문서 전체 검사는 기존 Before 보고서 누락 링크 7건으로 실패했으며 이번에 추가한 링크에는 오류가 없다.
+- Play·자동 테스트·빌드·Bake·성능 측정은 실행하지 않았다. 추가 7장의 무늬 유지 여부는 사용자가 플레이로 확인한다. 상세 대상·보존·검증 근거는 [작업 기록](plans/2026-10-18-texture-size-reduction.md), 대표 파츠별 요약은 [SJT 문서](../../Assets/SJT/7_Docs/MapOptimization.md)를 따른다.
+
+## 완료: BaseCamp 천장 조명 그림자 Resolution High→Medium
+
+- BaseCamp 원본 Lighting의 CeilingLight_0_0·0_1·1_0·1_1 네 Spot Light만 Tier 2→1로 변경했다. PC 기준 요청값 1024→512이며 Low와 공통 PC_RPAsset은 변경하지 않았다. 밝기·Range 8m·Soft Shadows·필터 품질·Bias 및 DoorFill·손전등은 유지했다.
+- Unity 재로딩에서 원본과 현재 씬의 네 조명 모두 Medium/원본 연결 유지를 확인했다. 독립 검토 확정 문제 없음, 파일 대조에서 원본의 값 4개 외 변경 없음과 보호 파일 405개 유지를 확인했다. 씬은 시작 시부터 dirty=true였고 저장하지 않았으며 Directional Light 비활성 상태를 보존했다.
+- Play·자동 테스트·빌드·Bake·성능 측정은 하지 않았다. 화질은 사용자 플레이 확인 대상이다. [작업 기록](plans/2026-10-18-basecamp-shadow-resolution.md)과 [SJT 최적화 정리](../../Assets/SJT/7_Docs/MapOptimization.md)를 갱신했다.
+
 ## 완료: 원본 프리팹 Occlusion Static 설정 / 후속 Bake 데이터 확인
 
 - 승인한 원본 47종/64개 Renderer 객체에 Occludee Static, 그중 28개에 Occluder Static도 추가했다. 문 2종은 전체 제외했고 격자 바닥·유리·열린 가구 등은 Occludee만 설정했다. 기존 Batching Static·모델·콜라이더·그림자·GUID/meta·씬 Override를 보존했다.
