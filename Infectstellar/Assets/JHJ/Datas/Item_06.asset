@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 6
   itemName: Gemstone(Blue)
   rarity: 0
-  price: 35
+  price: 350
   attack: 12
   weight: 5

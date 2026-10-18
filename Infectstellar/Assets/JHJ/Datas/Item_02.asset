@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 2
   itemName: Gemstone(Green)
   rarity: 1
-  price: 45
+  price: 450
   attack: 25
   weight: 5

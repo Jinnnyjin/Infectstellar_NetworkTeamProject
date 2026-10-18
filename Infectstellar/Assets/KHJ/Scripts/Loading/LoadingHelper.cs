@@ -18,11 +18,16 @@ namespace ENZEUN.Runtime
 
         private void Start()
         {
+            if (!PhotonNetwork.IsConnected)
+            {
+                return;
+            }
+
             PhotonNetwork.AutomaticallySyncScene = false;
 
             if (PhotonLinkManager.Instance == null)
             {
-                Debug.WriteLine("포톤 연결이 끊겼습니다. 심각한 에러 입니다");
+                MMLoadingSceneDebug("포톤 연결이 끊겼습니다. 심각한 에러 입니다");
             }
             else
             {
@@ -61,10 +66,7 @@ namespace ENZEUN.Runtime
         {
             SetCancelCondition(true);
 
-            PhotonNetwork.AutomaticallySyncScene = true;
-
-            if (PhotonNetwork.LocalPlayer.IsMasterClient)
-                ActivateScene();
+            ActivateScene();
         }
 
         public void ActivateScene()
@@ -79,15 +81,41 @@ namespace ENZEUN.Runtime
         {
             yield return MMCoroutine.WaitForFrames(1);
             //_loadDestinationAsyncOperation.allowSceneActivation = true;
-            while (_loadDestinationAsyncOperation.progress < 1.0f)
+
+            // 포톤에 연결되어 있을 때.
+            if (PhotonNetwork.InRoom)
             {
-                yield return null;
+                bool loadSceneUpdated = false;
+
+                while (_loadDestinationAsyncOperation.progress < 1.0f)
+                {
+                    if (!loadSceneUpdated)
+                    {
+                        if (_loadDestinationAsyncOperation.progress >= 0.9f)
+                        {
+                            loadSceneUpdated = true;
+                            photonLinkManager?.SetLoadSceneState(true);
+                        }
+                    }
+
+                    yield return null;
+                }
             }
+            // 포톤 연결이 아닐 때
+            else
+            {
+                _loadDestinationAsyncOperation.allowSceneActivation = true;
+
+                while (_loadDestinationAsyncOperation.progress < 1.0f)
+                {
+                    yield return null;
+                }
+            }
+
             MMLoadingSceneDebug("MMLoadingSceneManagerAdditive : activating destination scene");
             MMSceneLoadingManager.LoadingSceneEvent.Trigger(_sceneToLoadName, MMSceneLoadingManager.LoadingStatus.DestinationSceneActivation);
-            OnDestinationSceneActivation?.Invoke();
 
-            photonLinkManager?.SetLoadSceneState(true);
+            OnDestinationSceneActivation?.Invoke();
         }
 
         private async UniTaskVoid CheckTime(CancellationToken externalToken)
@@ -105,12 +133,12 @@ namespace ENZEUN.Runtime
                 // 만약 단순 시간 초과만 원하고 bool 조건도 함께 체크하고 싶다면 아래와 같이 작성할 수도 있습니다.
                 // await UniTask.WaitForSeconds(300, cancellationToken: linkedCts.Token);
 
-                Debug.WriteLine("시간이 초과되었습니다. 메인화면으로 돌아갑니다.");
+                MMLoadingSceneDebug("시간이 초과되었습니다. 메인화면으로 돌아갑니다.");
                 SceneManager.LoadScene("TitleScene");
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("CheckTime 작업이 정상적으로 취소되었습니다.");
+                MMLoadingSceneDebug("CheckTime 작업이 정상적으로 취소되었습니다.");
             }
             finally
             {

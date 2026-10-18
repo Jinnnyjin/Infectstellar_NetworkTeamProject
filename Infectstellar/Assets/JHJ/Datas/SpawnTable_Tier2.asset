@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: be60bfd1baabe85449c248b192b9efcf, type: 3}
-  m_Name: SpawnTable_Test
+  m_Name: SpawnTable_Tier2
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawnTableSO
   rarityWeights:
   - rarity: 0
-    weight: 40
+    weight: 25
   - rarity: 1
     weight: 30
   - rarity: 2
-    weight: 13
+    weight: 20
   - rarity: 3
-    weight: 10
+    weight: 15
   - rarity: 4
-    weight: 7
+    weight: 10
   itemPrefabs:
   - {fileID: 1983768382762892629, guid: bb52af4ec79614a4486f333ee783b84f, type: 3}
   - {fileID: 1983768382762892629, guid: 076446a605d60ac40ba6386905e81166, type: 3}

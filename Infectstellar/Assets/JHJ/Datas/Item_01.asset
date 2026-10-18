@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 1
   itemName: Crystal
   rarity: 3
-  price: 80
+  price: 800
   attack: 15
   weight: 8

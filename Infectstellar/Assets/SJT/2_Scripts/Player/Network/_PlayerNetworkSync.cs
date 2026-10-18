@@ -7,14 +7,13 @@ using Photon.Pun;
 /// </summary>
 public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
 {
-    private PhotonView view; // 이 플레이어의 조작 권한 확인과 RPC 전송에 쓰는 PUN 컴포넌트
     [SerializeField] private float bufferDelay = 0.1f;
     private _PlayerSnapShotPlayback playerSnapShotPlayback; // 전달받은 스냅샷을 전달하여 보간/외삽을 진행할 컴포넌트
     private bool isInitialized;
     private int actorNumber;
+    private PlayerNetworkSyncManager registeredManager;
 
-    private PhotonView photonView;
-    [SerializeField] private GameObject cinemachineCamera;
+    private PhotonView photonView; // 이 플레이어의 조작 권한 확인과 RPC 전송에 쓰는 PUN 컴포넌트
     [SerializeField] private PlayerLook playerLook;
     [SerializeField] private PlayerMotor playerMotor;
     [SerializeField] private Transform body;
@@ -25,6 +24,9 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     private PlayerAnimationController animationController;
     [SerializeField] private GameObject mineModel;
 
+    [SerializeField] private GameObject pointOfView;
+    [SerializeField] private GameObject thirdPersonView;
+
     public int ActorNumber => actorNumber;
 
     /// <summary>현재 클라이언트가 이 플레이어를 제어하는지 반환합니다.</summary>
@@ -32,6 +34,11 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 
     /// <summary>네트워크 생성이 완료되고 내 제어 권한이 유효한지 반환합니다.</summary>
     public bool IsLocalControlActive => isInitialized && isActiveAndEnabled && PhotonNetwork.InRoom && IsMine && photonView.ControllerActorNr == actorNumber;
+    /// <summary>이 플레이어의 현재 생존 여부를 반환합니다.</summary>
+    public bool IsAlive => stateMachine != null && stateMachine.IsAlive;
+    public GameObject MineModel => mineModel;
+    public GameObject PointOfView => pointOfView;
+    public GameObject ThirdPersonView => thirdPersonView;
 
     /// <summary>송수신과 원격 자세 적용에 필요한 참조를 확보합니다.</summary>
     private void Awake()
@@ -54,6 +61,22 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             return;
         }
 
+        // 카메라 관리자가 선택한 카메라만 켜도록 초기에는 모두 끕니다.
+        if (pointOfView != null)
+        {
+            pointOfView.SetActive(false);
+        }
+        if (thirdPersonView != null && thirdPersonView != pointOfView)
+        {
+            thirdPersonView.SetActive(false);
+        }
+#if UNITY_EDITOR
+        if (pointOfView == null || thirdPersonView == null || pointOfView == thirdPersonView)
+        {
+            Debug.LogWarning("[_PlayerNetworkSync] 본인 시점과 삼인칭 시점에 서로 다른 카메라를 연결해야 합니다. 삼인칭 카메라가 없으면 관전 대상에서 제외합니다.", this);
+        }
+#endif
+
         playerSnapShotPlayback = new _PlayerSnapShotPlayback(bufferDelay);
     }
 
@@ -61,6 +84,10 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     private void OnEnable()
     {
         playerController?.SetLocalControlActive(IsLocalControlActive);
+        if (isInitialized)
+        {
+            RegisterPlayer();
+        }
     }
 
     /// <summary>비활성화 시 로컬 입력과 이전 재생 기록을 정리합니다.</summary>
@@ -68,9 +95,14 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     {
         playerController?.SetLocalControlActive(false);
         playerSnapShotPlayback?.Clear();
+        if (registeredManager != null)
+        {
+            registeredManager.UnRegister(this);
+            registeredManager = null;
+        }
     }
 
-    /// <summary>원격 플레이어의 보간된 위치·회전을 매 프레임 적용합니다.</summary>
+    /// <summary>원격 플레이어의 보간 또는 외삽된 자세를 매 프레임 적용합니다.</summary>
     private void Update()
     {
         if (!PhotonNetwork.InRoom || IsMine || playerSnapShotPlayback == null)
@@ -103,17 +135,32 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         {
             if (mineModel != null)
                 mineModel.SetActive(false);
-            if (cinemachineCamera != null)
-                cinemachineCamera.SetActive(true);
         }
-        else
-        {
-            if (cinemachineCamera != null)
-                cinemachineCamera.SetActive(false);
-        }
+
+        RegisterPlayer();
     }
 
-    /// <summary>위치·회전과 확정된 이동 상태를 같은 기록으로 송수신합니다.</summary>
+    /// <summary>네트워크 초기화가 끝난 플레이어를 씬 관리자에 등록합니다.</summary>
+    private void RegisterPlayer()
+    {
+        if (!isInitialized || !PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        registeredManager = PlayerNetworkSyncManager.Instance;
+        if (registeredManager == null)
+        {
+#if UNITY_EDITOR
+            Debug.LogError("[_PlayerNetworkSync] PlayerNetworkSyncManager가 없습니다.", this);
+#endif
+            return;
+        }
+
+        registeredManager.Register(this);
+    }
+
+    /// <summary>자세·이동 상태와 외삽에 사용할 실제 속도를 송수신합니다.</summary>
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (!isActiveAndEnabled || playerSnapShotPlayback == null)
@@ -126,7 +173,8 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             _PlayerSnapShot sendSnapShot = new _PlayerSnapShot(
                 PhotonNetwork.Time,
                 body.position, body.eulerAngles.y, playerLook.PitchDegrees,
-                stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching);
+                stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching,
+                playerMotor.Velocity);
 
             stream.SendNext(sendSnapShot.Time);
 
@@ -137,13 +185,16 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             stream.SendNext((int)sendSnapShot.State);
             stream.SendNext(sendSnapShot.MoveDirection);
             stream.SendNext(sendSnapShot.IsCrouching);
+
+            stream.SendNext(sendSnapShot.Velocity);
         }
         else
         {
             _PlayerSnapShot receiveSnapShot = new _PlayerSnapShot(
                 (double)stream.ReceiveNext(),
                 (Vector3)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext(),
-                (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext());
+                (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext(),
+                (Vector3)stream.ReceiveNext());
 
             playerSnapShotPlayback.PushSnapShot(receiveSnapShot);
         }

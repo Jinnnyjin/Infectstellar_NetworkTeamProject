@@ -15,6 +15,6 @@ MonoBehaviour:
   id: 7
   itemName: Ore(Gold)
   rarity: 2
-  price: 70
+  price: 700
   attack: 15
   weight: 9
