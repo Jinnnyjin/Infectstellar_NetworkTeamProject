@@ -48,6 +48,7 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         if (health != null)
         {
             health.D_DamageApplied += HandleDamageApplied;
+            health.D_ReviveApplied += HandleRevived;
         }
 
         if (playerAnimationController != null)
@@ -72,6 +73,7 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
         if (health != null)
         {
             health.D_DamageApplied -= HandleDamageApplied;
+            health.D_ReviveApplied -= HandleRevived;
         }
 
         if (playerAnimationController != null)
@@ -181,6 +183,30 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
 
         // 발신자는 피해 대상의 제어 주체와 다를 수 있으며, 유효한 피해량 검사는 Health가 담당합니다.
         health.ApplyDamage(new DamageInfo(amount));
+    }
+
+    /// <summary>이 클라이언트에서 적용한 부활을 다른 클라이언트에 전달합니다.</summary>
+    private void HandleRevived()
+    {
+        if (!isActiveAndEnabled || !PhotonNetwork.InRoom || photonView == null || photonView.ViewID == 0)
+        {
+            return;
+        }
+
+        // 다른 플레이어의 복제본에서 실행한 부활도 전달합니다.
+        photonView.RPC(nameof(RpcRevive), RpcTarget.Others);
+    }
+
+    /// <summary>수신한 부활을 송신용 알림 없이 적용합니다.</summary>
+    [PunRPC]
+    private void RpcRevive(PhotonMessageInfo info)
+    {
+        if (!isActiveAndEnabled || !PhotonNetwork.InRoom || photonView == null || health == null || info.Sender == null)
+        {
+            return;
+        }
+
+        health.ApplyRevive();
     }
 
     private void HandleHandsUpStateChanged(bool isHandsup)
