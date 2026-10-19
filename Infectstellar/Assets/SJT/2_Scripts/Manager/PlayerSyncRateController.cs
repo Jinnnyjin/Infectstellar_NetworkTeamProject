@@ -229,7 +229,7 @@ public sealed class PlayerSyncRateController : MonoBehaviour
             }
         }
 
-        Debug.Log(debugRatesText.ToString(), this);
+        //Debug.Log(debugRatesText.ToString(), this);
     }
 #endif
 

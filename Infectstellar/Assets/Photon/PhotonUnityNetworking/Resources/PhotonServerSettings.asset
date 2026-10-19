@@ -65,6 +65,8 @@ MonoBehaviour:
   - RPC_RequestAddGold
   - RPC_SyncGold
   - RPC_InfectPlayer
+  - RpcConsume
+  - RpcRequestPurchase
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
   id: 2
   itemName: Gemstone(Green)
+  icon: {fileID: 21300000, guid: 5f234b254b6890742a3bff17f5e7f4b6, type: 3}
   rarity: 1
   price: 450
   attack: 25

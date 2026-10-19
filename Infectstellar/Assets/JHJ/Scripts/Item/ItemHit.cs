@@ -10,16 +10,29 @@ public class ItemHit : MonoBehaviour
     private bool isHit;
     private int attackerActorNumber;
     private bool isLocalThrower;
+    private IUsable usable;
+
     private Func<Collider, int> getOwnerActorNumber;
+    private Action onUsed;
 
     #region 심지태
     private DamageSource damageSource;
     #endregion
 
 
-    public void Init(Func<Collider, int> GetOwnerActorNumber, ItemDataSO itemDataSO)
+    public void Init(Func<Collider, int> GetOwnerActorNumber, ItemDataSO itemDataSO, Action onUsed)
     {
         this.getOwnerActorNumber = GetOwnerActorNumber;
+        this.onUsed = onUsed;
+
+        IUsable[] usables = GetComponents<IUsable>();
+
+        if (usables.Length > 1)
+        {
+            Debug.LogWarning($"[ItemHit] {name}에 IUsable이 {usables.Length}개 있음. 첫 번째만 사용", this);
+        }
+
+        usable = usables.Length > 0 ? usables[0] : null;
 
         if (!gameObject.TryGetComponent<DamageSource>(out damageSource))
         {
@@ -63,6 +76,16 @@ public class ItemHit : MonoBehaviour
             return;
 
         isHit = true;
+
+        // 사용가능한 아이템(부활 주사기 등) 먼저 판정
+        if(usable != null && usable.TryUse(new HitContext(collision.gameObject, attackerActorNumber)))
+        {
+            Debug.Log($"[ItemHit] Usable TryUse 사용 : {collision.gameObject.name}, 사용자 {attackerActorNumber}", this);
+            onUsed?.Invoke();
+            return;
+        }
+
+        // 사용가능한 아이템이 아니면 공격 데미지
         Debug.Log($"[ItemHit] 적중: {collision.collider.name}, 데미지 {damageSource.Damage}, 공격자 {attackerActorNumber}", this);
 
         #region 심지태
