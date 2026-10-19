@@ -23,7 +23,7 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
 #endif
 
     //////////////////////테스트용 몬스터 스폰
-    [SerializeField] private MonsterSpawner monsterSpawner;
+    //[SerializeField] private MonsterSpawner monsterSpawner;
     //////////////////////
     /// <summary>전달받은 부모의 자식 포인트 중 본인의 번호에 해당하는 위치를 사용합니다.</summary>
     private void SpawnPlayer(Transform spawnPoints)
@@ -48,10 +48,10 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
         GameObject player = PhotonNetwork.Instantiate(c_prefabPath, spawnPoint.position, spawnPoint.rotation);
 
         //////////////////////테스트용 몬스터 스폰
-        if (player != null)
-        {
-            monsterSpawner.SpawnAll();
-        }
+        //if (player != null)
+        //{
+        //    monsterSpawner.SpawnAll();
+        //}
         //////////////////////
     }
 }
