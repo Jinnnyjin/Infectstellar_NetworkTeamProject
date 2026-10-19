@@ -5,27 +5,34 @@ using UnityEngine;
 /// 베이스 캠프 상점 / 카탈로그의 아이템을 생성 지점에 방 소속으로 생성
 /// 구매판정 및 생성은 방장만
 /// </summary>
-public class Shop : MonoBehaviour
+public class Shop : MonoBehaviourPun
 {
     [SerializeField] private ShopCatalogSO catalog;
     [SerializeField] private Transform spawnPointRoot;
     [SerializeField] private LayerMask itemLayerMask;
     [SerializeField, Tooltip("지점이 비었는지 검사하는 상자의 절반 크기")] private Vector3 spotCheckHalfSize = new Vector3(0.3f, 0.3f, 0.3f);
+
     
 
     /// <summary>
     /// 목록 중 index번 아이템 구매 후 빈 지점에 생성
     /// 순서 : 검증 -> 빈자리 -> 골드 차감 -> 생성
     /// </summary>
-    public bool TryPurchase(int index)
+    private bool TryPurchase(int index)
     {
         if (!PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning("[Shop] 구매 불가: 방에 들어와 있지 않음", this);
             return false;
+        }
 
         if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.LogWarning("[Shop] 구매 불가: 방장이 아님", this);
             return false;
+        }
 
-        if(catalog == null || spawnPointRoot == null)
+        if (catalog == null || spawnPointRoot == null)
         {
             Debug.LogError($"[Shop] catalog 또는 spawnPoint가 비어있음", this);
             return false;
@@ -96,9 +103,44 @@ public class Shop : MonoBehaviour
         return false;
     }
 
+
+    public void RequestPurchase(int index)
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning("[Shop] 구매 요청 불가: 방에 들어와 있지 않음", this);
+            return;
+        }
+
+        photonView.RPC(nameof(RpcRequestPurchase), RpcTarget.MasterClient, index);
+        Debug.Log($"[Shop] 구매 요청 보냄, {index}번", this);
+    }
+
+    [PunRPC]
+    private void RpcRequestPurchase(int index, PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.LogWarning($"[Shop] 구매 요청 수신했으나 방장이 아님 (요청: {info.Sender.NickName}, {index}번)", this);
+            return;
+        }
+
+        bool isSuccess = TryPurchase(index);
+        Debug.Log($"[Shop] 구매 요청한 사람 : {info.Sender.NickName} 구매물품 {index}번, 성공여부 {isSuccess}", this);
+
+        // 실패 시 요청한 사람에게 알림? / 골드 부족, 빈자리없음?
+
+    }
+
     [ContextMenu("Test/Purchase Index 0")]
     private void TestPurchaseFirst()
     {
-        TryPurchase(0);
+        RequestPurchase(0);
+    }
+
+    [ContextMenu("Test/Purchase Invalid Index")]
+    private void TestPurchaseInvalid()
+    {
+        RequestPurchase(-1);
     }
 }
