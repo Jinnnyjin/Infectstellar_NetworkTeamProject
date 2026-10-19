@@ -2,11 +2,12 @@ using System;
 using System.Diagnostics;
 using ENZEUN.Runtime;
 using Photon.Pun;
+using Photon.Realtime;
 using Sirenix.OdinInspector;
 
 public class PlayerDataObserver : MonoBehaviourPun
 {
-
+    public Player ownerPlayer;
     public float hp { get; private set; } // 아직 안쓰는 필드
     public bool isDead => hp <= 0;
     public bool isInfected { get; private set; }
@@ -16,12 +17,16 @@ public class PlayerDataObserver : MonoBehaviourPun
     public Action OnPlayerInfected;
 
 
-
+    public void Start()
+    {
+        InitializePlayerDataObserver();
+    }
 
     [Button]
     public void InitializePlayerDataObserver()
     {
-        GameManager.Instance.RegisterPlayerData(photonView.OwnerActorNr, this);
+        ownerPlayer = photonView.Owner;
+        GameManager.Instance.RegisterPlayerData(ownerPlayer.ActorNumber, this);
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Photon.Pun;
 using System.Collections.Generic;
 using System;
+using Photon.Realtime;
 
 
 namespace ENZEUN.Runtime
@@ -19,6 +20,15 @@ namespace ENZEUN.Runtime
         public bool isInfected { get; private set; } // 감염자 여부
         [ShowInInspector]
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
+        [ShowInInspector]
+        public Player infectedPlayer { get; private set; } // 감염된 플레이어 레퍼런스
+
+
+        //========== 런타임 이벤트 들 =============================
+
+        public Action OnPlayerInfected;
+        public Action OnGoldChanged;
+
 
 
         //===================================================================
@@ -139,7 +149,7 @@ namespace ENZEUN.Runtime
             ReadyForStart,      // 게임 시작 준비 중
             OnGameStart,        // 게임 시작 타이밍
             GameStarted,        // 게임이 시작된 후
-            OnGameLoopEnd,      // 게임 루프 종료
+            Escaped,            // 탈출 성공
             OnFailed,           // 모두가 죽었을 때 (실패)
             ShowResult,         // 결과 보여주기
             RegisterRanking,    // 랭킹 등록
@@ -328,7 +338,9 @@ namespace ENZEUN.Runtime
 
             if (playerDataDict.TryGetValue(actorNr, out PlayerDataObserver dataObserver))
             {
+                infectedPlayer = dataObserver.ownerPlayer;
                 dataObserver.SetPlayerInfectedState(true);
+                OnPlayerInfected?.Invoke();
             }
         }
 

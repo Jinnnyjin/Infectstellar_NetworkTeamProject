@@ -26,13 +26,13 @@ namespace ENZEUN.Runtime
     [Serializable]
     public class RankingData
     {
-        public string nickname;
-        public int score;
+        public string nicknames;
+        public int earnedGold;
 
-        public RankingData(string nickname, int score)
+        public RankingData(string nicknames, int earnedGold)
         {
-            this.nickname = nickname;
-            this.score = score;
+            this.nicknames = nicknames;
+            this.earnedGold = earnedGold;
         }
     }
 
@@ -55,6 +55,7 @@ namespace ENZEUN.Runtime
         public Action OnFirebaseLoginSucceeded;
         public Action OnNicknameLoadSucceeded;
         public Action OnNicknameSaveSucceeded;
+        public Action OnRankingDataUploadSucceeded;
 
 
         /// <summary>
@@ -257,6 +258,8 @@ namespace ENZEUN.Runtime
             await databaseReference.Child("Rankings").Push().SetRawJsonValueAsync(json);
 
             Debug.Log("랭킹 점수 등록 완료!");
+
+            OnRankingDataUploadSucceeded?.Invoke();
         }
 
         List<RankingData> rankingList = new List<RankingData>();
@@ -293,7 +296,7 @@ namespace ENZEUN.Runtime
 
                     // Firebase의 기본 정렬은 오름차순(낮은 점수 -> 높은 점수)이므로,
                     // 내림차순(높은 점수 -> 낮은 점수)으로 최종 정렬합니다.
-                    rankingList = rankingList.OrderByDescending(r => r.score).ToList();
+                    rankingList = rankingList.OrderByDescending(r => r.earnedGold).ToList();
                 }
 
                 else
