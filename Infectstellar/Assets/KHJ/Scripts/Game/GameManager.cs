@@ -18,7 +18,7 @@ namespace ENZEUN.Runtime
         [ShowInInspector]
         public bool isInfected { get; private set; } // 감염자 여부
         [ShowInInspector]
-        public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; }
+        public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
 
 
         //===================================================================
