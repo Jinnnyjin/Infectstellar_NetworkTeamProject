@@ -4,6 +4,7 @@ public class HUDController : MonoBehaviour
 {
     [SerializeField] private HeldItemView heldItemView;
     [SerializeField] private InteractInfoView interactInfoView;
+    [SerializeField] private KeyPromptView promptView;
 
     public void InitialSetting(GameObject player)
     {
@@ -32,5 +33,11 @@ public class HUDController : MonoBehaviour
             Debug.LogError("[HUDController] interactInfoView 미연결", this);
         else if (grabber != null && interactor != null)
             interactInfoView.InitialSetting(interactor, grabber);
+
+        // 키 프롬프트 HUD
+        if (promptView == null)
+            Debug.LogError("[HUDController] interactInfoView 미연결", this);
+        else if (grabber != null && interactor != null)
+            promptView.InitialSetting(interactor, grabber);
     }
 }
