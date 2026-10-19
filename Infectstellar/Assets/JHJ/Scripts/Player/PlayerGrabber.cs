@@ -22,6 +22,12 @@ public class PlayerGrabber : MonoBehaviour
     public event Action<bool> DropRequested;
     public event Action<bool> ShootRequested;
 
+    /// <summary>
+    /// 들고 있는 아이템 바뀔때(잡은 아이템, 해제 시 null)
+    /// 모든 컴퓨터에서 발생하기 때문에 HUD는 자신의 플레이어 것만 구독
+    /// </summary>
+    public event Action<Item> HeldItemChanged;
+
     private void Awake()
     {
         interactor = GetComponent<PlayerInteractor>();
@@ -87,7 +93,7 @@ public class PlayerGrabber : MonoBehaviour
         if (heldItem.CurrentState != Item.State.Grabbed)
         {
             Debug.Log($"[PlayerGrabber] 들기 해제: {heldItem.ItemData.ItemName} ({heldItem.CurrentState})");
-            heldItem = null;
+            SetHeldItem(null);
 
             return;
         }
@@ -98,6 +104,19 @@ public class PlayerGrabber : MonoBehaviour
 
     // =============================================================
     // 메서드
+
+    /// <summary>
+    /// heldItem 변경하는 메서드
+    /// 값이 바뀔때만 HeldItemChanged
+    /// </summary>
+    private void SetHeldItem(Item item)
+    {
+        if (heldItem == null)
+            return;
+
+        heldItem = item;
+        HeldItemChanged?.Invoke(heldItem);
+    }
 
     /// <summary>
     /// 기준 지점에 들고 있는 아이템의 바닥 가운데를 맞췄을 때의 루트 위치·회전 (회전은 몸 기준, 좌우만)
@@ -133,7 +152,7 @@ public class PlayerGrabber : MonoBehaviour
         if (holdingActorNumber != ownerActorNumber)
             return;
 
-        heldItem = grabbedItem;
+        SetHeldItem(grabbedItem);
     }
 
     private bool CanHandleRequest(string requestName)
