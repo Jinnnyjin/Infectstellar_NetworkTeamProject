@@ -34,9 +34,19 @@ public static class ItemIconCapturer
                 continue;
             }
 
-            if(TryCapture(prefab, out string path))
-                Debug.Log($"[ItemIconCapturer] 저장: {path}", prefab);
+            if (!TryCapture(prefab, out string path))
+                continue;
+
+            if (!TryConfigureAsSprite(path))
+                continue;
+
+            if (!TryAssignIcon(item, path))
+                continue;
+
+            Debug.Log($"[ItemIconCapturer] 완료: {prefab.name} → {path}", item.ItemData);
         }
+
+        AssetDatabase.SaveAssets();
     }
 
     /// <summary>
@@ -122,7 +132,7 @@ public static class ItemIconCapturer
 
         bounds = renderers[0].bounds;
 
-        for(int i = 0; i < renderers.Length; i++)
+        for(int i = 1; i < renderers.Length; i++)
         {
             bounds.Encapsulate(renderers[i].bounds);
         }
@@ -149,5 +159,58 @@ public static class ItemIconCapturer
         // 투명 배경
         cam.backgroundColor = Color.clear;
     }
-    
+
+
+    /// <summary>
+    /// 저장한 PNG를 UI용 Sprite로 임포트 (투명 배경 유지)
+    /// </summary>
+    private static bool TryConfigureAsSprite(string path)
+    {
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer == null)
+        {
+            Debug.LogWarning($"[ItemIconCapturer] 임포터를 찾을 수 없음: {path}");
+            return false;
+        }
+
+        importer.textureType = TextureImporterType.Sprite;
+        importer.spriteImportMode = SpriteImportMode.Single;   // 추가: Sprite가 실제로 만들어지게
+        importer.alphaIsTransparency = true;
+        importer.mipmapEnabled = false;      // UI 아이콘은 밉맵 불필요 (흐려짐 방지)
+        importer.SaveAndReimport();
+
+        return true;
+    }
+
+    /// <summary>
+    /// 아이템의 ItemDataSO.icon에 Sprite 연결. icon이 private이라 SerializedObject로 접근
+    /// </summary>
+    private static bool TryAssignIcon(Item item, string path)
+    {
+        if (item.ItemData == null)
+        {
+            Debug.LogWarning($"[ItemIconCapturer] ItemData 없음: {item.name}", item);
+            return false;
+        }
+
+        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (sprite == null)
+        {
+            Debug.LogWarning($"[ItemIconCapturer] Sprite 로드 실패: {path}");
+            return false;
+        }
+
+        SerializedObject serializedData = new SerializedObject(item.ItemData);
+        SerializedProperty iconProperty = serializedData.FindProperty("icon");   // ItemDataSO의 필드 이름
+        if (iconProperty == null)
+        {
+            Debug.LogWarning("[ItemIconCapturer] ItemDataSO에 'icon' 필드 없음 (이름이 바뀌었는지 확인)", item.ItemData);
+            return false;
+        }
+
+        iconProperty.objectReferenceValue = sprite;
+        serializedData.ApplyModifiedProperties();   // 값 반영 + Undo 기록 + 저장 필요 표시
+
+        return true;
+    }
 }
