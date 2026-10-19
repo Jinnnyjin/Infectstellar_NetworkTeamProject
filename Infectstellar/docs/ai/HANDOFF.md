@@ -1,6 +1,56 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-17 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-19 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## Spider 공통 몬스터·네트워크
+
+- Monster 프리팹·SpiderSettings·평면 FSM 6개 상태와 현재 씬의 NavMesh/Arrival 진입 금지를 구성했다. 첫 Spider는 Supply `(20,0,14.14)`에서 시작한다. 모델·SO·공격 박스만 바꾸는 사용법은 [몬스터 안내](../../Assets/SJT/7_Docs/Monster.md)를 따른다.
+- MonsterNetworkSync/Snapshot/Playback과 공통 Network/SnapshotBuffer를 연결했다. 씬 Spider ViewID=2, Master만 AI·이동·타격을 실행한다. 피해는 공격자 로컬→Others RPC, 경직은 Master가 결정한다. Master 교체 시 공격 취소+후딜, 경직/사망 잔여 시간 유지, 룸 이탈 정지와 시체 네트워크 제거를 구현했다.
+- 최종 컴파일 성공, 버퍼 검사 93개(기존 PlayerPlayback 비교 72회 포함), 실제 두 클라이언트 검사 26개가 통과했다. 기존 Player 전송 형식은 유지했다. 현재 씬의 기존 PlayerManager가 정상 등록되어 이전 Manager 누락은 이번 실행에서 재현되지 않았다. Play 종료 후 Main/검증 VP 모두 dirty=false, Spider 시작 배치와 background=false로 복원했다.
+- 게임 전에 참가자를 모은 뒤 게임 씬을 로드한다. OnJoinedRoom·중도 입장 복구·룸 관리·애니메이션·스폰·풀링은 추가하지 않았다. 상세 근거·MPPM 씬 갱신 조치와 검증 한계는 [네트워크 기록](plans/2026-10-18-monster-network.md), 기존 1인 행동 22개 검증은 [Spider 기록](plans/2026-10-18-spider-monster.md)을 따른다. 전체 문 보행·20마리 장시간 성능·빌드는 미검증이다.
+
+## 반영: MainGameMap 섹터별 조명 / 최종 플레이 체감 확인 대기
+
+- 승인한 섹터 고유색 10개와 밝음(01·02·06)·중간(03·04·05·07)·어두움(08·09·10)을 MainGameMap 원본의 Light Override로 적용했다. 어두운 곳에는 복도·출입구 안내등과 04↔10 샛길의 약한 빛을 남겼다. 전체 59개 중 활성 48개다.
+- 사용자 후속 요청으로 중간 구역 RoomLight 11개를 0.10, HallLight 9개를 0.20으로 낮추고 Range 6m는 유지했다. 08·09·10의 HallLight 6개만 0.08/4m로 변경했다. 샛길은 기존 0.18/5m다. 후속 작업 시작 시 씬 dirty=true였으며 미저장 상태와 Override 15개를 보존하고 저장하지 않았다.
+- 이후 사용자 요청으로 중간 구역 20개만 방 0.20/6m·복도 0.45/6m로 복원했다. 08·09·10의 0.08/4m는 유지한다. 부분 롤백 시작 시 씬 dirty=false·Override 26개였으며 그대로 보존했다. 현재 수치는 이 부분 롤백 결과를 따른다.
+- 부분 롤백 후 원본 재로딩 값·현재 씬 수치 상속은 확인했다. 다만 검증 시점에는 dirty=true 및 08·09·10 일부 광원의 활성 상태 차이가 관측돼 전체 동등성 검사는 1,268개 통과·12개 실패다. 해당 상태는 수정·저장하지 않았다. 원본 설정 확인과 씬 전체 상태의 검사 실패를 구분한다.
+- 기존 사용자 MapTestScene 파일·씬 Override 15개·주변광·반사·손전등과 공용 천장등·개별 섹터 원본을 유지했다. 저장된 원본 상속을 이용하므로 현재 씬을 별도 저장하지 않았다.
+- 독립 파일 검토에서 조명 속성 외 변경·참조 오류가 발견되지 않았다. 최초 적용은 보호 83개 중 원본 외 82개 동일, 실내 화면 확인과 assert 1,331개를 통과했다. 후속 감광은 보호 86개 중 원본 외 85개 동일, 원본 재로딩·현재 씬 상속 assert 1,337개 통과·실패 0개다. 문서 검사는 기존 누락 링크 8건으로 실패했다.
+- Play·빌드·Bake·게임 재컴파일·자동 테스트는 실행하지 않았다. 중간 구역은 최초 값으로 복원했고 암부의 추가 감광은 유지한다. 손전등 대비·길 찾기는 사용자가 플레이로 판단한다. 최종 실행 검사와 상세 수치는 [조명 작업 기록](plans/2026-10-18-main-map-sector-lighting.md)을 따른다.
+
+## 완료: 공유 텍스처 크기
+
+- 확정한 9장 중 사용자 설정 `base-color-normal` 1024·`window_big` 512는 바이트 그대로 유지하고 추가 7장만 TextureImporter Default Max Size로 축소했다. MainGameMap의 유리 금속성·발광 마스크 및 컴퓨터 패널 금속성 3장은 실제 1024→512, BaseCamp Metal 4장은 4096→2048이다.
+- 기존 압축·Mip Maps·Read/Write·플랫폼 Override와 PNG·GUID·재질·프리팹·씬·품질 설정을 보존했다. 구형 메타데이터 2장의 직렬화 버전 갱신은 동반됐으며 Unity의 해석된 설정으로 의미 변경 여부를 대조했다.
+- 실제 크기·13장 Importer 설정·14종 재질 연결을 확인했고, 기준선 1,370개 경로에서 지정 7개 meta 외 변경이 없었다. 독립 검토에서 확정 문제 없음. 문서 전체 검사는 기존 Before 보고서 누락 링크 7건으로 실패했으며 이번에 추가한 링크에는 오류가 없다.
+- Play·자동 테스트·빌드·Bake·성능 측정은 실행하지 않았다. 추가 7장의 무늬 유지 여부는 사용자가 플레이로 확인한다. 상세 대상·보존·검증 근거는 [작업 기록](plans/2026-10-18-texture-size-reduction.md), 대표 파츠별 요약은 [SJT 문서](../../Assets/SJT/7_Docs/MapOptimization.md)를 따른다.
+
+## 완료: BaseCamp 천장 조명 그림자 Resolution High→Medium
+
+- BaseCamp 원본 Lighting의 CeilingLight_0_0·0_1·1_0·1_1 네 Spot Light만 Tier 2→1로 변경했다. PC 기준 요청값 1024→512이며 Low와 공통 PC_RPAsset은 변경하지 않았다. 밝기·Range 8m·Soft Shadows·필터 품질·Bias 및 DoorFill·손전등은 유지했다.
+- Unity 재로딩에서 원본과 현재 씬의 네 조명 모두 Medium/원본 연결 유지를 확인했다. 독립 검토 확정 문제 없음, 파일 대조에서 원본의 값 4개 외 변경 없음과 보호 파일 405개 유지를 확인했다. 씬은 시작 시부터 dirty=true였고 저장하지 않았으며 Directional Light 비활성 상태를 보존했다.
+- Play·자동 테스트·빌드·Bake·성능 측정은 하지 않았다. 화질은 사용자 플레이 확인 대상이다. [작업 기록](plans/2026-10-18-basecamp-shadow-resolution.md)과 [SJT 최적화 정리](../../Assets/SJT/7_Docs/MapOptimization.md)를 갱신했다.
+
+## 완료: 원본 프리팹 Occlusion Static 설정 / 후속 Bake 데이터 확인
+
+- 승인한 원본 47종/64개 Renderer 객체에 Occludee Static, 그중 28개에 Occluder Static도 추가했다. 문 2종은 전체 제외했고 격자 바닥·유리·열린 가구 등은 Occludee만 설정했다. 기존 Batching Static·모델·콜라이더·그림자·GUID/meta·씬 Override를 보존했다.
+- Unity 재로딩 값 불일치 0건, 독립 검토 확정 문제 없음, 보호 파일 890개 유지. 전체 변경 목록·설정별 수량과 검증 근거는 [작업 기록](plans/2026-10-18-prefab-occlusion-flags.md)을 따른다.
+- Bake·Play·자동 테스트·빌드·성능 측정·Occlusion Area/Portal·카메라/씬 설정 변경은 하지 않았다. 실제 컬링 효과와 정확성 확인은 후속 Bake 이후의 작업이다. Import 원본 14종은 기존 Git 제외 경로이며 추적/ignore 정책은 유지했다.
+- 위 미실행 범위는 프리팹 설정 작업 당시 기준이다. 이후 사용자 작업 단계에서 MapTestScene의 베이크 데이터와 씬 참조가 확인됐다. 직전 조회에서는 카메라 미선택·Occlusion 창 비표시로 Scene 미리보기가 꺼져 있었고 실제 컬링 정확성·성능은 미검증이다. 현재까지의 기법·대표 원본·선정 기준과 확인 방법은 [SJT 맵 최적화 정리](../../Assets/SJT/7_Docs/MapOptimization.md)에 정리했다.
+
+## 완료: 원본 프리팹 Batching Static 설정
+
+- 승인한 원본 44종의 Mesh Renderer 소유 GameObject 61개에 Batching Static만 추가했다. 복도 내부·LOD별 모델을 포함했고 문 2종과 투명 모델 3종은 제외했다. 다른 Static 비트·모델·재질·충돌체·그림자·조명·프로젝트 설정·GUID/meta는 보존했다.
+- Unity 재로딩에서 44종/61객체의 설정과 제외 모델 유지, 파일 대조에서 Batching Static 비트 외 변경 없음과 보호 파일 885개 유지가 확인됐다. 사용자 요청대로 Play·테스트·빌드·성능 측정은 실행하지 않았다. 정확한 전체 목록과 독립 검토·문서 검사 결과는 [작업 기록](plans/2026-10-18-prefab-batching-static.md)을 따른다.
+- BaseCamp Import 원본 14종은 기존 Git 제외 경로 안에 있어 일반 diff에 나오지 않는다. `.gitignore`·추적 상태는 변경하지 않았다. 실행 전부터 있던 MapTestScene·cabinet·인수인계 변경은 유지했다.
+
+## 완료: 제한된 원본 프리팹 충돌체 단순화
+
+- 2026-10-18 별도 승인 계획에 따라 `Floor4_4.2` 방 바닥을 BoxCollider 1개, `cabinet`을 좌우·뒤·아래·위·중간판 BoxCollider 6개로 교체했다. `shelf`는 빈 공간을 보존하려면 6개를 초과하므로 기존 MeshCollider를 유지했다. 정확한 경로·형상 근거·검증은 [교체 계획](plans/2026-10-18-collider-simplification.md)을 따른다.
+- 문턱·의자·기타 자산은 제외했다. 기존 모델·Transform·그림자·GUID/meta·Layer·물리 재질·Trigger를 유지하고 Rigidbody는 추가하지 않았다. 바닥의 얕은 장식 홈은 평탄화했고 캐비닛의 두 수납 공간·중간판 앞 빈 공간은 유지했다. 상판 돌출부 아래 약 6.2cm는 단순화됐다.
+- Unity에서 변경 원본을 다시 로드해 Box 1개/6개, Mesh 0개와 공통 충돌 설정을 확인했다. 정적 표면·빈 공간 검사와 독립 검토를 완료했다. 사용자 요청대로 자동 테스트·Play·빌드·성능 측정은 실행하지 않았다. 실제 이동·아이템 충돌은 사용자 확인이 남는다.
+- 바닥 원본은 기존 `.gitignore`의 `/Assets/[Ii]mport` 대상이다. 로컬 파일은 변경됐지만 일반 Git diff에 포함되지 않는다. 공유 ignore 정책·추적 상태를 변경하거나 강제 추가하지 않았다.
 
 ## 완료: 모듈러 프리팹 최적화 2번 / 4번 제외
 

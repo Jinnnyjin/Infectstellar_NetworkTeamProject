@@ -19,8 +19,22 @@ public class Health : MonoBehaviour, IDamageable
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()
     {
-        hp = 100f;
-        maxHP = hp;
+        if (maxHP <= 0f)
+        {
+            Initialize(100f);
+        }
+    }
+
+    /// <summary>생성 시 사용할 최대 체력과 현재 체력을 함께 설정합니다.</summary>
+    public void Initialize(float maxHealth)
+    {
+        if (!IsValidDamage(maxHealth))
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxHealth));
+        }
+
+        maxHP = maxHealth;
+        hp = maxHealth;
     }
 
 #if UNITY_EDITOR
