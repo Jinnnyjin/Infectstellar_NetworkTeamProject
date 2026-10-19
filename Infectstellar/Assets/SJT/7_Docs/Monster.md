@@ -4,7 +4,25 @@
 
 - [Monster 프리팹](../3_Prefabs/Monster.prefab)은 Spider 모델을 연결한 공통 몬스터다. [MapTestScene](../4_Scenes/MapTestScene.unity)의 Spider 한 개가 Supply 진입 통로 `(20,0,14.14)`, Y 회전 90도로 배치되어 있다.
 - [MonsterController](../2_Scripts/Monster/MonsterController.cs)가 UnityHFSM 평면 FSM의 배회·추적·공격·수색·경직·사망을 처리한다. 기존 Health·DamageSource를 사용한다.
-- PhotonView와 [MonsterNetworkSync](../2_Scripts/Monster/MonsterNetworkSync.cs)가 Master의 AI·이동·공격 판정과 원격 재생을 구분한다. 첫 데이터는 [SpiderSettings](../5_Data/SpiderSettings.asset)다. 애니메이션·스폰·풀링은 없다.
+- PhotonView와 [MonsterNetworkSync](../2_Scripts/Monster/MonsterNetworkSync.cs)가 Master의 AI·이동·공격 판정과 원격 재생을 구분한다. 첫 데이터는 [SpiderSettings](../5_Data/SpiderSettings.asset)다. 일괄 스폰 코드는 아래와 같으며 애니메이션·풀링은 없다.
+
+## 룸마다 한 번 일괄 생성하기
+
+[MonsterSpawner](../2_Scripts/Monster/MonsterSpawner.cs)의 `SpawnAll()`을 외부 게임 시작 로직에서 호출한다. 자동 Start 호출은 없다. 한 룸에서 전체 몬스터 생성을 담당하는 스포너는 하나만 사용한다.
+
+1. `Assets/SJT/Resources/Monsters/` 폴더를 직접 만들고 기존 Monster 프리팹을 바탕으로 네트워크 생성용 프리팹 또는 Prefab Variant를 준비한다. 이 폴더 바로 아래의 프리팹 이름은 중복하지 않는다. 예: `Spider.prefab`의 PUN 경로는 `Monsters/Spider`다. 원본 프리팹을 이동할 필요는 없다.
+2. 생성용 프리팹 루트의 PhotonView·MonsterController·MonsterNetworkSync 및 기존 설정·공격 박스·NavMeshAgent 연결을 유지한다. PhotonView의 ObservedComponents에는 MonsterNetworkSync를 연결하고 Synchronization은 기존 Unreliable로 유지한다. 프리팹과 PhotonView·Controller·NetworkSync는 활성 상태로 둔다.
+3. 씬에 빈 부모 객체 `MonsterSpawner`를 만들고 MonsterSpawner 컴포넌트를 추가한다. 그 아래 빈 지점 객체들을 만들고 [MonsterSpawnPoint](../2_Scripts/Monster/MonsterSpawnPoint.cs)를 추가한다. 각 지점의 Monster Prefab에 준비한 프리팹을 드래그한다.
+4. 지점의 월드 위치는 몬스터용 NavMesh 위·금지 구역 밖으로 맞춘다. Y 회전으로 첫 정면 방향을 정한다. Gizmo의 빨간 구·선이 위치·방향이다. X·Z 회전은 생성에 사용하지 않는다. 비활성 지점 객체와 꺼진 MonsterSpawnPoint 컴포넌트는 제외한다.
+5. 모든 참가자가 같은 룸·게임 씬에 준비되고 NavMesh가 로드된 뒤 게임 시작 로직에서 연결한 스포너의 `SpawnAll()`을 호출한다. 호출자는 필요하면 `[SerializeField] private MonsterSpawner monsterSpawner;`로 Inspector 참조를 연결한다. 비마스터 호출은 무시하며 요청을 마스터에게 전달하는 RPC는 추가하지 않았다.
+
+마스터가 전체 지점을 먼저 검사한다. 누락 프리팹·잘못된 Resources 경로·필수 컴포넌트/관찰자 연결·활성 지점 없음이면 생성 기록을 남기지 않고 중단하므로 설정 후 다시 호출할 수 있다. 프리팹 내부 Settings·공격 박스와 NavMesh 배치는 사용자 구성 항목이며 스포너가 자동 보정하지 않는다.
+
+온라인 룸은 `RoomOptions.BroadcastPropsChangeToAll=true`(PUN 기본값)가 필요하다. `SJT.MonsterSpawnStarted` 룸 속성에 요청 ActorNumber를 기록한 뒤 서버 확인 콜백을 받은 요청자가 여전히 마스터일 때만 `PhotonNetwork.InstantiateRoomObject()`로 각 지점에 한 마리씩 생성한다. 호출 직후 생성 완료가 보장되는 동기 API는 아니지만, 확인 이후의 지점 순회에는 대기 시간을 두지 않는다. 오프라인 룸에서는 로컬 속성 콜백을 사용한다.
+
+대기 중 재호출과 생성 후 재호출은 무시한다. 마스터 교체·씬 재진입·전멸은 룸 속성을 초기화하지 않는다. 대기 중 비활성화·이탈·마스터 교체, 또는 생성 도중 실패로 일부/전체가 생성되지 않더라도 이미 반영된 시작 기록은 유지한다. 자동 재시도·누락 복구는 없으며 다시 시작하려면 새 룸을 만든다. 해당 키를 다른 코드에서 삭제하거나 덮어쓰지 않는다.
+
+이번 작업에서는 코드만 추가했다. 위 프리팹·씬·외부 호출 연결은 사용자가 구성해야 하며 두 클라이언트 스폰 동작은 아직 검증하지 않았다. 씬에 미리 배치한 Spider도 자동 제거하지 않으므로 생성 수를 확인할 때 별도로 구분한다. 상세 구현·검증 상태는 [스포너 기록](../../../docs/ai/plans/2026-10-19-monster-spawner.md)을 따른다.
 
 ## 몬스터 종류를 바꾸는 세 단계
 
