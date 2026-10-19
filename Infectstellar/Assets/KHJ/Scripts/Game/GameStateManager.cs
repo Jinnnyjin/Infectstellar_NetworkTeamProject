@@ -1,6 +1,7 @@
 using UnityEngine;
 using MoreMountains.Tools;
 using static ENZEUN.Runtime.GameManager;
+using Photon.Pun;
 
 namespace ENZEUN.Runtime
 {
@@ -25,6 +26,7 @@ namespace ENZEUN.Runtime
             isInitialized = true;
         }
 
+
         public void OnEnable()
         {
             this.MMEventStartListening<MMStateChangeEvent<GameManager.GameStateFSM>>();
@@ -42,12 +44,40 @@ namespace ENZEUN.Runtime
 
         public void OnMMEvent(MMStateChangeEvent<GameStateFSM> eventType)
         {
+
+
             Debug.Log($"GameStateManager: OnMMEvent: NewState : {eventType.NewState} / PrevState : {eventType.PreviousState}");
+
+            // 현재 상태 진입 로직
+            switch (eventType.NewState)
+            {
+
+                case GameStateFSM.None:
+                    break;
+
+                case GameStateFSM.ReadyForStart:
+                    break;
+
+
+            }
+
+
+
+
+            // 이전 상태 종료 로직
+            switch (eventType.PreviousState)
+            {
+
+            }
+
         }
 
 
 
 
         #endregion
+
+
+
     }
 }

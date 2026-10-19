@@ -28,6 +28,8 @@ namespace ENZEUN.Runtime
         public static string sceneLoading_Customproperty = "SceneLoaded";
 
 
+
+
         public static int MaxPlayer = 4;
 
         private PhotonRoomListHandler photonRoomListHandler;
@@ -276,6 +278,22 @@ namespace ENZEUN.Runtime
         public override void OnDisconnected(DisconnectCause cause)
         {
             Debug.Log($"서버 연결 끊김: {cause}");
+
+            int tryCount = 0;
+
+            while (PhotonNetwork.IsConnected)
+            {
+                if (tryCount >= 10)
+                {
+                    Debug.Log($"연결 실패. 인터넷 환경을 확인하세요");
+                    ErrorPanelManager.Instance?.ShowError("Connect Failed. Please Check Internet");
+                    return;
+                }
+                tryCount++;
+                Debug.Log($"연결 재시도");
+                PhotonNetwork.ConnectUsingSettings();
+
+            }
         }
 
         #endregion
@@ -351,6 +369,8 @@ namespace ENZEUN.Runtime
             Hashtable props = new Hashtable() { { sceneLoading_Customproperty, loaded } };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
+
+
 
         #endregion
 
