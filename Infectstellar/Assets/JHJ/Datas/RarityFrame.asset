@@ -12,4 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 358f0f4e9b1459444a33be4267445217, type: 3}
   m_Name: RarityFrame
   m_EditorClassIdentifier: Assembly-CSharp::RarityFrameSO
-  entries: []
+  entries:
+  - rarity: 0
+    frame: {fileID: 21300000, guid: 8c2eff6d76d9cc12c0564c8c2d7839fe, type: 3}
+  - rarity: 1
+    frame: {fileID: 21300000, guid: 39123bba6115528631f1d88bcd106e1a, type: 3}
+  - rarity: 2
+    frame: {fileID: 21300000, guid: 978cacd7a85c971ee4f0cef638b9e5d2, type: 3}
+  - rarity: 3
+    frame: {fileID: 21300000, guid: 874398674e666d4271d61688fc07ee22, type: 3}
+  - rarity: 4
+    frame: {fileID: 21300000, guid: 5d067c213307cc571b3fd6e519cf976d, type: 3}
