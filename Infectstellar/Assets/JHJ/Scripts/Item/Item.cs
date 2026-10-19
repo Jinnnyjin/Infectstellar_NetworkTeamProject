@@ -257,7 +257,7 @@ public class Item : MonoBehaviour, IInteractable
 
     public InteractableInfo GetInfo()
     {
-        return new InteractableInfo(data.ItemName, data.Price);
+        return new InteractableInfo(data.ItemName, data.Price, data.Rarity);
     }
 
     public bool CanGrab()
