@@ -14,6 +14,8 @@ public class Health : MonoBehaviour, IDamageable
     public event Action<DamageInfo> D_DamageApplied;
     /// <summary>피해로 체력이 0이 되었을 때 한 번 알립니다.</summary>
     public event Action<DamageInfo> D_Died;
+    /// <summary>직접 실행한 부활이 적용된 뒤 RPC 송신용으로 알립니다.</summary>
+    public event Action D_ReviveApplied;
     public event Action D_Revived;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
@@ -86,8 +88,20 @@ public class Health : MonoBehaviour, IDamageable
         return true;
     }
 
-    /// <summary>사망한 경우 체력을 회복하고 부활을 알립니다.</summary>
+    /// <summary>부활을 적용하고 RPC 송신용 알림을 발생시킵니다.</summary>
     public bool Revive()
+    {
+        if (!ApplyRevive())
+        {
+            return false;
+        }
+
+        D_ReviveApplied?.Invoke();
+        return true;
+    }
+
+    /// <summary>RPC 송신용 알림 없이 체력을 복구하고 부활을 알립니다.</summary>
+    internal bool ApplyRevive()
     {
         if (!isActiveAndEnabled || hp > 0f)
         {
