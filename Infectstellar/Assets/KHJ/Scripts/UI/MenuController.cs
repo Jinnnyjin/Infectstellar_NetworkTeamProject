@@ -34,8 +34,6 @@ namespace ENZEUN.Runtime
         /// </summary>
         private void Awake()
         {
-            menuFSM = new MMStateMachine<MenuState>(this.gameObject, true);
-
             if (Instance == null)
             {
                 Instance = this;
@@ -45,6 +43,8 @@ namespace ENZEUN.Runtime
                 Destroy(gameObject);
                 return;
             }
+
+            menuFSM = new MMStateMachine<MenuState>(this.gameObject, true);
         }
 
         private void OnEnable()
