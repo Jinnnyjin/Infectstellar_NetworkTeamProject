@@ -7,16 +7,17 @@ public class ReviveSyringe : MonoBehaviour, IUsable
         if (!hitContext.Target.TryGetComponent<PlayerController>(out PlayerController controller))
             return false;
 
-        Revive(controller);
+        if (!Revive(controller))
+            return false;
 
         Debug.Log($"[ReviveSyringe] {hitContext.Target.name} 부활");
         return true;
     }
 
-    private void Revive(PlayerController targetController)
+    private bool Revive(PlayerController targetController)
     {
 
-        targetController.TryRevive();
+        return targetController.TryRevive();
 
     }
 }
