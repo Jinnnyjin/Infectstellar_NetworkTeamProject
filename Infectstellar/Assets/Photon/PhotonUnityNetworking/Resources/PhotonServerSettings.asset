@@ -57,6 +57,14 @@ MonoBehaviour:
   - StartLoadScene
   - LoadSceneRPC
   - RpcRevive
+  - TextRPC
+  - ChangeGameStateRPC
+  - TestRPC
+  - AddPlayerDictOnMaster
+  - RPC_ChangeGameState
+  - RPC_RequestAddGold
+  - RPC_SyncGold
+  - RPC_InfectPlayer
   - RpcConsume
   - RpcRequestPurchase
   DisableAutoOpenWizard: 1

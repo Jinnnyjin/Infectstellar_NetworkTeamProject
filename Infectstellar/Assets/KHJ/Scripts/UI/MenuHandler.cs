@@ -79,6 +79,7 @@ namespace ENZEUN.Runtime
             Debug.Log($"MenuHandler: OnMMEvent: NewState : {eventType.NewState} / PrevState : {eventType.PreviousState}");
 #endif
 
+            // 현재 상태 진입 로직
             switch (eventType.NewState)
             {
                 case MenuController.MenuState.Title:
@@ -117,6 +118,7 @@ namespace ENZEUN.Runtime
                     break;
             }
 
+            // 이전 상태 종료 로직
             switch (eventType.PreviousState)
             {
                 case MenuController.MenuState.Title:
