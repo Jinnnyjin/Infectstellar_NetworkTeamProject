@@ -225,7 +225,7 @@ public sealed class PlayerController : MonoBehaviour
     /// <summary>직접 제어하는 플레이어의 부활을 시도합니다.</summary>
     public bool TryRevive()
     {
-        if (!isInitialized || !isActiveAndEnabled || health == null)
+        if (!isInitialized || !isActiveAndEnabled || health == null || !stateMachine.IsAlive)
         {
             return false;
         }
