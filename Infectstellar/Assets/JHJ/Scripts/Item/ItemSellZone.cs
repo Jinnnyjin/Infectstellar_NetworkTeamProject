@@ -24,7 +24,7 @@ public class ItemSellZone : MonoBehaviour
         if (!rb.TryGetComponent(out Item item))
             return;
 
-        if (!item.TryMarkSold())
+        if (!item.TryMarkRemoved())
             return;
 
         int price = item.ItemData.Price;

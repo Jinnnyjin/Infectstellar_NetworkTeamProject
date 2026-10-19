@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using Photon.Realtime;
+using ENZEUN.Runtime;
+using Photon.Pun;
 
 /// <summary>
 /// 게임매니저에서 초기값도 준다고 생각하고 구현, 추후 수정될 수 있음 [임시]
@@ -14,11 +17,8 @@ public class BaseCampInfoView : MonoBehaviour
 
     private void Awake()
     {
-        if(goldText == null || noneInfectedText == null || infectedText == null)
-        {
-            Debug.LogError($"[BaseCampInfoVeiw] 참조 미연결: {name}", this);
-            return;
-        }
+        if (goldText == null || noneInfectedText == null || infectedText == null)
+            Debug.LogError($"[BaseCampInfoView] 참조 미연결: {name}", this);
 
         if (playerSlots == null || playerSlots.Length == 0)
         {
@@ -46,15 +46,15 @@ public class BaseCampInfoView : MonoBehaviour
 
     public void ShowPlayers(IReadOnlyList<PlayerStatusInfo> list)
     {
-        if(list  == null || list.Count == 0)
+        if (list == null || list.Count == 0)
         {
-            Debug.LogError($"[BaseCampInfoVeiw] 플레이어 리스트 확인 불가: {name}", this);
+            Debug.LogError($"[BaseCampInfoView] 플레이어 리스트 확인 불가: {name}", this);
             return;
         }
 
-        if(list.Count > playerSlots.Length)
+        if (list.Count > playerSlots.Length)
         {
-            Debug.LogError($"[BaseCampInfoVeiw] 플레이어 수가 {playerSlots.Length}명이 넘음. 플레이어 수 {list.Count}명", this);
+            Debug.LogError($"[BaseCampInfoView] 플레이어 수가 {playerSlots.Length}명이 넘음. 플레이어 수 {list.Count}명", this);
             return;
         }
 
@@ -68,30 +68,39 @@ public class BaseCampInfoView : MonoBehaviour
         }
     }
 
-    [ContextMenu("Test/Show Sample")]
-    private void TestShowSample()
+    // ── Photon Player → 화면용 정보 변환 (생존 여부는 게임 매니저가 줌) 추후 연결
+    private static PlayerStatusInfo ToStatusInfo(Player player, bool isAlive)
     {
-        ShowGold(12345);
-        ShowInfected(true);
-        ShowPlayers(new List<PlayerStatusInfo>
-    {
-        new PlayerStatusInfo("KHJ", true),
-        new PlayerStatusInfo("SJT", false),
-        new PlayerStatusInfo("JHJ", true),
-    });
+        return new PlayerStatusInfo(player.NickName, isAlive, GetPlayerColor(player));
     }
 
-    [ContextMenu("Test/Show Full")]
-    private void TestShowFull()
+    private static Color GetPlayerColor(Player player)
     {
-        ShowGold(0);
-        ShowInfected(false);
-        ShowPlayers(new List<PlayerStatusInfo>
+        if (player.CustomProperties.TryGetValue(PhotonLinkManager.myColor_Customproperty, out object value) && value is int)
+        {
+            return PhotonLinkManager.GetIndexedColor((int)value);
+        }
+
+        Debug.LogWarning($"[BaseCampInfoView] {player.NickName}의 색 정보 없음, 흰색으로 표시");
+        return Color.white;
+    }
+
+    // 테스트 코드
+
+    [ContextMenu("Test/Show Room Players")]
+    private void TestShowRoomPlayers()
     {
-        new PlayerStatusInfo("KHJ", true),
-        new PlayerStatusInfo("SJT", true),
-        new PlayerStatusInfo("JHJ", true),
-        new PlayerStatusInfo("TEST123", true),
-    });
+        if (!PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning("[BaseCampInfoView] 방 안에서만 테스트 가능", this);
+            return;
+        }
+
+        List<PlayerStatusInfo> list = new List<PlayerStatusInfo>();
+        foreach (Player player in PhotonNetwork.PlayerList)
+        {
+            list.Add(ToStatusInfo(player, true));
+        }
+        ShowPlayers(list);
     }
 }
