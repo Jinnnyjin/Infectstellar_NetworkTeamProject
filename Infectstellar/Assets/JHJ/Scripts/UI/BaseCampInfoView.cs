@@ -15,6 +15,56 @@ public class BaseCampInfoView : MonoBehaviour
     [SerializeField] private TMP_Text noneInfectedText;
     [SerializeField] private TMP_Text infectedText;
 
+
+    private GameManager gameManagerRef;
+
+    public void InitializeBaseCampInfo()
+    {
+        gameManagerRef = GameManager.Instance;
+
+        if (gameManagerRef == null)
+        {
+            Debug.Log("게임매니저가 초기화되지 않았습니다. 베이스캠프 정보를 불러올 수 없습니다.");
+            return;
+        }
+
+        int count = 0;
+
+        foreach (var pair in gameManagerRef.playerDataDict.Values)
+        {
+            playerSlots[count].SetInfo(pair);
+            count++;
+        }
+
+        foreach (var slot in playerSlots)
+        {
+            if (slot.player == null)
+            {
+                slot.Clear();
+            }
+        }
+
+        gameManagerRef.OnGoldChanged += ShowGold;
+        gameManagerRef.OnPlayerInfected += ShowInfected;
+    }
+
+    public void OnDisable()
+    {
+        gameManagerRef.OnGoldChanged -= ShowGold;
+        gameManagerRef.OnPlayerInfected -= ShowInfected;
+    }
+
+    public void Start()
+    {
+        if (GameManager.Instance != null)
+        {
+            InitializeBaseCampInfo();
+
+        }
+        else
+            Debug.Log("게임매니저가 초기화되지 않았습니다. 베이스캠프 정보를 불러올 수 없습니다.");
+    }
+
     private void Awake()
     {
         if (goldText == null || noneInfectedText == null || infectedText == null)
@@ -33,74 +83,21 @@ public class BaseCampInfoView : MonoBehaviour
         }
     }
 
-    public void ShowGold(int amount)
+    /// <summary>
+    /// 게임매니저? 에서 골드가 바뀌는 이벤트 구독 예정
+    /// </summary>
+    public void ShowGold()
     {
+        int amount = gameManagerRef.currentGold;
         goldText.text = amount.ToString("N0") + " G";
     }
 
-    public void ShowInfected(bool infected)
+    public void ShowInfected()
     {
+        bool infected = gameManagerRef.isInfected;
         infectedText.gameObject.SetActive(infected);
         noneInfectedText.gameObject.SetActive(!infected);
     }
 
-    public void ShowPlayers(IReadOnlyList<PlayerStatusInfo> list)
-    {
-        if (list == null || list.Count == 0)
-        {
-            Debug.LogError($"[BaseCampInfoView] 플레이어 리스트 확인 불가: {name}", this);
-            return;
-        }
 
-        if (list.Count > playerSlots.Length)
-        {
-            Debug.LogError($"[BaseCampInfoView] 플레이어 수가 {playerSlots.Length}명이 넘음. 플레이어 수 {list.Count}명", this);
-            return;
-        }
-
-        for (int i = 0; i < playerSlots.Length; i++)
-        {
-            if (i < list.Count)
-                playerSlots[i].SetInfo(list[i]);
-
-            else
-                playerSlots[i].Clear();
-        }
-    }
-
-    // ── Photon Player → 화면용 정보 변환 (생존 여부는 게임 매니저가 줌) 추후 연결
-    private static PlayerStatusInfo ToStatusInfo(Player player, bool isAlive)
-    {
-        return new PlayerStatusInfo(player.NickName, isAlive, GetPlayerColor(player));
-    }
-
-    private static Color GetPlayerColor(Player player)
-    {
-        if (player.CustomProperties.TryGetValue(PhotonLinkManager.myColor_Customproperty, out object value) && value is int)
-        {
-            return PhotonLinkManager.GetIndexedColor((int)value);
-        }
-
-        Debug.LogWarning($"[BaseCampInfoView] {player.NickName}의 색 정보 없음, 흰색으로 표시");
-        return Color.white;
-    }
-
-    // 테스트 코드
-
-    [ContextMenu("Test/Show Room Players")]
-    private void TestShowRoomPlayers()
-    {
-        if (!PhotonNetwork.InRoom)
-        {
-            Debug.LogWarning("[BaseCampInfoView] 방 안에서만 테스트 가능", this);
-            return;
-        }
-
-        List<PlayerStatusInfo> list = new List<PlayerStatusInfo>();
-        foreach (Player player in PhotonNetwork.PlayerList)
-        {
-            list.Add(ToStatusInfo(player, true));
-        }
-        ShowPlayers(list);
-    }
 }
