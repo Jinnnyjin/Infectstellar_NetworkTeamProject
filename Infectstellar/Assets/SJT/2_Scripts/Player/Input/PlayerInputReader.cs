@@ -17,6 +17,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     private const string c_crouchActionName = "Crouch";
     private const string c_jumpActionName = "Jump";
     private const string c_flashActionName = "Flash";
+    private const string c_nextSpectateTarget = "NextSpectateTarget";
 
     private PlayerInput playerInput;
     private InputActionAsset cachedActions; // 어느 액션 자산에서 참조를 찾아 두었는지
@@ -29,11 +30,13 @@ public sealed class PlayerInputReader : MonoBehaviour
     private InputAction crouchAction;
     private InputAction jumpAction;
     private InputAction flashAction;
+    private InputAction nextSpectateTargetAction;
     #endregion
     #region 읽은 입력 결과와 조작 허용 상태를 저장하는 필드
     private PlayerInputFrame currentFrame; // 마지막으로 읽은 이동·달리기·웅크리기·점프 입력
     private Vector2 lookDelta; // 시점 회전에 사용할 이번 프레임의 마우스 이동량
     private bool flashPressed;
+    private bool nextSpectateTargetPressed;
     private bool isControlActive; // Controller가 플레이어 조작을 허용했는지
     private bool shouldBlockJumpUntilRelease = true; // 이미 누른 점프는 버튼을 놓을 때까지 차단할지, 예를 들어 Space를 누른 상태로 게임 창에 돌아와 조작을 재개한 경우, 이때 원본은 이미 누르고 있던 Space를 새로운 점프 요청으로 받아들이지 않도록 함
     private bool shouldBlockFlashUntilRelease = true;
@@ -46,6 +49,8 @@ public sealed class PlayerInputReader : MonoBehaviour
     /// 이번 프레임에 허용된 손전등 신규 입력이 있는지 반환합니다.
     /// </summary>
     public bool FlashPressed => flashPressed;
+    /// <summary>이번 프레임에 관전 대상 변경 버튼을 새로 눌렀는지 반환합니다.</summary>
+    public bool NextSpectateTargetPressed => nextSpectateTargetPressed;
 
     private void Awake()
 
@@ -126,6 +131,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         currentFrame = default;
         lookDelta = Vector2.zero;
         flashPressed = false;
+        nextSpectateTargetPressed = false;
         if (!isControlActive)
         {
             return;
@@ -175,6 +181,11 @@ public sealed class PlayerInputReader : MonoBehaviour
         else
         {
             shouldBlockFlashUntilRelease = true;
+        }
+
+        if (nextSpectateTargetAction != null && nextSpectateTargetAction.enabled)
+        {
+            nextSpectateTargetPressed = nextSpectateTargetAction.WasPressedThisFrame();
         }
 
         currentFrame = new PlayerInputFrame(
@@ -285,6 +296,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         crouchAction = playerMap?.FindAction(c_crouchActionName);
         jumpAction = playerMap?.FindAction(c_jumpActionName);
         flashAction = playerMap?.FindAction(c_flashActionName);
+        nextSpectateTargetAction = playerMap?.FindAction(c_nextSpectateTarget);
 
         if (moveAction == null || lookAction == null || sprintAction == null || crouchAction == null || jumpAction == null)
         {
@@ -298,6 +310,13 @@ public sealed class PlayerInputReader : MonoBehaviour
         if (flashAction == null)
         {
             Debug.LogWarning("[PlayerInputReader] Player 맵에 Flash 액션이 없어 손전등 입력을 사용할 수 없습니다.", this);
+        }
+#endif
+
+#if UNITY_EDITOR
+        if (nextSpectateTargetAction == null)
+        {
+            Debug.LogWarning("[PlayerInputReader] Player 맵에 nextSpectateTarget 액션이 없어 시점 변경을 사용할 수 없습니다.", this);
         }
 #endif
 
@@ -315,6 +334,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         flashPressed = false;
         shouldBlockJumpUntilRelease = true;
         shouldBlockFlashUntilRelease = true;
+        nextSpectateTargetPressed = false;
     }
 
     /// <summary>

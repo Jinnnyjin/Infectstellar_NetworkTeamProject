@@ -1,6 +1,27 @@
 # Infectstellar 게임 작업 인수인계
 
-최종 갱신일: 2026-10-15 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+최종 갱신일: 2026-10-17 (Asia/Seoul). 경로는 Unity 프로젝트 루트 기준이다.
+
+## 완료: 모듈러 프리팹 최적화 2번 / 4번 제외
+
+- 2026-10-17 사용자가 **4번을 제외하고 2번만 구현**하도록 요청했다. 번호는 같은 날 대화의 원본 프리팹 개선 후보 표를 따른다. 사용자 요청으로 테스트는 실행하지 않았다.
+- **2번: 작은 소품의 그림자 생성 줄이기(파일 반영 완료).** 아래 6종 원본 프리팹의 Mesh Renderer 7개를 `Cast Shadows = Off`로 변경했다. 일반 의자의 LOD0·LOD1 Renderer 2개와 나머지 프리팹별 Renderer 1개씩이다. 기준 경로는 `Assets/Sci-Fi Styled Modular Pack/Prefabs/`이다.
+
+| 분류 | 기준 경로 아래 대상 원본 | 현재 맵 파일의 직접 참조 수 |
+| --- | --- | ---: |
+| 작은 화분 | `Decorative elements/decorative_plant_small.prefab` | 6 |
+| 일반 의자 | `Decorative elements/decorative_chair.prefab` | 15 |
+| 조종석 의자 | `Decorative elements/pilot_seat.prefab` | 2 |
+| 작은 유리 테이블 | `Decorative elements/Tables/decorative_table_small_glass.prefab` | 1 |
+| 작은 일반 테이블 | `Decorative elements/Tables/decorative_table_small_no_glass.prefab` | 2 |
+| 천장 조명 기구 | `Lights/light_celing_1.prefab` | 59 |
+
+- 위 85개는 BaseCamp·MainGameMap·Sectors의 직접 `m_SourcePrefab` 참조 합계이며 실행 시 표시 수나 전체 배치 총수가 아니다. 2026-10-17 사용자가 작은 장식·의자·작은 가구·천장 조명 기구를 포함하고 조종석 의자도 포함하도록 선택했다. 위 6종 외 선반·캐비닛·침대·책상·소파·큰 식물·대형 기계와 벽·바닥·천장 구조체·문은 이번 그림자 변경에서 제외한다. 원본을 공유하는 다른 맵에도 변경이 반영되는 범위다.
+- 2번의 적용 방향은 **Cast Shadows만 끄고 Receive Shadows는 유지**하는 것이다. 소품에 다른 물체의 그림자가 드리워지는 표현은 유지하며 천장 조명 자체의 밝기·범위도 유지한다. Receive Shadows 해제·공유 머티리얼 수정은 이번 합의에 포함하지 않는다.
+- 효과는 해당 소품이 그림자를 계산하는 광원의 영향을 받을 때 확인한다. 메인맵의 실시간 Point 59개는 그림자가 꺼져 있으므로 해당 광원에 대한 추가 절감으로 표현하지 않는다. 그림자 있는 손전등 등에서 외형과 실제 성능을 비교해야 하며 개선량은 미검증이다.
+- **4번: 충돌체 단순화는 이번 작업에서 제외.** 이전 평상시 Physics p95가 약 0.12–0.13ms로 작아 작업량 대비 개선 여지가 작다는 판단을 설명했고 사용자가 제외를 확정했다. 충돌체는 변경하지 않았다.
+- 실행 전 Git·대상 프리팹과 meta를 확인했다. 연결된 Unity는 대상 프로젝트/ready/stopped이며 MapTestScene은 dirty=false, 열린 Prefab Stage는 없었다. 기존 머티리얼·ProjectSettings 변경과 사용자 작성 `_decorative_chair.prefab` 및 meta는 보존 대상이다. 현재 맵 연결은 `Assets/SJT/3_Prefabs/Map/BaseCamp/BaseCamp.prefab`, `Assets/SJT/3_Prefabs/Map/MainGameMap/MainGameMap.prefab` 및 하위 Sectors 기준이다.
+- 변경 확인은 저장된 프리팹의 diff·GUID/meta·관련 파일 보존 대조와 읽기 전용 검토로 한정한다. 테스트·Play·빌드·성능 측정은 실행하지 않았으며 외형·성능 효과는 미검증이다.
 
 ## 현재 상태: 맵 최적화 스킬
 
