@@ -1,73 +1,33 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class _PlayerSnapShotPlayback
 {
-    private const int c_maxSnapShots = 32; // 스냅샷 버퍼의 최대 크기
     private const float c_maxExtrapolationTime = 0.1f;
-    private readonly List<_PlayerSnapShot> snapShotBuffer = new List<_PlayerSnapShot>(c_maxSnapShots);
-    private readonly float bufferDelay; // 다음 스냅샷이 도착할 여유를 주기 위해 상대 움직임을 늦춰 보여주는 시간(초).
+    private readonly SnapshotBuffer<_PlayerSnapShot> buffer;
 
     public _PlayerSnapShotPlayback(float _bufferDelay)
     {
-        if (float.IsNaN(_bufferDelay) || float.IsInfinity(_bufferDelay) || _bufferDelay < 0f)
-        {
-            throw new ArgumentOutOfRangeException($"[_PlayerSnapShotPlayback] 보간 지연은 0 이상의 유한한 값이어야 합니다. _bufferDelay : {_bufferDelay}");
-        }
-
-        bufferDelay = _bufferDelay;
+        buffer = new SnapshotBuffer<_PlayerSnapShot>(_bufferDelay, snapshot => snapshot.Time);
     }
 
     public void PushSnapShot(_PlayerSnapShot snapShot)
     {
-        if (double.IsNaN(snapShot.Time) || double.IsInfinity(snapShot.Time))
-        {
-            return;
-        }
-
-        // 마지막 기록 시간보다 이후의 새로운 시각의 기록만 보관한다.
-        if (snapShotBuffer.Count > 0 && snapShot.Time <= snapShotBuffer[snapShotBuffer.Count - 1].Time)
-        {
-            return;
-        }
-
-        // 버퍼의 최대 크기보다 커진 경우, 가장 오래된 스냅샷을 제거한다
-        if (snapShotBuffer.Count >= c_maxSnapShots)
-        {
-            snapShotBuffer.RemoveAt(0);
-        }
-
-        snapShotBuffer.Add(snapShot);
+        buffer.Push(snapShot);
     }
 
     /// <summary>버퍼 상태에 따라 보간 또는 외삽한 스냅샷을 반환합니다.</summary>
     public _PlayerSnapShot? GetPlaybackSnapShot(double currentNetworkTime)
     {
-        if (snapShotBuffer.Count == 0 || double.IsNaN(currentNetworkTime) || double.IsInfinity(currentNetworkTime))
+        if (!buffer.TrySample(currentNetworkTime, out _PlayerSnapShot from, out _PlayerSnapShot to, out double playbackTime))
         {
             return null;
         }
 
-        // 현재 재생할 시간, 매개변수로 받은 현재 시간에서 보간지연만큼 이전의 시간을 계산한다.
-        double playbackTime = currentNetworkTime - bufferDelay;
-
-        // 현재 재생 시각 앞뒤의 기록을 남기고, 더 오래된 기록은 제거한다.
-        // snapShotBuffer[0] : 재생 시각 직전 또는 같은 시각의 스냅샷(from)
-        // snapShotBuffer[1] : 재생 시각 직후의 스냅샷(to)
-        while (snapShotBuffer.Count >= 2 && snapShotBuffer[1].Time <= playbackTime)
-        {
-            snapShotBuffer.RemoveAt(0);
-        }
-
-        _PlayerSnapShot from = snapShotBuffer[0];
-        if (snapShotBuffer.Count == 1)
+        if (from.Time == to.Time)
         {
             return ExtrapolateSnapShot(from, playbackTime);
         }
-
-        _PlayerSnapShot to = snapShotBuffer[1];
 
         return InterpolateSnapShot(from, to, playbackTime);
     }
@@ -116,6 +76,6 @@ public class _PlayerSnapShotPlayback
     /// <summary>이전 재생 기록을 모두 비웁니다.</summary>
     public void Clear()
     {
-        snapShotBuffer.Clear();
+        buffer.Clear();
     }
 }
