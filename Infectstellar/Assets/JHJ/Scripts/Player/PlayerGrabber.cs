@@ -111,7 +111,7 @@ public class PlayerGrabber : MonoBehaviour
     /// </summary>
     private void SetHeldItem(Item item)
     {
-        if (heldItem == null)
+        if (heldItem == item)
             return;
 
         heldItem = item;
