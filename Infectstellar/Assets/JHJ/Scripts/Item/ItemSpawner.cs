@@ -4,8 +4,6 @@ using Photon.Pun;
 
 public class ItemSpawner : MonoBehaviour
 {
-    private const string ITEM_RESOURCE_PATH = "Items/";
-
     [SerializeField] private Transform spawnPointRoot;
     [SerializeField] private ItemSpawnTableSO spawnTable;
     [Min(0)]
@@ -86,18 +84,15 @@ public class ItemSpawner : MonoBehaviour
             }
 
             Item prefab = items[Random.Range(0, items.Count)];
+            Quaternion rot = Quaternion.identity;
 
-            Collider[] colliders = ItemPhysics.GetColliders(prefab.transform);
-            if (!ColliderBoundsUtil.TryGetUprightBottomCenter(prefab.transform, colliders, out Vector3 bottomCenter))
+            if(!RoomItemSpawnUtil.TryGetRootPositionOnFloor(prefab, spawnPoints[i].transform.position, rot, out Vector3 pos))
             {
                 Debug.LogWarning($"[ItemSpawner] 바닥 중심 계산 실패 / 프리팹 이름: {prefab.name}, 스폰 위치: {spawnPoints[i].name}", this);
                 continue;
             }
 
-            Quaternion rot = Quaternion.identity;
-            Vector3 pos = spawnPoints[i].transform.position - rot * bottomCenter;
-
-            PhotonNetwork.InstantiateRoomObject(ITEM_RESOURCE_PATH + prefab.name, pos, rot);
+            RoomItemSpawnUtil.InstantiateRoomItem(prefab, pos, rot);
             Debug.Log($"[ItemSpawner] 스폰: {spawnPoints[i].name}에 {prefab.ItemData.ItemName} ({rarity})", this);
         }
 

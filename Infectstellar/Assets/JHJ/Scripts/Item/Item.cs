@@ -28,7 +28,7 @@ public class Item : MonoBehaviour, IInteractable
     private int shooterActorNumber;
     private bool isLocalReleaser;
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
-    private bool isSold;
+    private bool isRemoved;
 
 
     private void Awake()
@@ -59,11 +59,11 @@ public class Item : MonoBehaviour, IInteractable
 
         // 네트워크
         network = GetComponent<ItemNetwork>();
-        network.Init(ExecuteShoot, ApplyStopSync, ExecuteDrop);
+        network.Init(ExecuteShoot, ApplyStopSync, ExecuteDrop, TryMarkRemoved);
 
         // ItemHit
         hit = GetComponent<ItemHit>();
-        hit.Init(network.GetOwnerActorNumber, data);
+        hit.Init(network.GetOwnerActorNumber, data, OnUsed);
 
         ChangeState(State.Placed);
     }
@@ -225,21 +225,31 @@ public class Item : MonoBehaviour, IInteractable
     }
 
     // =============================================================
-    // Sold
+    // Remove
 
     /// <summary>
-    /// 판매 처리 표시, 이미 판매됐다면 false
-    /// Master 판매구역에서만 사용 (콜라이더가 여러개면 중복 판매될까봐)
+    /// 판매·사용 삭제 공통, Master에서만 사용
     /// </summary>
-    public bool TryMarkSold()
+    public bool TryMarkRemoved()
     {
-        if(isSold)
+        if(isRemoved)
         {
             return false;
         }
 
-        isSold = true;
+        isRemoved = true;
         return true;
+    }
+
+    // =============================================================
+    // Use
+
+    /// <summary>
+    /// 사용 성공 시 ItemHit이 호출 (Init으로 전달).
+    /// </summary>
+    private void OnUsed()
+    {
+        network.SendConsume();
     }
 
     // =============================================================

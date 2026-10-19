@@ -10,12 +10,14 @@ public class ItemNetwork : MonoBehaviourPun
     private Action<Vector3, Quaternion, Vector3, int, bool> onShootReceived;
     private Action<Vector3, Quaternion> onStopReceived;
     private Action<Vector3, Quaternion, bool> onDropReceived;
+    private Func<bool> tryMarkRemoved;
 
-    public void Init(Action<Vector3, Quaternion, Vector3, int, bool> onShootReceived, Action<Vector3, Quaternion> onStopReceived, Action<Vector3, Quaternion, bool> onDropReceived)
+    public void Init(Action<Vector3, Quaternion, Vector3, int, bool> onShootReceived, Action<Vector3, Quaternion> onStopReceived, Action<Vector3, Quaternion, bool> onDropReceived, Func<bool> tryMarkRemoved)
     {
         this.onShootReceived = onShootReceived;
         this.onStopReceived = onStopReceived;
         this.onDropReceived = onDropReceived;
+        this.tryMarkRemoved = tryMarkRemoved;
     }
 
     // =============================================================
@@ -99,6 +101,45 @@ public class ItemNetwork : MonoBehaviourPun
         onDropReceived(startPos, startRot, info.Sender.IsLocal);
     }
 
+
+    // =============================================================
+    // Consume
+    public void SendConsume()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning($"현재 방에 들어가있지 않음");
+            return;
+        }
+
+        photonView.RPC(nameof(RpcConsume), RpcTarget.MasterClient);
+    }
+
+    [PunRPC]
+    private void RpcConsume(PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.LogWarning("[ItemNetwork] 방장이 아님, 삭제 요청 무시", this);
+            return;
+        }
+
+        Debug.Log($"[ItemNetwork] Consume 수신: 보낸 사람 actorNumber {info.Sender.ActorNumber}, / 내가 보낸사람(판정 컴퓨터)?: {info.Sender.IsLocal}", this);
+
+        if (tryMarkRemoved == null)
+        {
+            Debug.LogError("[ItemNetwork] Init 안 됨, Consume 수신 처리 불가", this);
+            return;
+        }
+
+        if(!tryMarkRemoved())
+        {
+            Debug.Log($"[ItemNetwork] 이미 제거 처리 중, 삭제 요청 무시", this);
+            return;
+        }
+
+        PhotonNetwork.Destroy(gameObject);
+    }
 
     public int GetOwnerActorNumber(Collider collider)
     {

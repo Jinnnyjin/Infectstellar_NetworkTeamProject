@@ -9,6 +9,7 @@ public class ItemDataSO : ScriptableObject
     [Tooltip("1부터 시작, 0은 미지정")] [Min(1)]
     [SerializeField] private int id;
     [SerializeField] private string itemName;
+    [SerializeField] private Sprite icon;
     [SerializeField] private ItemRarity rarity;
     [SerializeField] private int price;
     [SerializeField] private float attack;
@@ -17,8 +18,16 @@ public class ItemDataSO : ScriptableObject
 
     public int Id => id;
     public string ItemName => itemName;
+    public Sprite Icon => icon;
     public ItemRarity Rarity => rarity;
     public int Price => price;
     public float Attack => attack;
     public float Weight => weight;
+
+
+    private void OnValidate()
+    {
+        if (icon == null)
+            Debug.LogWarning($"[ItemDataSO] {name}: 아이콘 미지정", this);
+    }
 }
