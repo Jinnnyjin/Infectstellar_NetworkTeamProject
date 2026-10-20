@@ -1,3 +1,7 @@
+using ENZEUN.Runtime;
+using MoreMountains.Feedbacks;
+using Photon.Pun;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class HUDController : MonoBehaviour
@@ -5,18 +9,24 @@ public class HUDController : MonoBehaviour
     [SerializeField] private HeldItemView heldItemView;
     [SerializeField] private InteractInfoView interactInfoView;
     [SerializeField] private KeyPromptView promptView;
+    [SerializeField] private MMF_Player imageFader;
 
-    public void InitialSetting(PlayerDataObserver observer)
+    /// <summary>
+    /// 내 플레이어 등록 후 호출
+    /// </summary>
+    public void InitialSetting()
     {
-        if(observer == null)
+        GameManager gm = GameManager.Instance;
+        if (gm == null)
         {
-            Debug.LogError("[HUDController] observer가 null", this);
+            Debug.LogError("[HUDController] GameManager 없음", this);
             return;
         }
 
-        if(!observer.photonView.IsMine)
+        int myActorNum = PhotonNetwork.LocalPlayer.ActorNumber;
+        if(!gm.playerDataDict.TryGetValue(myActorNum, out PlayerDataObserver observer) || observer == null)
         {
-            Debug.LogError("[HUDController] 내 플레이어가 아님", this);
+            Debug.LogError($"[HUDController] 내 플레이어 데이터가 등록되지 않음 (ActorNr {myActorNum})", this);
             return;
         }
 
@@ -44,8 +54,27 @@ public class HUDController : MonoBehaviour
 
         // 키 프롬프트 HUD
         if (promptView == null)
-            Debug.LogError("[HUDController] interactInfoView 미연결", this);
+            Debug.LogError("[HUDController] promptView 미연결", this);
         else if (grabber != null && interactor != null)
             promptView.InitialSetting(interactor, grabber);
+
+        FadeDarkImage(false);
+    }
+
+
+
+
+    [Button]
+    private void FadeDarkImage(bool dir)
+    {
+        if (dir)
+        {
+            imageFader.PlayFeedbacksTopToBottom();
+        }
+        else
+        {
+            imageFader.PlayFeedbacksBottomToTop();
+
+        }
     }
 }
