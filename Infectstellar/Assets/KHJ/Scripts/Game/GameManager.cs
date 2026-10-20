@@ -82,7 +82,7 @@ namespace ENZEUN.Runtime
 
             if (gameStateManager == null)
             {
-                Debug.LogError("GameStateManager 가 존재하지 않습니다. 초기화에 실패했습니다.");
+                Debug.LogError("[GameManager] : GameStateManager 가 존재하지 않습니다. 초기화에 실패했습니다.");
             }
 
 
@@ -105,7 +105,7 @@ namespace ENZEUN.Runtime
         private async UniTask WaitAndTriggerReadyGame()
         {
 #if UNITY_EDITOR
-            Debug.Log("게임을 초기화 합니다. 2 초 뒤 [Ready For Start] 단계로 넘어갑니다");
+            Debug.Log("[GameManager] : 게임을 초기화 합니다. 2 초 뒤 [Ready For Start] 단계로 넘어갑니다");
 #endif
 
             await UniTask.Delay(TimeSpan.FromSeconds(2));
@@ -121,7 +121,7 @@ namespace ENZEUN.Runtime
         public void ReadyForGame()
         {
 #if UNITY_EDITOR
-            Debug.Log("[Ready For Start] 단계 입니다. 게임 매니저 초기화를 시작합니다");
+            Debug.Log("[GameManager] : [Ready For Start] 단계 입니다. 게임 매니저 초기화를 시작합니다");
 #endif
             gameStateManager.InitializeGameStateManager();
 
@@ -133,14 +133,16 @@ namespace ENZEUN.Runtime
         public async UniTask WaitForStart()
         {
 #if UNITY_EDITOR
-            Debug.Log("게임 매니저 초기화가 완료되었습니다. 3 초 뒤 플레이어를 초기화 합니다.");
+            Debug.Log("[GameManager] : 게임 매니저 초기화가 완료되었습니다. PlayerDataObserver 초기화를 기다립니다.");
 #endif
-            await UniTask.Delay(TimeSpan.FromSeconds(3));
+            //await UniTask.Delay(TimeSpan.FromSeconds(3));
 
-            SetGameReadyState(true);
+            //SetGameReadyState(true);
+
+            CheckAllPlayerGameReady();
         }
 
-        private void SetGameReadyState(bool isReady)
+        public void SetGameReadyState(bool isReady)
         {
             Hashtable props = new Hashtable() { { PhotonLinkManager.gameReady_Customproperty, isReady } };
 
@@ -182,10 +184,15 @@ namespace ENZEUN.Runtime
             }
 
             if (!allReady)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 아직 모든 플레이어가 준비되지 않았습니다.");
+#endif
                 return;
+            }
 
 #if UNITY_EDITOR
-            Debug.Log("플레이어가 모두 준비되었습니다.");
+            Debug.Log("[GameManager] : 플레이어가 모두 준비되었습니다.");
 #endif
             WaitAndTriggerGameStart().Forget();
         }
@@ -193,7 +200,7 @@ namespace ENZEUN.Runtime
         private async UniTask WaitAndTriggerGameStart()
         {
 #if UNITY_EDITOR
-            Debug.Log("1초 뒤 [On Game Start] 단계로 넘어갑니다.");
+            Debug.Log("[GameManager] : 1초 뒤 [On Game Start] 단계로 넘어갑니다.");
 #endif
             await UniTask.Delay(TimeSpan.FromSeconds(1));
 
@@ -212,7 +219,7 @@ namespace ENZEUN.Runtime
                 return;
 
 #if UNITY_EDITOR
-            Debug.Log("[On Game Start] 단계 입니다. 초기화를 시작합니다.");
+            Debug.Log("[GameManager] : [On Game Start] 단계 입니다. 초기화를 시작합니다.");
 #endif
 
             //============== 초기화 중 =============================================================
@@ -222,7 +229,7 @@ namespace ENZEUN.Runtime
             if (baseCampInfo == null)
             {
 #if UNITY_EDITOR
-                Debug.LogError("BaseCampInfo 를 초기화할 수 없습니다. [BaseCampInfo Is Null]");
+                Debug.LogError("[GameManager] : BaseCampInfo 를 초기화할 수 없습니다. [BaseCampInfo Is Null]");
 #endif
                 return;
             }
@@ -230,7 +237,7 @@ namespace ENZEUN.Runtime
             baseCampInfo.InitializeBaseCampInfo();
 
 #if UNITY_EDITOR
-            Debug.Log("BaseCampInfo 초기화가 완료되었습니다.");
+            Debug.Log("[GameManager] : BaseCampInfo 초기화가 완료되었습니다.");
 #endif
 
             //============== 초기화 중 =============================================================
@@ -240,7 +247,7 @@ namespace ENZEUN.Runtime
             if (itemSpawner == null)
             {
 #if UNITY_EDITOR
-                Debug.LogError("ItemSpawner 를 초기화할 수 없습니다. [ItemSpawner Is Null]");
+                Debug.LogError("[GameManager] : ItemSpawner 를 초기화할 수 없습니다. [ItemSpawner Is Null]");
 #endif
                 return;
             }
@@ -248,7 +255,7 @@ namespace ENZEUN.Runtime
             itemSpawner.SpawnAll();
 
 #if UNITY_EDITOR
-            Debug.Log("Item 스폰이 완료되었습니다.");
+            Debug.Log("[GameManager] : Item 스폰이 완료되었습니다.");
 #endif
 
             //============== 초기화 중 =============================================================
@@ -258,7 +265,7 @@ namespace ENZEUN.Runtime
             if (monster == null)
             {
 #if UNITY_EDITOR
-                Debug.LogError("MonsterSpawner 를 초기화할 수 없습니다. [MonsterSpawner Is Null]");
+                Debug.LogError("[GameManager] : MonsterSpawner 를 초기화할 수 없습니다. [MonsterSpawner Is Null]");
 #endif
                 return;
             }
@@ -266,7 +273,7 @@ namespace ENZEUN.Runtime
             monster.SpawnAll();
 
 #if UNITY_EDITOR
-            Debug.Log("Monster 스폰이 완료되었습니다.");
+            Debug.Log("[GameManager] : Monster 스폰이 완료되었습니다.");
 #endif
 
             //============== 초기화 중 =============================================================
@@ -276,7 +283,7 @@ namespace ENZEUN.Runtime
             if (hUDController == null)
             {
 #if UNITY_EDITOR
-                Debug.LogError("HUD 를 초기화할 수 없습니다. [HUD Is Null]");
+                Debug.LogError("[GameManager] : HUD 를 초기화할 수 없습니다. [HUD Is Null]");
 #endif
                 return;
             }
@@ -284,7 +291,7 @@ namespace ENZEUN.Runtime
             hUDController.InitialSetting();
 
 #if UNITY_EDITOR
-            Debug.Log("HUD 초기화가 완료되었습니다.");
+            Debug.Log("[GameManager] : HUD 초기화가 완료되었습니다.");
 #endif
 
             //============== 초기화 중 =============================================================
@@ -373,7 +380,7 @@ namespace ENZEUN.Runtime
             {
                 bool newReady = (bool)changedProps[PhotonLinkManager.gameReady_Customproperty];
 #if UNITY_EDITOR
-                Debug.Log($"[GameManager] {targetPlayer.NickName}의 GameReady 상태가 변경됨: {newReady}");
+                Debug.Log($"[GameManager] : {targetPlayer.NickName}의 GameReady 상태가 변경됨: {newReady}");
 #endif
                 CheckAllPlayerGameReady();
             }
@@ -525,7 +532,7 @@ namespace ENZEUN.Runtime
             if (!PhotonNetwork.IsMasterClient)
             {
 #if UNITY_EDITOR
-                Debug.Log("마스터 클라이언트가 아닙니다.");
+                Debug.Log("[GameManager] : 마스터 클라이언트가 아닙니다.");
 #endif
                 return;
             }
@@ -533,7 +540,7 @@ namespace ENZEUN.Runtime
             if (PhotonNetwork.CurrentRoom.PlayerCount <= 1)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염시키기에는 플레이어가 너무 적습니다.");
+                Debug.Log("[GameManager] : 감염시키기에는 플레이어가 너무 적습니다.");
 #endif
                 return;
             }
@@ -541,7 +548,7 @@ namespace ENZEUN.Runtime
             if (infectedPlayer != null)
             {
 #if UNITY_EDITOR
-                Debug.Log("이미 감염된 플레이어가 존재합니다.");
+                Debug.Log("[GameManager] : 이미 감염된 플레이어가 존재합니다.");
 #endif
                 return;
             }
@@ -552,7 +559,7 @@ namespace ENZEUN.Runtime
             if (randF > IntectionChance)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염확률을 뚫지 못했습니다.");
+                Debug.Log("[GameManager] : 감염확률을 뚫지 못했습니다.");
 #endif
                 return;
             }
@@ -573,7 +580,7 @@ namespace ENZEUN.Runtime
             if (aliveActorNumbers.Count <= 0)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염시키기엔 살아있는 플레이어가 없습니다.");
+                Debug.Log("[GameManager] : 감염시키기엔 살아있는 플레이어가 없습니다.");
 #endif
                 return;
             }
@@ -583,14 +590,14 @@ namespace ENZEUN.Runtime
             int selectedActorNr = aliveActorNumbers[randomIndex];
 
 #if UNITY_EDITOR
-            Debug.Log($"감염 대상 선정 완료 : ActorNr - [{selectedActorNr}]");
+            Debug.Log($"[GameManager] : 감염 대상 선정 완료 : ActorNr - [{selectedActorNr}]");
 #endif
 
             // 5. RPC 전파
             photonView.RPC(nameof(RPC_InfectPlayer), RpcTarget.All, selectedActorNr);
 
 #if UNITY_EDITOR
-            Debug.Log("대상이 감염되었습니다.");
+            Debug.Log("[GameManager] : 대상이 감염되었습니다.");
 #endif
 
             return;

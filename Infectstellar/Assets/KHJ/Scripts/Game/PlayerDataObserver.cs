@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using ENZEUN.Runtime;
 using Photon.Pun;
 using Photon.Realtime;
@@ -20,19 +21,37 @@ public class PlayerDataObserver : MonoBehaviourPun
     public Action OnPlayerHpChanged;
 
 
-    public void Start()
+    public async void Start()
     {
 #if UNITY_EDITOR
         Debug.Log("[PlayerDataObserver] : 플레이어가 생성되었습니다. 초기화를 시작합니다.");
 #endif
+        while (photonView != null && photonView.Owner != null)
+        {
+#if UNITY_EDITOR
+            Debug.Log("[PlayerDataObserver] : Photon 초기화 기다리는 중...");
+#endif
+            await UniTask.Yield();
+        }
+
         InitializePlayerDataObserver();
+
+#if UNITY_EDITOR
+        Debug.Log("[PlayerDataObserver] : 초기화가 완료되었습니다. 2 초 뒤 커스텀프로퍼티를 업데이트 합니다.");
+#endif
+
+        await UniTask.Delay(TimeSpan.FromSeconds(2));
+
+        GameManager.Instance.SetGameReadyState(true);
     }
 
     [Button]
     public void InitializePlayerDataObserver()
     {
         ownerPlayer = photonView.Owner;
+
         GameManager.Instance.RegisterPlayerData(ownerPlayer.ActorNumber, this);
+
     }
 
     /// <summary>
@@ -42,9 +61,10 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void SetPlayerCurrentHp(float hp)
     {
 #if UNITY_EDITOR
-        Debug.Log($"[PlayerDataObserver] : 플레이어의 체력이 변경되었습니다. 현재 체력 : [{hp}]");
+        Debug.Log($"[PlayerDataObserver] : 플레이어({ownerPlayer.NickName})의 체력이 변경되었습니다. 현재 체력 : [{hp}]");
 #endif
         this.hp = hp;
+
         OnPlayerHpChanged?.Invoke();
     }
 
