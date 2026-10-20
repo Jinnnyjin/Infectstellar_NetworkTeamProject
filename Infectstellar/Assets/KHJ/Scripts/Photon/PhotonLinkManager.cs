@@ -393,7 +393,7 @@ namespace ENZEUN.Runtime
         private void LoadSceneRPC()
         {
 #if UNITY_EDITOR
-            Debug.LogError($"모든 플레이어가 준비되었습니다.");
+            Debug.Log($"모든 플레이어가 준비되었습니다.");
 #endif
             OnAllPlayerReadyToNextScene?.Invoke();
         }
