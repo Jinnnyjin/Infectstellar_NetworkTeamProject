@@ -75,7 +75,7 @@ public class KeyPromptView : MonoBehaviour
         if(grabber.HeldItem != null)
         {
             promptText.text = heldText;
-            SetVisible(false);
+            SetVisible(true);
             return;
         }
 
@@ -84,7 +84,7 @@ public class KeyPromptView : MonoBehaviour
         if (target == null && interactor.CurrentObject != null)
         {
             promptText.text = interactor.CurrentObject.PromptText;
-            SetVisible(false);
+            SetVisible(true);
             return;
         }
 
@@ -96,7 +96,7 @@ public class KeyPromptView : MonoBehaviour
 
         lastCanGrab = target.CanGrab();
         promptText.text = lastCanGrab ? grabText : cannotGrabText;
-        SetVisible(false);
+        SetVisible(true);
     }
 
 
