@@ -42,7 +42,15 @@ public class Health : MonoBehaviour, IDamageable
 
         maxHP = maxHealth;
         hp = maxHealth;
-        KHJ_PlayerDataObserver?.SetPlayerCurrentHp(HP);
+
+        try
+        {
+            KHJ_PlayerDataObserver?.SetPlayerCurrentHp(HP);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("$[Health] : KHJ_PlayerDataObserver가 Null입니다.");
+        }
     }
 
 #if UNITY_EDITOR
