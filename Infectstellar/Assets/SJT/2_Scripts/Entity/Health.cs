@@ -64,7 +64,18 @@ public class Health : MonoBehaviour, IDamageable
 
         // 로컬에서만 실행되는 현준님 이벤트
         KHJ_OnDie?.Invoke();
-        KHJ_PlayerDataObserver?.SetPlayerCurrentHp(HP);
+
+        if (KHJ_PlayerDataObserver == null)
+        {
+#if UNITY_EDITOR
+            Debug.LogError("[Health] : PlayerDataObserver 가 존재하지 않습니다. 현재 체력 전달에 실패했습니다.");
+#endif
+            return;
+        }
+        else
+        {
+            KHJ_PlayerDataObserver.SetPlayerCurrentHp(HP);
+        }
     }
 
     /// <summary>송신용 알림 없이 피해를 적용하고, 체력이 0이 되면 사망을 알립니다.</summary>
