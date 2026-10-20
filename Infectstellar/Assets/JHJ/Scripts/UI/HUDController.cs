@@ -1,5 +1,6 @@
 using ENZEUN.Runtime;
 using MoreMountains.Feedbacks;
+using MoreMountains.Tools;
 using Photon.Pun;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class HUDController : MonoBehaviour
     [SerializeField] private InteractInfoView interactInfoView;
     [SerializeField] private KeyPromptView promptView;
     [SerializeField] private MMF_Player imageFader;
+    [SerializeField] private MMProgressBar Hp_Bar;
+    [SerializeField] private PlayerDataObserver observer;
 
     /// <summary>
     /// 내 플레이어 등록 후 호출
@@ -17,6 +20,7 @@ public class HUDController : MonoBehaviour
     public void InitialSetting()
     {
         GameManager gm = GameManager.Instance;
+
         if (gm == null)
         {
             Debug.LogError("[HUDController] GameManager 없음", this);
@@ -24,11 +28,14 @@ public class HUDController : MonoBehaviour
         }
 
         int myActorNum = PhotonNetwork.LocalPlayer.ActorNumber;
-        if (!gm.playerDataDict.TryGetValue(myActorNum, out PlayerDataObserver observer) || observer == null)
+
+        if (!gm.playerDataDict.TryGetValue(myActorNum, out observer) || observer == null)
         {
             Debug.LogError($"[HUDController] 내 플레이어 데이터가 등록되지 않음 (ActorNr {myActorNum})", this);
             return;
         }
+
+        observer.OnPlayerHpChanged += ChangeHpBar;
 
         GameObject player = observer.gameObject;
 
@@ -61,7 +68,16 @@ public class HUDController : MonoBehaviour
         FadeDarkImage(false);
     }
 
+    private void ChangeHpBar()
+    {
+        Hp_Bar.UpdateBar(observer.hp, 0f, 100f);
+    }
 
+    [Button]
+    private void ChangeHpBarTarget(float hp)
+    {
+        Hp_Bar.UpdateBar(hp, 0f, 100f);
+    }
 
 
     [Button]
