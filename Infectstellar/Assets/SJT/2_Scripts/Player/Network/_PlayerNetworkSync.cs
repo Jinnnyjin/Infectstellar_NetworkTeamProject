@@ -1,5 +1,6 @@
 using UnityEngine;
 using Photon.Pun;
+using ENZEUN.Runtime;
 
 /// <summary>
 /// 스냅샷 송수신을 받은 주체
@@ -23,6 +24,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     [SerializeField, Tooltip("StateMachine에 연결한 것과 같은 모델의 애니메이션 컴포넌트")]
     private PlayerAnimationController animationController;
     [SerializeField] private GameObject mineModel;
+    [SerializeField] private Renderer playerRenderer;
 
     [SerializeField] private GameObject pointOfView;
     [SerializeField] private GameObject thirdPersonView;
@@ -129,6 +131,14 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 
         isInitialized = true;
         playerController.SetLocalControlActive(IsLocalControlActive);
+
+        int colorIndex = (int)PhotonNetwork.LocalPlayer.CustomProperties[PhotonLinkManager.myColor_Customproperty];
+        Color newColor = PhotonLinkManager.GetIndexedColor(colorIndex);
+
+        var block = new MaterialPropertyBlock();
+        playerRenderer.GetPropertyBlock(block, 1);
+        block.SetColor("_BaseColor", newColor);
+        playerRenderer.SetPropertyBlock(block, 1);
 
         // 기존 모델 처리 유지
         if (IsMine)
