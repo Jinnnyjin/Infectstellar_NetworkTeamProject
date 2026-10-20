@@ -57,8 +57,14 @@ public class Shop : MonoBehaviourPun
             return false;
         }
 
-        // [임시] 골드 차감: 항상 성공. 게임 매니저 골드 차감 연결 시 교체 예정
+        // [임시] 골드 차감: (현재)항상 성공. 게임 매니저 골드 차감 연결 시 교체 예정
         //        빈 자리 확보 뒤, 생성 앞 (자리가 없으면 골드를 쓰지 않음)
+
+        // 구매는 골드가 부족하면 아이템을 생성 되지않도록 결과(bool)를 돌려받는 메서드가 필요합니다.
+
+        // 이런식으로 호출하려고 했습니다. 임의로 TrySpendGold
+        //if (!GameManager.Instance.TrySpendGold(entry.BuyPrice))
+            //return false;   // 골드 부족
 
         RoomItemSpawnUtil.InstantiateRoomItem(entry.Item, pos, rot);
         Debug.Log($"[Shop] 구매 완료, {entry.Item.name} {entry.BuyPrice}");
