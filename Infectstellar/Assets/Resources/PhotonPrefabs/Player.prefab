@@ -713,7 +713,7 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 2
   OwnershipTransfer: 0
-  observableSearch: 0
+  observableSearch: 2
   ObservedComponents:
   - {fileID: 7073898250178020161}
   sceneViewId: 0
@@ -737,6 +737,7 @@ MonoBehaviour:
   body: {fileID: 3556861022553636256}
   animationController: {fileID: 5538048699541995334}
   mineModel: {fileID: 2474721882481375467}
+  playerRenderer: {fileID: 7248641861433818222}
   pointOfView: {fileID: 3151569999027386306}
   thirdPersonView: {fileID: 5751516181697759411}
 --- !u!114 &3356795141544694185
