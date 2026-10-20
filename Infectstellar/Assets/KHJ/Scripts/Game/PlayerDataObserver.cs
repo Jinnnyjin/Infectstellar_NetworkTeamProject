@@ -12,9 +12,12 @@ public class PlayerDataObserver : MonoBehaviourPun
     public bool isDead => hp <= 0;
     public bool isInfected { get; private set; }
 
-
+    /// <summary>
+    /// 플레이어가 죽었을 때 발동 / bool : 감염자인지
+    /// </summary>
     public Action OnPlayerDie;
     public Action OnPlayerInfected;
+    public Action OnPlayerHpChanged;
 
 
     public void Start()
@@ -36,6 +39,7 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void SetPlayerCurrentHp(int hp)
     {
         this.hp = hp;
+        OnPlayerHpChanged();
     }
 
     /// <summary>
