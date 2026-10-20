@@ -248,7 +248,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3226846680800623007, guid: 91c28268dfedf0e42b2d3c1ebbdb0ee4, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.23
+      value: -2.568
       objectReference: {fileID: 0}
     - target: {fileID: 3226846680800623007, guid: 91c28268dfedf0e42b2d3c1ebbdb0ee4, type: 3}
       propertyPath: m_LocalPosition.y
@@ -256,7 +256,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3226846680800623007, guid: 91c28268dfedf0e42b2d3c1ebbdb0ee4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.18
+      value: -3.615
       objectReference: {fileID: 0}
     - target: {fileID: 3226846680800623007, guid: 91c28268dfedf0e42b2d3c1ebbdb0ee4, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1094,14 +1094,6 @@ PrefabInstance:
     - target: {fileID: 3916494124619297829, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 5208806634479211062, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_ScreenMatchMode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7041965698651271472, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AdditionalShaderChannelsFlag
-      value: 25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
