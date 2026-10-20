@@ -8,7 +8,7 @@ using UnityEngine;
 public class PlayerDataObserver : MonoBehaviourPun
 {
     public Player ownerPlayer;
-    public float hp { get; private set; } // 아직 안쓰는 필드
+    public float hp { get; private set; } = 100f;
     public bool isDead => hp <= 0;
     public bool isInfected { get; private set; }
 
