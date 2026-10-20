@@ -538,6 +538,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1352763005}
   - component: {fileID: 1352763004}
+  - component: {fileID: 1352763006}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -572,6 +573,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1352763006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1352763003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 2
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1518756113
 GameObject:
   m_ObjectHideFlags: 0
@@ -804,7 +827,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PhotonPlayerSpawnerForTest
   playerSpawnPoints: {fileID: 1842329858}
-  monsterSpawner: {fileID: 0}
 --- !u!114 &1842329857
 MonoBehaviour:
   m_ObjectHideFlags: 0
