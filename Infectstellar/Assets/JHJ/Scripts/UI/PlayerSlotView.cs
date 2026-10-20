@@ -1,3 +1,4 @@
+using ENZEUN.Runtime;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
@@ -16,7 +17,10 @@ public class PlayerSlotView : MonoBehaviour
     [SerializeField] private Color downMixColor = Color.gray3;
     [SerializeField, Range(0f, 1f)] private float downMixRatio = 0.6f;
 
-    private Player player;
+    public Player player;
+    public PlayerDataObserver playerDataObserverobserver;
+    private Color myColor;
+
 
     private void Awake()
     {
@@ -26,15 +30,46 @@ public class PlayerSlotView : MonoBehaviour
         }
     }
 
-
-    public void SetInfo(PlayerStatusInfo info)
+    public void OnDisable()
     {
+        if (playerDataObserverobserver != null)
+        {
+            playerDataObserverobserver.OnPlayerDie -= RefreshColor;
+        }
+    }
+
+
+    public void SetInfo(PlayerDataObserver info)
+    {
+        playerDataObserverobserver = info;
+        player = info.ownerPlayer;
+
+        playerDataObserverobserver.OnPlayerDie += RefreshColor;
+
         gameObject.SetActive(true);
-        playerNickname.text = info.Nickname;
+        playerNickname.text = player.NickName;
 
+        Color newColor;
 
-        playerIcon.color = info.IsAlive ? info.Color : Color.Lerp(info.Color, downMixColor, downMixRatio);
-        playerNickname.color = info.IsAlive ? aliveColor : downColor;
+        if (player.CustomProperties.TryGetValue(PhotonLinkManager.myColor_Customproperty, out object value) && value is int)
+        {
+            newColor = PhotonLinkManager.GetIndexedColor((int)value);
+        }
+        else
+        {
+            Debug.LogWarning($"[PlayerSlotView] 플레이어[{player.NickName}] 의 색 정보 없음, 흰색으로 표시");
+            newColor = Color.white;
+        }
+
+        myColor = newColor;
+
+        RefreshColor();
+    }
+
+    public void RefreshColor()
+    {
+        playerIcon.color = playerDataObserverobserver.isDead ? Color.Lerp(myColor, downMixColor, downMixRatio) : myColor;
+        playerNickname.color = playerDataObserverobserver.isDead ? downColor : aliveColor;
     }
 
     public void Clear()
@@ -45,12 +80,12 @@ public class PlayerSlotView : MonoBehaviour
 
     // 테스트 코드
 
-    [ContextMenu("Test/Alive")]
-    private void TestAlive() => SetInfo(new PlayerStatusInfo("Test", true, Color.red));
+    // [ContextMenu("Test/Alive")]
+    // private void TestAlive() => SetInfo(new PlayerStatusInfo("Test", true, Color.red));
 
-    [ContextMenu("Test/Down")]
-    private void TestDown() => SetInfo(new PlayerStatusInfo("Test", false, Color.red));
+    // [ContextMenu("Test/Down")]
+    // private void TestDown() => SetInfo(new PlayerStatusInfo("Test", false, Color.red));
 
-    [ContextMenu("Test/Clear")]
-    private void TestClear() => Clear();
+    // [ContextMenu("Test/Clear")]
+    // private void TestClear() => Clear();
 }
