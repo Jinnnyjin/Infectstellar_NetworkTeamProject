@@ -334,18 +334,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 734869789579789529, guid: 8662ef7d12fef7242a4200a369ea048f, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 938483300563097366, guid: 8662ef7d12fef7242a4200a369ea048f, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2106661009182342747, guid: 8662ef7d12fef7242a4200a369ea048f, type: 3}
-      propertyPath: managedReferences[7617139933542875219].Timing.RepeatForever
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6429598692959834677, guid: 8662ef7d12fef7242a4200a369ea048f, type: 3}
       propertyPath: m_Name
       value: BaseCampInfo_Canvas

@@ -294,6 +294,17 @@ namespace ENZEUN.Runtime
         {
             if (!PhotonNetwork.IsMasterClient)
             {
+#if UNITY_EDITOR
+                Debug.Log("마스터 클라이언트가 아닙니다.");
+#endif
+                return;
+            }
+
+            if (infectedPlayer != null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("이미 감염된 플레이어가 존재합니다.");
+#endif
                 return;
             }
 
@@ -302,6 +313,9 @@ namespace ENZEUN.Runtime
             // 1. 감염 확률 실패 시 즉시 탈출
             if (randF > IntectionChance)
             {
+#if UNITY_EDITOR
+                Debug.Log("감염확률을 뚫지 못했습니다.");
+#endif
                 return;
             }
 
