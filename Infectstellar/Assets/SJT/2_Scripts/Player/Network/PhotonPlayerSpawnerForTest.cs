@@ -9,16 +9,12 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
 
     [SerializeField] private Transform playerSpawnPoints;
 
-    private void Awake()
-    {
-        SpawnPlayer(playerSpawnPoints);
-    }
 
 #if UNITY_EDITOR
     /// <summary>룸에 입장하면 본인의 Player를 생성합니다.</summary>
     public override void OnJoinedRoom()
     {
-        SpawnPlayer(playerSpawnPoints);
+        SpawnPlayer();
     }
 #endif
 
@@ -26,16 +22,16 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
     // [SerializeField] private MonsterSpawner monsterSpawner;
     //////////////////////
     /// <summary>전달받은 부모의 자식 포인트 중 본인의 번호에 해당하는 위치를 사용합니다.</summary>
-    private void SpawnPlayer(Transform spawnPoints)
+    public void SpawnPlayer()
     {
-        if (!PhotonNetwork.InRoom || spawnPoints == null)
+        if (!PhotonNetwork.InRoom || playerSpawnPoints == null)
         {
             return;
         }
 
         int spawnIndex = PhotonNetwork.LocalPlayer.ActorNumber - 1;
 
-        if (spawnIndex < 0 || spawnIndex >= spawnPoints.childCount)
+        if (spawnIndex < 0 || spawnIndex >= playerSpawnPoints.childCount)
         {
 #if UNITY_EDITOR
             Debug.LogError("[PhotonPlayerSpawnerForTest] ActorNumber에 대응하는 스폰 포인트가 없습니다.", this);
@@ -43,7 +39,7 @@ public sealed class PhotonPlayerSpawnerForTest : MonoBehaviourPunCallbacks
             return;
         }
 
-        Transform spawnPoint = spawnPoints.GetChild(spawnIndex);
+        Transform spawnPoint = playerSpawnPoints.GetChild(spawnIndex);
 
         GameObject player = PhotonNetwork.Instantiate(c_prefabPath, spawnPoint.position, spawnPoint.rotation);
 

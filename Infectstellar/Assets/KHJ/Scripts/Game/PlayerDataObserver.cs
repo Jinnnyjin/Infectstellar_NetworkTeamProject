@@ -20,10 +20,6 @@ public class PlayerDataObserver : MonoBehaviourPun
     public Action OnPlayerHpChanged;
 
 
-    public void Start()
-    {
-        InitializePlayerDataObserver();
-    }
 
     [Button]
     public void InitializePlayerDataObserver()
