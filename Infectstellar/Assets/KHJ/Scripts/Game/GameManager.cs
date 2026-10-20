@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Photon.Pun;
 using System.Collections.Generic;
 using System;
+using Photon.Realtime;
 
 
 namespace ENZEUN.Runtime
@@ -19,6 +20,16 @@ namespace ENZEUN.Runtime
         public bool isInfected { get; private set; } // 감염자 여부
         [ShowInInspector]
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
+        [ShowInInspector]
+        public Player infectedPlayer { get; private set; } // 감염된 플레이어 레퍼런스
+
+
+        //========== 런타임 이벤트 들 =============================
+
+        public Action OnPlayerInfected;
+        public Action OnInfectedStateChanged;
+        public Action OnGoldChanged;
+
 
 
         //===================================================================
@@ -114,11 +125,24 @@ namespace ENZEUN.Runtime
 
             bool allDead = true;
 
+            bool hasInfectedPlayer = false;
+
             foreach (var data in playerDataDict.Values)
             {
                 // 한 명이라도 안죽었으면 false;
                 if (!data.isDead)
                     allDead = false;
+                // 감염된 플레이어가 살아있으면, hasInfectedPlayer 참
+                if (data.isInfected && !data.isDead)
+                {
+                    hasInfectedPlayer = true;
+                }
+            }
+
+            // 현재 상태와 동기화 시킴
+            if (isInfected != hasInfectedPlayer)
+            {
+                photonView.RPC(nameof(RPC_InfectedStateChanged), RpcTarget.All, hasInfectedPlayer);
             }
 
             if (allDead)
@@ -139,7 +163,7 @@ namespace ENZEUN.Runtime
             ReadyForStart,      // 게임 시작 준비 중
             OnGameStart,        // 게임 시작 타이밍
             GameStarted,        // 게임이 시작된 후
-            OnGameLoopEnd,      // 게임 루프 종료
+            Escaped,            // 탈출 성공
             OnFailed,           // 모두가 죽었을 때 (실패)
             ShowResult,         // 결과 보여주기
             RegisterRanking,    // 랭킹 등록
@@ -224,6 +248,7 @@ namespace ENZEUN.Runtime
         public void RPC_SyncGold(int syncedGold)
         {
             this.currentGold = syncedGold;
+            OnGoldChanged?.Invoke();
         }
 
         #endregion
@@ -269,6 +294,25 @@ namespace ENZEUN.Runtime
         {
             if (!PhotonNetwork.IsMasterClient)
             {
+#if UNITY_EDITOR
+                Debug.Log("마스터 클라이언트가 아닙니다.");
+#endif
+                return;
+            }
+
+            if (PhotonNetwork.CountOfPlayersInRooms <= 1)
+            {
+#if UNITY_EDITOR
+                Debug.Log("감염시키기에는 플레이어가 너무 적습니다.");
+#endif
+                return;
+            }
+
+            if (infectedPlayer != null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("이미 감염된 플레이어가 존재합니다.");
+#endif
                 return;
             }
 
@@ -277,6 +321,9 @@ namespace ENZEUN.Runtime
             // 1. 감염 확률 실패 시 즉시 탈출
             if (randF > IntectionChance)
             {
+#if UNITY_EDITOR
+                Debug.Log("감염확률을 뚫지 못했습니다.");
+#endif
                 return;
             }
 
@@ -292,11 +339,11 @@ namespace ENZEUN.Runtime
                 }
             }
 
-            // 3. 살아있는 유저가 아예 없거나 2명 미만이면 감염 실패
-            if (aliveActorNumbers.Count <= 2)
+            // 3. 살아있는 유저가 아예 없으면 감염 실패
+            if (aliveActorNumbers.Count <= 0)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염시킬 수 있는 살아있는 플레이어가 없습니다.");
+                Debug.Log("감염시키기엔 살아있는 플레이어가 없습니다.");
 #endif
                 return;
             }
@@ -328,8 +375,17 @@ namespace ENZEUN.Runtime
 
             if (playerDataDict.TryGetValue(actorNr, out PlayerDataObserver dataObserver))
             {
+                infectedPlayer = dataObserver.ownerPlayer;
                 dataObserver.SetPlayerInfectedState(true);
+                OnPlayerInfected?.Invoke();
             }
+        }
+
+        [PunRPC]
+        private void RPC_InfectedStateChanged(bool hasInfectedPlayer)
+        {
+            isInfected = hasInfectedPlayer;
+            OnInfectedStateChanged?.Invoke();
         }
 
 
