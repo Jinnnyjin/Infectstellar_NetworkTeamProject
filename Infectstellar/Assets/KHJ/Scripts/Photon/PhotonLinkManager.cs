@@ -4,7 +4,7 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using System;
 using ExitGames.Client.Photon;
-using Unity.VisualScripting;
+
 
 
 namespace ENZEUN.Runtime
@@ -18,6 +18,10 @@ namespace ENZEUN.Runtime
         /// 포톤 Player Custom Property 의 대기실 준비 상태
         /// </summary>
         public static string isReady_Customproperty = "IsReady";
+        /// <summary>
+        /// 포톤 Player Custom Property 의 대기실 준비 상태
+        /// </summary>
+        public static string gameReady_Customproperty = "GameReady";
         /// <summary>
         /// 포톤 Player Custom Property 의 캐릭터 색깔
         /// </summary>
@@ -239,6 +243,12 @@ namespace ENZEUN.Runtime
 #endif
         }
 
+        public override void OnLeftRoom()
+        {
+            base.OnLeftRoom();
+            ResetRoomCustomProperty();
+        }
+
         // 로비에 있을 때 방 목록이 변경될 때마다 자동 호출됨 (방 찾기 목록용)
         public override void OnRoomListUpdate(List<RoomInfo> roomList)
         {
@@ -338,7 +348,6 @@ namespace ENZEUN.Runtime
                 // 준비 상태 변경 이벤트 발행
                 CheckAllPlayerSceneLoaded();
             }
-
         }
 
         #region Player Custom Property Edit Methods
@@ -367,6 +376,18 @@ namespace ENZEUN.Runtime
         public void SetLoadSceneState(bool loaded)
         {
             Hashtable props = new Hashtable() { { sceneLoading_Customproperty, loaded } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        public void ResetRoomCustomProperty()
+        {
+            Hashtable props = new Hashtable()
+            {
+                { isReady_Customproperty ,          false},
+                { myColor_Customproperty ,          1},
+                { gameReady_Customproperty,      false},
+                { sceneLoading_Customproperty,      false}
+            };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 

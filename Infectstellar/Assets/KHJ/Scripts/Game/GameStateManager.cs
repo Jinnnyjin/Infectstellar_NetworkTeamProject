@@ -1,7 +1,6 @@
 using UnityEngine;
 using MoreMountains.Tools;
 using static ENZEUN.Runtime.GameManager;
-using Photon.Pun;
 
 namespace ENZEUN.Runtime
 {
@@ -21,7 +20,6 @@ namespace ENZEUN.Runtime
 
             // 초기화 로직
             FindFirstObjectByType<BaseCampInfoView>().InitializeBaseCampInfo();
-
 
             isInitialized = true;
         }
@@ -56,6 +54,7 @@ namespace ENZEUN.Runtime
                     break;
 
                 case GameStateFSM.ReadyForStart:
+                    Instance.ReadyForGame();
                     break;
 
                 case GameStateFSM.OnGameStart:

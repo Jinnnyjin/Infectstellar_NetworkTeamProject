@@ -6,11 +6,12 @@ using Photon.Pun;
 using System.Collections.Generic;
 using System;
 using Photon.Realtime;
+using ExitGames.Client.Photon;
 
 
 namespace ENZEUN.Runtime
 {
-    public class GameManager : MonoBehaviourPun
+    public class GameManager : MonoBehaviourPunCallbacks
     {
 
         //========== 게임 진행 중 필요한 필드 들 =============================
@@ -57,13 +58,15 @@ namespace ENZEUN.Runtime
         }
 
 
-        public void OnEnable()
+        public override void OnEnable()
         {
-
+            base.OnEnable();
         }
 
-        public void OnDisable()
+        public override void OnDisable()
         {
+            base.OnDisable();
+
             foreach (var data in playerDataDict.Values)
             {
                 data.OnPlayerDie -= CheckAllPlayerDied;
@@ -79,10 +82,7 @@ namespace ENZEUN.Runtime
             {
                 Debug.Log("GameStateManager 가 존재하지 않습니다. 초기화에 실패했습니다.");
             }
-            else
-            {
-                gameStateManager.InitializeGameStateManager();
-            }
+
 
             if (PhotonNetwork.IsConnected)
             {
@@ -100,6 +100,64 @@ namespace ENZEUN.Runtime
             }
         }
 
+        public void ReadyForGame()
+        {
+            FindFirstObjectByType<PhotonPlayerSpawnerForTest>().SpawnPlayer();
+
+            gameStateManager.InitializeGameStateManager();
+
+            SetGameReadyState(true);
+        }
+
+
+        //=================== Ready For Start ===============================================
+        #region Ready For Start
+
+        private void SetGameReadyState(bool isReady)
+        {
+            Hashtable props = new Hashtable() { { PhotonLinkManager.isReady_Customproperty, isReady } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+
+        private void CheckAllPlayerGameReady()
+        {
+            if (!PhotonNetwork.IsMasterClient)
+                return;
+
+            bool allReady = true;
+
+            Player[] players = PhotonNetwork.PlayerList;
+
+            foreach (var p in players)
+            {
+                if (!allReady)
+                {
+                    break;
+                }
+
+                if (p.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
+                {
+                    if (!(bool)obj)
+                    {
+                        allReady = false;
+                    }
+
+                }
+                else
+                {
+                    allReady = false;
+                }
+            }
+
+            if (!allReady)
+                return;
+
+            ChangeGameState(GameStateFSM.GameStarted);
+        }
+
+
+        #endregion
 
         //============================================================================
 
@@ -152,6 +210,26 @@ namespace ENZEUN.Runtime
         }
 
 
+        //===================== Photon Callbacks ==============================================
+        #region Photon Callbacks
+
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+
+            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(PhotonLinkManager.isReady_Customproperty))
+            {
+                bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
+#if UNITY_EDITOR
+                Debug.Log($"[GameManager] {targetPlayer.NickName}의 GameReady 상태가 변경됨: {newReady}");
+#endif
+                CheckAllPlayerGameReady();
+            }
+        }
+
+
+        #endregion
         //============================================================================
 
 
@@ -300,6 +378,14 @@ namespace ENZEUN.Runtime
                 return;
             }
 
+            if (PhotonNetwork.CountOfPlayersInRooms <= 1)
+            {
+#if UNITY_EDITOR
+                Debug.Log("감염시키기에는 플레이어가 너무 적습니다.");
+#endif
+                return;
+            }
+
             if (infectedPlayer != null)
             {
 #if UNITY_EDITOR
@@ -331,11 +417,11 @@ namespace ENZEUN.Runtime
                 }
             }
 
-            // 3. 살아있는 유저가 아예 없거나 2명 미만이면 감염 실패
-            if (aliveActorNumbers.Count <= 2)
+            // 3. 살아있는 유저가 아예 없으면 감염 실패
+            if (aliveActorNumbers.Count <= 0)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염시킬 수 있는 살아있는 플레이어가 없습니다.");
+                Debug.Log("감염시키기엔 살아있는 플레이어가 없습니다.");
 #endif
                 return;
             }
