@@ -1,3 +1,4 @@
+using ENZEUN.Runtime;
 using Photon.Pun;
 using System;
 using UnityEngine;
@@ -10,6 +11,8 @@ using UnityEngine;
 public class ItemSellZone : MonoBehaviour
 {
     // [임시] 현재는 금액만 넘김, 필요한 정보 있으면 추가 예정
+    // 판매될 때 금액만 전달합니다. 게임 매니저에서 구독하는 방식으로 이루어져 있습니다.
+    // Master에서만 발생합니다.
     public static event Action<int> ItemSold;
 
     private void OnTriggerEnter(Collider other)
@@ -30,6 +33,8 @@ public class ItemSellZone : MonoBehaviour
         int price = item.ItemData.Price;
         PhotonNetwork.Destroy(item.gameObject);
 
+        if (GameManager.Instance!=null)
+        GameManager.Instance?.RequestAddGold(price);
         ItemSold?.Invoke(price);
         Debug.Log($"[ItemSellZone] {item.name} {price} 판매완료");
     }
