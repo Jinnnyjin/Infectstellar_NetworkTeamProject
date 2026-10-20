@@ -58,6 +58,7 @@ namespace ENZEUN.Runtime
                     break;
 
                 case GameStateFSM.OnGameStart:
+                    Instance.TriggerGameStart();
                     break;
 
                 case GameStateFSM.GameStarted:
@@ -74,7 +75,6 @@ namespace ENZEUN.Runtime
 
                 case GameStateFSM.RegisterRanking:
                     break;
-
 
             }
 

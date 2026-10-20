@@ -38,7 +38,7 @@ public class HUDTestBinder : MonoBehaviour // [임시]
             return;
         }
 
-        hudController.InitialSetting(localPlayer);
+        //hudController.InitialSetting(localPlayer);
         Debug.Log($"[HUDTestBinder] {localPlayer.name} → HUD 연결", this);
     }
 

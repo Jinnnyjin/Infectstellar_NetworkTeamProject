@@ -20,6 +20,10 @@ public class PlayerDataObserver : MonoBehaviourPun
     public Action OnPlayerHpChanged;
 
 
+    public void Start()
+    {
+        InitializePlayerDataObserver();
+    }
 
     [Button]
     public void InitializePlayerDataObserver()
@@ -57,5 +61,4 @@ public class PlayerDataObserver : MonoBehaviourPun
     {
         OnPlayerDie?.Invoke();
     }
-
 }
