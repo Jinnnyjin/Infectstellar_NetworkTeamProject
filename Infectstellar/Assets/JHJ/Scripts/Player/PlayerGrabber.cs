@@ -77,8 +77,10 @@ public class PlayerGrabber : MonoBehaviour
         {
             if (heldItem != null)
                 TryDrop();
-            else
+            else if (interactor.CurrentTarget != null)
                 TryGrab();
+            else if (interactor.CurrentObject != null && interactor.CurrentObject.CanInteract)
+                interactor.CurrentObject.Interact();
         }
 
         if (Input.GetKeyDown(KeyCode.F))
