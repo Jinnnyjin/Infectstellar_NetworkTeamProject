@@ -1004,7 +1004,7 @@ MonoBehaviour:
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 450}
-  m_ScreenMatchMode: 0
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -1045,7 +1045,6 @@ MonoBehaviour:
   promptView: {fileID: 3899111736913219300}
   imageFader: {fileID: 3308766890052734552}
   Hp_Bar: {fileID: 7844965148378726505}
-  observer: {fileID: 0}
 --- !u!1 &4709775331224448937
 GameObject:
   m_ObjectHideFlags: 0
@@ -1951,7 +1950,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Tools.MMProgressBar
   PlayerID: hpBar
-  ForegroundBar: {fileID: 768978083816155081}
+  ForegroundBar: {fileID: 5993918638079309868}
   DelayedBarDecreasing: {fileID: 6313415072620018111}
   DelayedBarIncreasing: {fileID: 2569223839873644767}
   MinimumBarFillValue: 0
