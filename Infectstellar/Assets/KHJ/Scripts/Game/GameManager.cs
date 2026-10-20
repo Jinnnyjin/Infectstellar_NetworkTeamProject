@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
-using System.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -24,6 +23,8 @@ namespace ENZEUN.Runtime
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
         [ShowInInspector]
         public Player infectedPlayer { get; private set; } // 감염된 플레이어 레퍼런스
+        [ShowInInspector]
+        public bool isGameStarted { get; private set; } = false; // 게임이 정상적으로 시작되었는지
 
 
         //========== 런타임 이벤트 들 =============================
@@ -141,7 +142,7 @@ namespace ENZEUN.Runtime
 
         private void SetGameReadyState(bool isReady)
         {
-            Hashtable props = new Hashtable() { { PhotonLinkManager.isReady_Customproperty, isReady } };
+            Hashtable props = new Hashtable() { { PhotonLinkManager.gameReady_Customproperty, isReady } };
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
@@ -150,6 +151,9 @@ namespace ENZEUN.Runtime
         private void CheckAllPlayerGameReady()
         {
             if (!PhotonNetwork.IsMasterClient)
+                return;
+
+            if (isGameStarted)
                 return;
 
             bool allReady = true;
@@ -163,7 +167,7 @@ namespace ENZEUN.Runtime
                     break;
                 }
 
-                if (p.CustomProperties.TryGetValue(PhotonLinkManager.isReady_Customproperty, out object obj))
+                if (p.CustomProperties.TryGetValue(PhotonLinkManager.gameReady_Customproperty, out object obj))
                 {
                     if (!(bool)obj)
                     {
@@ -193,7 +197,7 @@ namespace ENZEUN.Runtime
 #endif
             await UniTask.Delay(1000);
 
-            ChangeGameState(GameStateFSM.GameStarted);
+            ChangeGameState(GameStateFSM.OnGameStart);
         }
 
 
@@ -204,6 +208,8 @@ namespace ENZEUN.Runtime
 
         public void TriggerGameStart()
         {
+            if (isGameStarted)
+                return;
 #if UNITY_EDITOR
             Debug.Log("[On Game Start] 단계 입니다. HUD 를 초기화합니다.");
 #endif
@@ -223,10 +229,24 @@ namespace ENZEUN.Runtime
             Debug.LogError("HUD 초기화가 완료되었습니다.");
 #endif
 
+            isGameStarted = true;
+
             InfectTimer().Forget();
+
+            ChangeGameState(GameStateFSM.GameStarted);
         }
 
         #endregion
+
+        //=================== Game Started ===============================================
+
+        #region Game Started
+
+
+
+
+        #endregion
+
 
         //============================================================================
         //============================================================================
@@ -287,10 +307,10 @@ namespace ENZEUN.Runtime
         {
             base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
 
-            // "IsReady" 키가 변경 목록에 포함되어 있는지 확인
-            if (changedProps.ContainsKey(PhotonLinkManager.isReady_Customproperty))
+            // "GameReady" 키가 변경 목록에 포함되어 있는지 확인
+            if (changedProps.ContainsKey(PhotonLinkManager.gameReady_Customproperty))
             {
-                bool newReady = (bool)changedProps[PhotonLinkManager.isReady_Customproperty];
+                bool newReady = (bool)changedProps[PhotonLinkManager.gameReady_Customproperty];
 #if UNITY_EDITOR
                 Debug.Log($"[GameManager] {targetPlayer.NickName}의 GameReady 상태가 변경됨: {newReady}");
 #endif
