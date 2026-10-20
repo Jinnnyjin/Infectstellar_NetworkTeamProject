@@ -300,6 +300,14 @@ namespace ENZEUN.Runtime
                 return;
             }
 
+            if (PhotonNetwork.CountOfPlayersInRooms <= 1)
+            {
+#if UNITY_EDITOR
+                Debug.Log("감염시키기에는 플레이어가 너무 적습니다.");
+#endif
+                return;
+            }
+
             if (infectedPlayer != null)
             {
 #if UNITY_EDITOR
@@ -331,11 +339,11 @@ namespace ENZEUN.Runtime
                 }
             }
 
-            // 3. 살아있는 유저가 아예 없거나 2명 미만이면 감염 실패
-            if (aliveActorNumbers.Count <= 2)
+            // 3. 살아있는 유저가 아예 없으면 감염 실패
+            if (aliveActorNumbers.Count <= 0)
             {
 #if UNITY_EDITOR
-                Debug.Log("감염시킬 수 있는 살아있는 플레이어가 없습니다.");
+                Debug.Log("감염시키기엔 살아있는 플레이어가 없습니다.");
 #endif
                 return;
             }
