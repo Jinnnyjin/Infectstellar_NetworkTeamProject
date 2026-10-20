@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using Photon.Realtime;
 using ENZEUN.Runtime;
-using Photon.Pun;
+using Sirenix.OdinInspector;
+using MoreMountains.Feedbacks;
 
 /// <summary>
 /// 게임매니저에서 초기값도 준다고 생각하고 구현, 추후 수정될 수 있음 [임시]
@@ -14,10 +13,14 @@ public class BaseCampInfoView : MonoBehaviour
     [SerializeField] private PlayerSlotView[] playerSlots;
     [SerializeField] private TMP_Text noneInfectedText;
     [SerializeField] private TMP_Text infectedText;
-
+    [BoxGroup("FeedBacks")]
+    [SerializeField] private MMF_Player goldFb;
+    [BoxGroup("FeedBacks")]
+    [SerializeField] private MMF_Player infectFb;
 
     private GameManager gameManagerRef;
 
+    [Button]
     public void InitializeBaseCampInfo()
     {
         gameManagerRef = GameManager.Instance;
@@ -46,12 +49,14 @@ public class BaseCampInfoView : MonoBehaviour
 
         gameManagerRef.OnGoldChanged += ShowGold;
         gameManagerRef.OnPlayerInfected += ShowInfected;
+        gameManagerRef.OnInfectedStateChanged += ShowInfected;
     }
 
     public void OnDisable()
     {
         gameManagerRef.OnGoldChanged -= ShowGold;
         gameManagerRef.OnPlayerInfected -= ShowInfected;
+        gameManagerRef.OnInfectedStateChanged -= ShowInfected;
     }
 
     public void Start()
@@ -90,13 +95,25 @@ public class BaseCampInfoView : MonoBehaviour
     {
         int amount = gameManagerRef.currentGold;
         goldText.text = amount.ToString("N0") + " G";
+        goldFb?.PlayFeedbacks();
     }
 
+    [Button]
     public void ShowInfected()
     {
         bool infected = gameManagerRef.isInfected;
+
         infectedText.gameObject.SetActive(infected);
         noneInfectedText.gameObject.SetActive(!infected);
+
+        if (infected)
+        {
+            infectFb?.PlayFeedbacks();
+        }
+        else
+        {
+            infectFb?.StopFeedbacks();
+        }
     }
 
 

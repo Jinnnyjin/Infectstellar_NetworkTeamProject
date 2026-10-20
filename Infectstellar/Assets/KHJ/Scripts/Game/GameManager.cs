@@ -27,6 +27,7 @@ namespace ENZEUN.Runtime
         //========== 런타임 이벤트 들 =============================
 
         public Action OnPlayerInfected;
+        public Action OnInfectedStateChanged;
         public Action OnGoldChanged;
 
 
@@ -124,11 +125,24 @@ namespace ENZEUN.Runtime
 
             bool allDead = true;
 
+            bool hasInfectedPlayer = false;
+
             foreach (var data in playerDataDict.Values)
             {
                 // 한 명이라도 안죽었으면 false;
                 if (!data.isDead)
                     allDead = false;
+                // 감염된 플레이어가 살아있으면, hasInfectedPlayer 참
+                if (data.isInfected && !data.isDead)
+                {
+                    hasInfectedPlayer = true;
+                }
+            }
+
+            // 현재 상태와 동기화 시킴
+            if (isInfected != hasInfectedPlayer)
+            {
+                photonView.RPC(nameof(RPC_InfectedStateChanged), RpcTarget.All, hasInfectedPlayer);
             }
 
             if (allDead)
@@ -234,6 +248,7 @@ namespace ENZEUN.Runtime
         public void RPC_SyncGold(int syncedGold)
         {
             this.currentGold = syncedGold;
+            OnGoldChanged?.Invoke();
         }
 
         #endregion
@@ -342,6 +357,13 @@ namespace ENZEUN.Runtime
                 dataObserver.SetPlayerInfectedState(true);
                 OnPlayerInfected?.Invoke();
             }
+        }
+
+        [PunRPC]
+        private void RPC_InfectedStateChanged(bool hasInfectedPlayer)
+        {
+            isInfected = hasInfectedPlayer;
+            OnInfectedStateChanged?.Invoke();
         }
 
 

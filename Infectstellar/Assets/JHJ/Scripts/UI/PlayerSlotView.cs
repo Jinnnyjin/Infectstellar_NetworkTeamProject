@@ -57,7 +57,7 @@ public class PlayerSlotView : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[BaseCampInfoView] {player.NickName}의 색 정보 없음, 흰색으로 표시");
+            Debug.LogWarning($"[PlayerSlotView] 플레이어[{player.NickName}] 의 색 정보 없음, 흰색으로 표시");
             newColor = Color.white;
         }
 
