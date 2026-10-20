@@ -41,6 +41,7 @@ public class Health : MonoBehaviour, IDamageable
 
         maxHP = maxHealth;
         hp = maxHealth;
+        KHJ_OnSetPlayerCurrentHp?.Invoke();
     }
 
 #if UNITY_EDITOR
@@ -117,6 +118,7 @@ public class Health : MonoBehaviour, IDamageable
         }
 
         hp = maxHP;
+        KHJ_OnSetPlayerCurrentHp?.Invoke();
         D_Revived?.Invoke();
         return true;
     }
