@@ -6,8 +6,7 @@ using UnityEngine;
 /// 구매판정 및 생성은 방장만
 /// </summary>
 public class Shop : MonoBehaviourPun
-{
-    [SerializeField] private ShopCatalogSO catalog;
+{ 
     [SerializeField] private Transform spawnPointRoot;
     [SerializeField] private LayerMask itemLayerMask;
     [SerializeField, Tooltip("지점이 비었는지 검사하는 상자의 절반 크기")] private Vector3 spotCheckHalfSize = new Vector3(0.3f, 0.3f, 0.3f);
@@ -18,7 +17,7 @@ public class Shop : MonoBehaviourPun
     /// 목록 중 index번 아이템 구매 후 빈 지점에 생성
     /// 순서 : 검증 -> 빈자리 -> 골드 차감 -> 생성
     /// </summary>
-    private bool TryPurchase(int index)
+    public bool TryPurchase(Item item, int price)
     {
         if (!PhotonNetwork.InRoom)
         {
@@ -32,26 +31,20 @@ public class Shop : MonoBehaviourPun
             return false;
         }
 
-        if (catalog == null || spawnPointRoot == null)
+        if (spawnPointRoot == null)
         {
-            Debug.LogError($"[Shop] catalog 또는 spawnPoint가 비어있음", this);
+            Debug.LogError("[Shop] spawnPointRoot가 비어있음", this);
             return false;
         }
 
-        if (!catalog.TryGetEntry(index, out ShopEntry entry))
+        if (item == null)
         {
-            Debug.LogWarning($"[Shop] catalog에서 잘못된 인덱스({index}번) 호출", this);
-            return false;
-        }
-
-        if(entry.Item == null)
-        {
-            Debug.LogError($"[Shop] {index}번 아이템 비어있음", this);
+            Debug.LogError("[Shop] 구매할 아이템이 비어있음", this);
             return false;
         }
 
         Quaternion rot = Quaternion.identity;
-        if(!TryFindFreeRootPosition(entry.Item, rot, out Vector3 pos))
+        if(!TryFindFreeRootPosition(item, rot, out Vector3 pos))
         {
             Debug.LogWarning($"[Shop] 빈자리 없음", this);
             return false;
@@ -66,8 +59,8 @@ public class Shop : MonoBehaviourPun
         //if (!GameManager.Instance.TrySpendGold(entry.BuyPrice))
             //return false;   // 골드 부족
 
-        RoomItemSpawnUtil.InstantiateRoomItem(entry.Item, pos, rot);
-        Debug.Log($"[Shop] 구매 완료, {entry.Item.name} {entry.BuyPrice}");
+        RoomItemSpawnUtil.InstantiateRoomItem(item, pos, rot);
+        Debug.Log($"[Shop] 구매 완료, {item.name} {price}");
         return true;
     }
 
@@ -107,46 +100,5 @@ public class Shop : MonoBehaviourPun
 
         // 전부 차있을때
         return false;
-    }
-
-
-    public void RequestPurchase(int index)
-    {
-        if (!PhotonNetwork.InRoom)
-        {
-            Debug.LogWarning("[Shop] 구매 요청 불가: 방에 들어와 있지 않음", this);
-            return;
-        }
-
-        photonView.RPC(nameof(RpcRequestPurchase), RpcTarget.MasterClient, index);
-        Debug.Log($"[Shop] 구매 요청 보냄, {index}번", this);
-    }
-
-    [PunRPC]
-    private void RpcRequestPurchase(int index, PhotonMessageInfo info)
-    {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.LogWarning($"[Shop] 구매 요청 수신했으나 방장이 아님 (요청: {info.Sender.NickName}, {index}번)", this);
-            return;
-        }
-
-        bool isSuccess = TryPurchase(index);
-        Debug.Log($"[Shop] 구매 요청한 사람 : {info.Sender.NickName} 구매물품 {index}번, 성공여부 {isSuccess}", this);
-
-        // 실패 시 요청한 사람에게 알림? / 골드 부족, 빈자리없음?
-
-    }
-
-    [ContextMenu("Test/Purchase Index 0")]
-    private void TestPurchaseFirst()
-    {
-        RequestPurchase(0);
-    }
-
-    [ContextMenu("Test/Purchase Invalid Index")]
-    private void TestPurchaseInvalid()
-    {
-        RequestPurchase(-1);
     }
 }

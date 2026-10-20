@@ -12,7 +12,7 @@ public class HUDController : MonoBehaviour
     [SerializeField] private KeyPromptView promptView;
     [SerializeField] private MMF_Player imageFader;
     [SerializeField] private MMProgressBar Hp_Bar;
-    [SerializeField] private PlayerDataObserver observer;
+    [ShowInInspector] private PlayerDataObserver observer;
 
     /// <summary>
     /// 내 플레이어 등록 후 호출

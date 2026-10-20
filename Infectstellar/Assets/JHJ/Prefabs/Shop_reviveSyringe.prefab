@@ -189,7 +189,8 @@ GameObject:
   - component: {fileID: 3442725076199300786}
   - component: {fileID: 498566566287067877}
   - component: {fileID: 2241668243384240636}
-  - component: {fileID: 3142266584006123323}
+  - component: {fileID: 6773872857911962002}
+  - component: {fileID: 6650389238398791824}
   m_Layer: 0
   m_Name: Shop_reviveSyringe
   m_TagString: Untagged
@@ -292,7 +293,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.4, y: 4, z: 1.1500425}
   m_Center: {x: -0.000000059604645, y: 2, z: 0.026123196}
---- !u!114 &3142266584006123323
+--- !u!114 &6773872857911962002
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -301,7 +302,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 8515749980216655104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38bdf8c2e8d1c104e969d08880a41fac, type: 3}
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VendingMachine
-  promptText: "[E] \uC0C1\uC810 \uC5F4\uAE30"
+  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &6650389238398791824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8515749980216655104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dfc5fc212f28254fb6b10dbbfb064fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopProduct
+  product: {fileID: 11400000, guid: a238aee4037ae9449807c896a7a28591, type: 2}
+  shop: {fileID: 0}
