@@ -6,13 +6,21 @@ public class HUDController : MonoBehaviour
     [SerializeField] private InteractInfoView interactInfoView;
     [SerializeField] private KeyPromptView promptView;
 
-    public void InitialSetting(GameObject player)
+    public void InitialSetting(PlayerDataObserver observer)
     {
-        if(player == null)
+        if(observer == null)
         {
-            Debug.LogError("[HUDController] player가 null", this);
+            Debug.LogError("[HUDController] observer가 null", this);
             return;
         }
+
+        if(!observer.photonView.IsMine)
+        {
+            Debug.LogError("[HUDController] 내 플레이어가 아님", this);
+            return;
+        }
+
+        GameObject player = observer.gameObject;
 
         PlayerGrabber grabber = player.GetComponent<PlayerGrabber>();
         PlayerInteractor interactor = player.GetComponent<PlayerInteractor>();
