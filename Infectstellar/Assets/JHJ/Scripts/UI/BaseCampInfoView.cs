@@ -47,6 +47,9 @@ public class BaseCampInfoView : MonoBehaviour
             }
         }
 
+        ShowGold();
+        ShowInfected();
+
         gameManagerRef.OnGoldChanged += ShowGold;
         gameManagerRef.OnPlayerInfected += ShowInfected;
         gameManagerRef.OnInfectedStateChanged += ShowInfected;
