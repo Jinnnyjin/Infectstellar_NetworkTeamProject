@@ -1,9 +1,9 @@
+using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 
 public class KeyPromptView : MonoBehaviour
 {
-    [SerializeField] private Canvas slotCanvas;
     [SerializeField] private TMP_Text promptText;
 
     // [임시] 입력 방식 확정 시 교체 (던지기는 우클릭 예정)
@@ -11,15 +11,13 @@ public class KeyPromptView : MonoBehaviour
     [SerializeField] private string cannotGrabText = "잡기 불가";
     [SerializeField] private string heldText = "[E] 놓기\n[F] 던지기";
 
+    [SerializeField] private MMF_Player visibleFb;
+    private bool isVisible;
+
     private PlayerInteractor interactor;
     private PlayerGrabber grabber;
     private bool lastCanGrab;
 
-
-    private void Awake()
-    {
-        slotCanvas.enabled = false;
-    }
 
     public void InitialSetting(PlayerInteractor newInteractor, PlayerGrabber newGrabber)
     {
@@ -35,6 +33,7 @@ public class KeyPromptView : MonoBehaviour
         grabber = newGrabber;
 
         interactor.targetChanged += HandleTargetChanged;
+        interactor.objectChanged += HandleObjectChanged;
         grabber.HeldItemChanged += HandleHeldItemChanged;
 
         Refresh();
@@ -66,32 +65,48 @@ public class KeyPromptView : MonoBehaviour
         Refresh();
     }
 
+    private void HandleObjectChanged(IInteractObject obj)
+    {
+        Refresh();
+    }
+
     private void Refresh()
     {
         if(grabber.HeldItem != null)
         {
             promptText.text = heldText;
-            slotCanvas.enabled = true;
+            SetVisible(false);
             return;
         }
 
         IInteractable target = interactor.CurrentTarget;
-        if(target == null)
+
+        if (target == null && interactor.CurrentObject != null)
         {
-            slotCanvas.enabled = false;
+            promptText.text = interactor.CurrentObject.PromptText;
+            SetVisible(false);
+            return;
+        }
+
+        if (target == null)
+        {
+            SetVisible(false);
             return;
         }
 
         lastCanGrab = target.CanGrab();
         promptText.text = lastCanGrab ? grabText : cannotGrabText;
-        slotCanvas.enabled = true;
+        SetVisible(false);
     }
 
 
     private void Unsubscribe()
     {
         if (interactor != null)
+        {
             interactor.targetChanged -= HandleTargetChanged;
+            interactor.objectChanged -= HandleObjectChanged;
+        }
 
         if (grabber != null)
             grabber.HeldItemChanged -= HandleHeldItemChanged;
@@ -100,5 +115,19 @@ public class KeyPromptView : MonoBehaviour
     private void OnDestroy()
     {
         Unsubscribe();
+    }
+
+
+    private void SetVisible(bool visible)
+    {
+        if (isVisible == visible)
+            return;
+
+        isVisible = visible;
+
+        if (visible)
+            visibleFb?.PlayFeedbacksTopToBottom();
+        else
+            visibleFb?.PlayFeedbacksBottomToTop();
     }
 }

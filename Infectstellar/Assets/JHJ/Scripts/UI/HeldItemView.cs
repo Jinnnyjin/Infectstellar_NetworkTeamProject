@@ -1,3 +1,4 @@
+using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,14 +7,13 @@ public class HeldItemView : MonoBehaviour
 {
     [SerializeField] private Image icon;
     [SerializeField] private TMP_Text nameText;
-    [SerializeField] private Canvas slotCanvas;
+    [SerializeField] private MMF_Player visibleFb;
+
+
+    private bool isVisible;
 
     private PlayerGrabber grabber;
 
-    private void Awake()
-    {
-        Show(null);   
-    }
 
     public void InitialSetting(PlayerGrabber newGrabber)
     {
@@ -40,11 +40,11 @@ public class HeldItemView : MonoBehaviour
     {
         if(item == null || item.ItemData == null)
         {
-            slotCanvas.enabled = false;
+            SetVisible(false);
             return;
         }
 
-        slotCanvas.enabled = true;
+        SetVisible(true);
         Sprite sprite = item.ItemData.Icon;
 
         if(sprite == null)
@@ -64,5 +64,18 @@ public class HeldItemView : MonoBehaviour
     {
         if(grabber != null)
             grabber.HeldItemChanged -= OnHeldItemChanged;
+    }
+
+    private void SetVisible(bool visible)
+    {
+        if (isVisible == visible)
+            return;
+
+        isVisible = visible;
+
+        if (visible)
+            visibleFb?.PlayFeedbacksTopToBottom();
+        else
+            visibleFb?.PlayFeedbacksBottomToTop();
     }
 }

@@ -1,22 +1,21 @@
+using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class InteractInfoView : MonoBehaviour
 {
-    [SerializeField] private Canvas slotCanvas;
     [SerializeField] private Image frameImage;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private RarityFrameSO rarityFrame;
+    [SerializeField] private MMF_Player visibleFb;   // 정방향 = 표시, 역방향 = 숨김
+
+    private bool isVisible;
 
     private PlayerInteractor interactor;
     private PlayerGrabber grabber;
 
-    private void Awake()
-    {
-        slotCanvas.enabled = false;
-    }
 
     public void InitialSetting(PlayerInteractor newInteractor, PlayerGrabber newGrabber)
     {
@@ -51,14 +50,14 @@ public class InteractInfoView : MonoBehaviour
     {
         if(grabber.HeldItem != null)
         {
-            slotCanvas.enabled = false;
+            SetVisible(false);
             return;
         }
 
         IInteractable target = interactor.CurrentTarget;
         if(target == null)
         {
-            slotCanvas.enabled = false;
+            SetVisible(true);
             return;
         }
 
@@ -75,7 +74,7 @@ public class InteractInfoView : MonoBehaviour
             Debug.LogWarning($"[InteractInfoView] {info.Rarity} Frame을 가져올 수 없음", this);
         }
 
-        slotCanvas.enabled = true;
+        SetVisible(false);
     }
 
     private void Unsubscribe()
@@ -90,5 +89,18 @@ public class InteractInfoView : MonoBehaviour
     private void OnDestroy()
     {
         Unsubscribe();
+    }
+
+    private void SetVisible(bool visible)
+    {
+        if (isVisible == visible)
+            return;
+
+        isVisible = visible;
+
+        if (visible)
+            visibleFb?.PlayFeedbacksTopToBottom();
+        else
+            visibleFb?.PlayFeedbacksBottomToTop();
     }
 }

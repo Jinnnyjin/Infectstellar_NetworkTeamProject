@@ -10,7 +10,10 @@ using UnityEngine;
 public class PlayerInteractor : MonoBehaviour
 {
     public IInteractable CurrentTarget { get; private set; }
+    public IInteractObject CurrentObject { get; private set; }
+
     public event Action<IInteractable> targetChanged;
+    public event Action<IInteractObject> objectChanged;
 
     [SerializeField] private Transform viewPivot;
     [SerializeField, Min(0f)] private float interactDistance = 3f;
@@ -44,6 +47,7 @@ public class PlayerInteractor : MonoBehaviour
     {
         // 이전 대상을 계속 띄우지 않도록
         SetTarget(null);
+        SetObject(null);
     }
 
     /// <summary>
@@ -52,30 +56,35 @@ public class PlayerInteractor : MonoBehaviour
     private void LateUpdate()
     {
         IInteractable newTarget = null;
+        IInteractObject newObject = null;
 
-        if(stateMachine.IsAlive)
-        {
-            newTarget = FindTarget();
-        }
+        if (stateMachine.IsAlive)
+            FindTarget(out newTarget, out newObject);
 
         SetTarget(newTarget);
+        SetObject(newObject);
     }
 
     /// <summary>
     /// ViewPivot 정면 레이 맞은 대상 IInteractable 반환 / 없으면 null
     /// </summary>
-    private IInteractable FindTarget()
+    private void FindTarget(out IInteractable target, out IInteractObject obj)
     {
+        target = null;
+        obj = null;
+
         Ray ray = new Ray(viewPivot.position, viewPivot.forward);
 
         if (!Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactMask, QueryTriggerInteraction.Ignore))
-            return null;
+            return;
 
-        return hit.collider.GetComponentInParent<IInteractable>();
+        target = hit.collider.GetComponentInParent<IInteractable>();
+        if (target == null)
+            obj = hit.collider.GetComponentInParent<IInteractObject>();
     }
 
     /// <summary>
-    /// 현재 보는 대상 변경
+    /// 현재 보는 아이템 변경
     /// </summary>
     private void SetTarget(IInteractable newTarget)
     {
@@ -84,6 +93,16 @@ public class PlayerInteractor : MonoBehaviour
 
         CurrentTarget = newTarget;
         targetChanged?.Invoke(CurrentTarget);
+    }
+
+    
+    private void SetObject(IInteractObject newObj)
+    {
+        if (newObj == CurrentObject)
+            return;
+
+        CurrentObject = newObj;
+        objectChanged?.Invoke(CurrentObject);
     }
 
     private void OnDrawGizmosSelected()
