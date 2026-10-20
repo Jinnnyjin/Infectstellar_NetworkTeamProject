@@ -24,7 +24,7 @@ public class Health : MonoBehaviour, IDamageable
     private PlayerDataObserver KHJ_PlayerDataObserver;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
-    private void Awake()
+    private void Start()
     {
         if (maxHP <= 0f)
         {
@@ -42,7 +42,6 @@ public class Health : MonoBehaviour, IDamageable
 
         maxHP = maxHealth;
         hp = maxHealth;
-        KHJ_PlayerDataObserver?.SetPlayerCurrentHp(HP);
     }
 
 #if UNITY_EDITOR

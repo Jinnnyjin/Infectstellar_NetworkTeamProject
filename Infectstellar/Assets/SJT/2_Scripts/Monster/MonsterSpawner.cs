@@ -15,6 +15,7 @@ public sealed class MonsterSpawner : MonoBehaviourPunCallbacks
     private int pendingActor;
 
     /// <summary>룸의 생성 시작 기록을 확인받은 뒤 모든 활성 지점에 한 마리씩 생성합니다.</summary>
+    [ContextMenu("SpawnAll")]
     public void SpawnAll()
     {
         Room room = PhotonNetwork.CurrentRoom;
