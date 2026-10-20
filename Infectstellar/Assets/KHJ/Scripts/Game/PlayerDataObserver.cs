@@ -41,6 +41,9 @@ public class PlayerDataObserver : MonoBehaviourPun
     /// <param name="hp"></param>
     public void SetPlayerCurrentHp(float hp)
     {
+#if UNITY_EDITOR
+        Debug.Log($"[PlayerDataObserver] : 플레이어의 체력이 변경되었습니다. 현재 체력 : [{hp}]");
+#endif
         this.hp = hp;
         OnPlayerHpChanged?.Invoke();
     }
@@ -53,7 +56,9 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void SetPlayerInfectedState(bool infected = true)
     {
         isInfected = infected;
-        OnPlayerInfected?.Invoke();
+
+        if (ownerPlayer.IsLocal)
+            OnPlayerInfected?.Invoke();
     }
 
     /// <summary>

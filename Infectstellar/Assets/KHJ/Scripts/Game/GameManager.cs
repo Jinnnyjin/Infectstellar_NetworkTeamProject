@@ -105,10 +105,10 @@ namespace ENZEUN.Runtime
         private async UniTask WaitAndTriggerReadyGame()
         {
 #if UNITY_EDITOR
-            Debug.Log("게임을 초기화 합니다. 1 초 뒤 [Ready For Start] 단계로 넘어갑니다");
+            Debug.Log("게임을 초기화 합니다. 2 초 뒤 [Ready For Start] 단계로 넘어갑니다");
 #endif
 
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.Delay(TimeSpan.FromSeconds(2));
 
             ChangeGameState(GameStateFSM.ReadyForStart);
         }
@@ -123,9 +123,9 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("[Ready For Start] 단계 입니다. 게임 매니저 초기화를 시작합니다");
 #endif
-            FindFirstObjectByType<PhotonPlayerSpawnerForTest>().SpawnPlayer();
-
             gameStateManager.InitializeGameStateManager();
+
+            FindFirstObjectByType<PhotonPlayerSpawnerForTest>().SpawnPlayer();
 
             WaitForStart().Forget();
         }
@@ -133,9 +133,9 @@ namespace ENZEUN.Runtime
         public async UniTask WaitForStart()
         {
 #if UNITY_EDITOR
-            Debug.Log("게임 매니저 초기화가 완료되었습니다. 1 초 뒤 플레이어를 초기화 합니다.");
+            Debug.Log("게임 매니저 초기화가 완료되었습니다. 3 초 뒤 플레이어를 초기화 합니다.");
 #endif
-            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            await UniTask.Delay(TimeSpan.FromSeconds(3));
 
             SetGameReadyState(true);
         }
@@ -195,7 +195,7 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("1초 뒤 [On Game Start] 단계로 넘어갑니다.");
 #endif
-            await UniTask.Delay(1000);
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
 
             ChangeGameState(GameStateFSM.OnGameStart);
         }

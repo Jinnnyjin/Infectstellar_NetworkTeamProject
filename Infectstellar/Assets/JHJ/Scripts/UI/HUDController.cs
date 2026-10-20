@@ -68,6 +68,15 @@ public class HUDController : MonoBehaviour
         FadeDarkImage(false);
     }
 
+    private void OnDisable()
+    {
+        if (observer == null)
+            return;
+
+        observer.OnPlayerHpChanged -= ChangeHpBar;
+
+    }
+
     private void ChangeHpBar()
     {
         Hp_Bar.UpdateBar(observer.hp, 0f, 100f);
