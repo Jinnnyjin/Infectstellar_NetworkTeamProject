@@ -459,7 +459,6 @@ GameObject:
   - component: {fileID: 7423901455654246401}
   - component: {fileID: 8984561690930161050}
   - component: {fileID: 2633622859778071905}
-  - component: {fileID: 6521948923584864573}
   - component: {fileID: 96879955007318545}
   - component: {fileID: 3143105792460970469}
   - component: {fileID: 7338459547745817413}
@@ -655,18 +654,6 @@ MonoBehaviour:
   interactMask:
     serializedVersion: 2
     m_Bits: 127
---- !u!114 &6521948923584864573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2022546531456197676}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e84cc4b269ffbe340a9f92d2b8389889, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractInfoDisplay
 --- !u!114 &96879955007318545
 MonoBehaviour:
   m_ObjectHideFlags: 0
