@@ -20,7 +20,7 @@ public class Health : MonoBehaviour, IDamageable
     public event Action D_Revived;
 
     public UnityEvent KHJ_OnDie;
-    public UnityEvent KHJ_OnSetPlayerCurrentHp;
+    public UnityEvent<float> KHJ_OnSetPlayerCurrentHp;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()
@@ -41,7 +41,7 @@ public class Health : MonoBehaviour, IDamageable
 
         maxHP = maxHealth;
         hp = maxHealth;
-        KHJ_OnSetPlayerCurrentHp?.Invoke();
+        KHJ_OnSetPlayerCurrentHp?.Invoke(HP);
     }
 
 #if UNITY_EDITOR
@@ -64,7 +64,7 @@ public class Health : MonoBehaviour, IDamageable
 
         // 로컬에서만 실행되는 현준님 이벤트
         KHJ_OnDie?.Invoke();
-        KHJ_OnSetPlayerCurrentHp?.Invoke();
+        KHJ_OnSetPlayerCurrentHp?.Invoke(HP);
     }
 
     /// <summary>송신용 알림 없이 피해를 적용하고, 체력이 0이 되면 사망을 알립니다.</summary>
@@ -118,7 +118,7 @@ public class Health : MonoBehaviour, IDamageable
         }
 
         hp = maxHP;
-        KHJ_OnSetPlayerCurrentHp?.Invoke();
+        KHJ_OnSetPlayerCurrentHp?.Invoke(HP);
         D_Revived?.Invoke();
         return true;
     }

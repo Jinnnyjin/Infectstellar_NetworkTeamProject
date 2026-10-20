@@ -23,7 +23,7 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void Start()
     {
 #if UNITY_EDITOR
-        Debug.LogError("[PlayerDataObserver] : 플레이어가 생성되었습니다. 초기화를 시작합니다.");
+        Debug.Log("[PlayerDataObserver] : 플레이어가 생성되었습니다. 초기화를 시작합니다.");
 #endif
         InitializePlayerDataObserver();
     }
@@ -39,10 +39,10 @@ public class PlayerDataObserver : MonoBehaviourPun
     /// 플레이어의 체력이 바뀔 때마다 호출해주세요 // 아직 안쓰고 있으니 상의 후 호출 추가해주세요
     /// </summary>
     /// <param name="hp"></param>
-    public void SetPlayerCurrentHp(int hp)
+    public void SetPlayerCurrentHp(float hp)
     {
         this.hp = hp;
-        OnPlayerHpChanged();
+        OnPlayerHpChanged?.Invoke();
     }
 
     /// <summary>
