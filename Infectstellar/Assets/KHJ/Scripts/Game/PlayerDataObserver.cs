@@ -26,12 +26,12 @@ public class PlayerDataObserver : MonoBehaviourPun
 #if UNITY_EDITOR
         Debug.Log("[PlayerDataObserver] : 플레이어가 생성되었습니다. 초기화를 시작합니다.");
 #endif
-        while (photonView != null && photonView.Owner != null)
+        while (photonView == null && photonView.Owner == null)
         {
 #if UNITY_EDITOR
-            Debug.Log("[PlayerDataObserver] : Photon 초기화 기다리는 중...");
+            Debug.Log("[PlayerDataObserver] : Photon 초기화 기다리는 중...(1초마다 루프)");
 #endif
-            await UniTask.Yield();
+            await UniTask.WaitForSeconds(1);
         }
 
         InitializePlayerDataObserver();
