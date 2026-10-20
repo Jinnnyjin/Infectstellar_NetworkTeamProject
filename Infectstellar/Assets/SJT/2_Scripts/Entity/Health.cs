@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>체력을 관리하고 최초 피해 적용 결과를 알립니다.</summary>
 public class Health : MonoBehaviour, IDamageable
@@ -17,6 +18,9 @@ public class Health : MonoBehaviour, IDamageable
     /// <summary>직접 실행한 부활이 적용된 뒤 RPC 송신용으로 알립니다.</summary>
     public event Action D_ReviveApplied;
     public event Action D_Revived;
+
+    public UnityEvent KHJ_OnDie;
+    public UnityEvent KHJ_OnSetPlayerCurrentHp;
 
     /// <summary>최대 체력과 현재 체력을 초기화합니다.</summary>
     private void Awake()
@@ -56,6 +60,10 @@ public class Health : MonoBehaviour, IDamageable
         }
 
         D_DamageApplied?.Invoke(damageInfo);
+
+        // 로컬에서만 실행되는 현준님 이벤트
+        KHJ_OnDie?.Invoke();
+        KHJ_OnSetPlayerCurrentHp?.Invoke();
     }
 
     /// <summary>송신용 알림 없이 피해를 적용하고, 체력이 0이 되면 사망을 알립니다.</summary>
