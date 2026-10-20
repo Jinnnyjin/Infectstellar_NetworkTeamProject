@@ -228,7 +228,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
         gameStartBtn.interactable = allReady;
 
 #if UNITY_EDITOR
-        if (players.Length == 1)
+        if (players.Length == 0)
             gameStartBtn.interactable = true;
 #endif
     }
