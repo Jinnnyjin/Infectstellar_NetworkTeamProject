@@ -212,12 +212,12 @@ namespace ENZEUN.Runtime
                 return;
 
 #if UNITY_EDITOR
-            Debug.Log("[On Game Start] 단계 입니다. HUD 와 BaseCampInfo 를 초기화합니다.");
+            Debug.Log("[On Game Start] 단계 입니다. 초기화를 시작합니다.");
 #endif
 
+            //============== 초기화 중 =============================================================
             BaseCampInfoView baseCampInfo = FindFirstObjectByType<BaseCampInfoView>();
 
-            HUDController hUDController = FindFirstObjectByType<HUDController>();
 
             if (baseCampInfo == null)
             {
@@ -233,6 +233,46 @@ namespace ENZEUN.Runtime
             Debug.Log("BaseCampInfo 초기화가 완료되었습니다.");
 #endif
 
+            //============== 초기화 중 =============================================================
+
+            ItemSpawnerGroup itemSpawner = FindFirstObjectByType<ItemSpawnerGroup>();
+
+            if (itemSpawner == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogError("ItemSpawner 를 초기화할 수 없습니다. [ItemSpawner Is Null]");
+#endif
+                return;
+            }
+
+            itemSpawner.SpawnAll();
+
+#if UNITY_EDITOR
+            Debug.Log("Item 스폰이 완료되었습니다.");
+#endif
+
+            //============== 초기화 중 =============================================================
+
+            MonsterSpawner monster = FindFirstObjectByType<MonsterSpawner>();
+
+            if (monster == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogError("MonsterSpawner 를 초기화할 수 없습니다. [MonsterSpawner Is Null]");
+#endif
+                return;
+            }
+
+            monster.SpawnAll();
+
+#if UNITY_EDITOR
+            Debug.Log("Monster 스폰이 완료되었습니다.");
+#endif
+
+            //============== 초기화 중 =============================================================
+
+            HUDController hUDController = FindFirstObjectByType<HUDController>();
+
             if (hUDController == null)
             {
 #if UNITY_EDITOR
@@ -246,6 +286,9 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("HUD 초기화가 완료되었습니다.");
 #endif
+
+            //============== 초기화 중 =============================================================
+
 
             isGameStarted = true;
 
