@@ -57,7 +57,7 @@ public class InteractInfoView : MonoBehaviour
         IInteractable target = interactor.CurrentTarget;
         if(target == null)
         {
-            SetVisible(true);
+            SetVisible(false);
             return;
         }
 
@@ -74,7 +74,7 @@ public class InteractInfoView : MonoBehaviour
             Debug.LogWarning($"[InteractInfoView] {info.Rarity} Frame을 가져올 수 없음", this);
         }
 
-        SetVisible(false);
+        SetVisible(true);
     }
 
     private void Unsubscribe()
