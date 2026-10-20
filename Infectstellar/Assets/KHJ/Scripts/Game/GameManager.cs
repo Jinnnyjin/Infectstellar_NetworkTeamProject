@@ -210,10 +210,28 @@ namespace ENZEUN.Runtime
         {
             if (isGameStarted)
                 return;
+
 #if UNITY_EDITOR
-            Debug.Log("[On Game Start] 단계 입니다. HUD 를 초기화합니다.");
+            Debug.Log("[On Game Start] 단계 입니다. HUD 와 BaseCampInfo 를 초기화합니다.");
 #endif
+
+            BaseCampInfoView baseCampInfo = FindFirstObjectByType<BaseCampInfoView>();
+
             HUDController hUDController = FindFirstObjectByType<HUDController>();
+
+            if (baseCampInfo == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogError("BaseCampInfo 를 초기화할 수 없습니다. [BaseCampInfo Is Null]");
+#endif
+                return;
+            }
+
+            baseCampInfo.InitializeBaseCampInfo();
+
+#if UNITY_EDITOR
+            Debug.Log("BaseCampInfo 초기화가 완료되었습니다.");
+#endif
 
             if (hUDController == null)
             {
@@ -226,7 +244,7 @@ namespace ENZEUN.Runtime
             hUDController.InitialSetting();
 
 #if UNITY_EDITOR
-            Debug.LogError("HUD 초기화가 완료되었습니다.");
+            Debug.Log("HUD 초기화가 완료되었습니다.");
 #endif
 
             isGameStarted = true;
