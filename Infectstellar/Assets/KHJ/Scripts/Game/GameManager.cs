@@ -81,7 +81,7 @@ namespace ENZEUN.Runtime
 
             if (gameStateManager == null)
             {
-                Debug.Log("GameStateManager 가 존재하지 않습니다. 초기화에 실패했습니다.");
+                Debug.LogError("GameStateManager 가 존재하지 않습니다. 초기화에 실패했습니다.");
             }
 
 
@@ -89,7 +89,7 @@ namespace ENZEUN.Runtime
             {
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    ChangeGameState(GameStateFSM.ReadyForStart);
+                    WaitAndTriggerReadyGame().Forget();
                 }
                 else
                 {
@@ -101,8 +101,27 @@ namespace ENZEUN.Runtime
             }
         }
 
+        private async UniTask WaitAndTriggerReadyGame()
+        {
+#if UNITY_EDITOR
+            Debug.Log("게임을 초기화 합니다. 1 초 뒤 [Ready For Start] 단계로 넘어갑니다");
+#endif
+
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
+
+            ChangeGameState(GameStateFSM.ReadyForStart);
+        }
+
+        //=================== Ready For Start ===============================================
+
+        #region Ready For Start
+
+
         public void ReadyForGame()
         {
+#if UNITY_EDITOR
+            Debug.Log("[Ready For Start] 단계 입니다. 게임 매니저 초기화를 시작합니다");
+#endif
             FindFirstObjectByType<PhotonPlayerSpawnerForTest>().SpawnPlayer();
 
             gameStateManager.InitializeGameStateManager();
@@ -112,18 +131,18 @@ namespace ENZEUN.Runtime
 
         public async UniTask WaitForStart()
         {
-            await UniTask.Delay(1000);
+#if UNITY_EDITOR
+            Debug.Log("게임 매니저 초기화가 완료되었습니다. 1 초 뒤 플레이어를 초기화 합니다.");
+#endif
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
 
             SetGameReadyState(true);
         }
 
-
-        //=================== Ready For Start ===============================================
-        #region Ready For Start
-
         private void SetGameReadyState(bool isReady)
         {
             Hashtable props = new Hashtable() { { PhotonLinkManager.isReady_Customproperty, isReady } };
+
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
@@ -161,12 +180,17 @@ namespace ENZEUN.Runtime
             if (!allReady)
                 return;
 
-
+#if UNITY_EDITOR
+            Debug.Log("플레이어가 모두 준비되었습니다.");
+#endif
             WaitAndTriggerGameStart().Forget();
         }
 
         private async UniTask WaitAndTriggerGameStart()
         {
+#if UNITY_EDITOR
+            Debug.Log("1초 뒤 [On Game Start] 단계로 넘어갑니다.");
+#endif
             await UniTask.Delay(1000);
 
             ChangeGameState(GameStateFSM.GameStarted);
@@ -176,9 +200,13 @@ namespace ENZEUN.Runtime
         #endregion
 
         //=================== On Game Start ===============================================
+        #region On Game Start
 
         public void TriggerGameStart()
         {
+#if UNITY_EDITOR
+            Debug.Log("[On Game Start] 단계 입니다. HUD 를 초기화합니다.");
+#endif
             HUDController hUDController = FindFirstObjectByType<HUDController>();
 
             if (hUDController == null)
@@ -188,9 +216,17 @@ namespace ENZEUN.Runtime
 #endif
                 return;
             }
+
             hUDController.InitialSetting();
+
+#if UNITY_EDITOR
+            Debug.LogError("HUD 초기화가 완료되었습니다.");
+#endif
+
+            InfectTimer().Forget();
         }
 
+        #endregion
 
         //============================================================================
         //============================================================================
@@ -413,7 +449,7 @@ namespace ENZEUN.Runtime
                 return;
             }
 
-            if (PhotonNetwork.CountOfPlayersInRooms <= 1)
+            if (PhotonNetwork.CurrentRoom.PlayerCount <= 1)
             {
 #if UNITY_EDITOR
                 Debug.Log("감염시키기에는 플레이어가 너무 적습니다.");

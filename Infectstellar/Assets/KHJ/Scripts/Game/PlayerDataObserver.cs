@@ -1,9 +1,9 @@
 using System;
-using System.Diagnostics;
 using ENZEUN.Runtime;
 using Photon.Pun;
 using Photon.Realtime;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class PlayerDataObserver : MonoBehaviourPun
 {
@@ -22,6 +22,9 @@ public class PlayerDataObserver : MonoBehaviourPun
 
     public void Start()
     {
+#if UNITY_EDITOR
+        Debug.LogError("[PlayerDataObserver] : 플레이어가 생성되었습니다. 초기화를 시작합니다.");
+#endif
         InitializePlayerDataObserver();
     }
 
