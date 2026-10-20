@@ -24,7 +24,7 @@ public class HUDController : MonoBehaviour
         }
 
         int myActorNum = PhotonNetwork.LocalPlayer.ActorNumber;
-        if(!gm.playerDataDict.TryGetValue(myActorNum, out PlayerDataObserver observer) || observer == null)
+        if (!gm.playerDataDict.TryGetValue(myActorNum, out PlayerDataObserver observer) || observer == null)
         {
             Debug.LogError($"[HUDController] 내 플레이어 데이터가 등록되지 않음 (ActorNr {myActorNum})", this);
             return;
@@ -65,9 +65,9 @@ public class HUDController : MonoBehaviour
 
 
     [Button]
-    private void FadeDarkImage(bool dir)
+    private void FadeDarkImage(bool fadeIn)
     {
-        if (dir)
+        if (fadeIn)
         {
             imageFader.PlayFeedbacksTopToBottom();
         }

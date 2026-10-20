@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using System.Threading.Tasks;
 
 
 namespace ENZEUN.Runtime
@@ -106,6 +107,13 @@ namespace ENZEUN.Runtime
 
             gameStateManager.InitializeGameStateManager();
 
+            WaitForStart().Forget();
+        }
+
+        public async UniTask WaitForStart()
+        {
+            await UniTask.Delay(1000);
+
             SetGameReadyState(true);
         }
 
@@ -153,12 +161,38 @@ namespace ENZEUN.Runtime
             if (!allReady)
                 return;
 
+
+            WaitAndTriggerGameStart().Forget();
+        }
+
+        private async UniTask WaitAndTriggerGameStart()
+        {
+            await UniTask.Delay(1000);
+
             ChangeGameState(GameStateFSM.GameStarted);
         }
 
 
         #endregion
 
+        //=================== On Game Start ===============================================
+
+        public void TriggerGameStart()
+        {
+            HUDController hUDController = FindFirstObjectByType<HUDController>();
+
+            if (hUDController == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogError("HUD 를 초기화할 수 없습니다. [HUD Is Null]");
+#endif
+                return;
+            }
+            hUDController.InitialSetting();
+        }
+
+
+        //============================================================================
         //============================================================================
 
         public void RegisterPlayerData(int ActorNr, PlayerDataObserver playerDataObserver)
@@ -257,6 +291,7 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        //============================================================================
 
 
 
