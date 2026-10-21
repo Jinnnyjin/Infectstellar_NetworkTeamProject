@@ -66,6 +66,11 @@ public class PlayerDataObserver : MonoBehaviourPun
         this.hp = hp;
 
         OnPlayerHpChanged?.Invoke();
+
+        if (this.hp <= 0)
+        {
+            PlayerDied();
+        }
     }
 
     /// <summary>

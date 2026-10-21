@@ -7,7 +7,7 @@ public class ShopProduct : MonoBehaviourPun, IInteractObject
     [SerializeField] private ShopProductSO product;
     [SerializeField, Tooltip("비어있으면 씬에서 찾음 (프리팹은 씬 오브젝트를 참조할 수 없음)")] private Shop shop;
 
-    private string promptText = "구매 불가";
+    private string promptText;
 
     public string PromptText => promptText;
     public bool CanInteract => product != null && product.Item != null && shop != null;
@@ -15,6 +15,8 @@ public class ShopProduct : MonoBehaviourPun, IInteractObject
 
     private void Awake()
     {
+        promptText = InteractPromptSO.Instance.CannotPurchase;
+
         if (shop == null)
             shop = FindFirstObjectByType<Shop>();
 
@@ -27,7 +29,7 @@ public class ShopProduct : MonoBehaviourPun, IInteractObject
             return;
         }
 
-        promptText = $"[E] 구매 {product.Item.ItemData.ItemName} ({product.BuyPrice} G)";
+        promptText = InteractPromptSO.Instance.GetPurchaseText(product.Item.ItemData.ItemName, product.BuyPrice);
     }
 
 
