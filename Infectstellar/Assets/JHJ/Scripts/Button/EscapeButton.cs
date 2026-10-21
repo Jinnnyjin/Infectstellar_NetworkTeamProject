@@ -12,45 +12,27 @@ public class EscapeButton : MonoBehaviour, IInteractObject
 
     // 조건 : 게임매니저 O, 문이 닫혀있을 때, 게임중
     public bool CanInteract => GameManager.Instance != null && !GameManager.Instance.doorIsOpen;
+    public bool doOnce = false;
 
 
     public void Interact()
     {
+        if (doOnce)
+        {
+            Debug.LogWarning("[EscapeButton] 탈출버튼 상호작용 불가", this);
+            return;
+        }
         if (!CanInteract)
         {
             Debug.LogWarning("[EscapeButton] 탈출버튼 상호작용 불가", this);
             return;
         }
 
-        if (!isSubscribed)
-            SubscribeGM();
-
-        gameManager.RequestEscape();
+        GameManager.Instance.RequestEscape();
 
         Debug.Log("[EscapeButton] 탈출 버튼 상호작용 성공", this);
+
+        doOnce = true;
     }
 
-    private GameManager gameManager;
-    private bool isSubscribed = false;
-
-    private void SubscribeGM()
-    {
-        if (isSubscribed)
-            return;
-
-        gameManager = GameManager.Instance;
-
-        gameManager.OnEscapeButtonClicked += EscapeButtonClicked;
-    }
-
-    public void OnDisable()
-    {
-        gameManager.OnEscapeButtonClicked -= EscapeButtonClicked;
-
-    }
-
-    public void EscapeButtonClicked()
-    {
-
-    }
 }

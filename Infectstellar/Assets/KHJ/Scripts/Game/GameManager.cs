@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 
 namespace ENZEUN.Runtime
@@ -557,6 +559,9 @@ namespace ENZEUN.Runtime
             if (allDead)
             {
                 gameEndType = GameEndType.Failed;
+
+                OnFailed?.Invoke();
+
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
@@ -591,7 +596,21 @@ namespace ENZEUN.Runtime
                 gameEndType = GameEndType.Escaped;
             }
 
+            OnEscaped?.Invoke();
+
             ChangeGameState(GameStateFSM.Escaped);
+        }
+
+
+        public async UniTask GoToTitleAfter3Sec()
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(5));
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+
+            Application.Quit();
         }
 
 
@@ -897,15 +916,15 @@ namespace ENZEUN.Runtime
         [PunRPC]
         private void RPC_ExecuteEscape()
         {
+            CheckGameResult();
+
             OnEscapeButtonClicked?.Invoke();
         }
-
 
 
         #endregion
 
         //============================================================================
-
 
         #region Door Button
 
