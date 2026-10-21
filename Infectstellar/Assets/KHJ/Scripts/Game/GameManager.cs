@@ -722,6 +722,7 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        //============================================================================
 
 
         #region Infect Logic
@@ -856,6 +857,98 @@ namespace ENZEUN.Runtime
             isInfected = hasInfectedPlayer;
             OnInfectedStateChanged?.Invoke();
         }
+
+
+        #endregion
+
+
+        //============================================================================
+
+        #region Esacpe Button
+
+        public Action OnEscapeButtonClicked;
+
+        // 1. 탈출 요청
+        public void RequestEscape()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ExecuteEscape();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestEscapeOnMaster), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestEscapeOnMaster()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ExecuteEscape();
+        }
+
+        private void ExecuteEscape()
+        {
+            photonView.RPC(nameof(RPC_ExecuteEscape), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void RPC_ExecuteEscape()
+        {
+            OnEscapeButtonClicked?.Invoke();
+        }
+
+
+
+        #endregion
+
+        //============================================================================
+
+
+        #region Door Button
+
+        public bool doorIsOpen = false;
+
+        public Action<bool> OnDoorButtonClicked;
+
+        // 1. 문 열기 요청
+        public void RequestToggleDoor()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ToggleDoor();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestToggleDoor), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestToggleDoor()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ToggleDoor();
+        }
+
+        private void ToggleDoor()
+        {
+            doorIsOpen = !doorIsOpen;
+
+            photonView.RPC(nameof(RPC_ToggleDoor), RpcTarget.All, doorIsOpen);
+        }
+
+        [PunRPC]
+        private void RPC_ToggleDoor(bool isOpen)
+        {
+            doorIsOpen = isOpen;
+
+            OnDoorButtonClicked?.Invoke(doorIsOpen);
+        }
+
 
 
         #endregion
