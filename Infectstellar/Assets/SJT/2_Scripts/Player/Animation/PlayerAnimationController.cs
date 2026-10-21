@@ -27,6 +27,8 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private PlayerAnimationSettings settings;
     [SerializeField, Tooltip("이 컴포넌트와 같은 모델 객체의 Animator를 연결")]
     private Animator animator;
+    [SerializeField, Tooltip("발소리 재생 오디오 소스")]
+    private AudioSource footAudoiSource;
 
     private PlayerState requestedState; // HFSM이 마지막으로 요청한 상태로, 다음 Update에서 재생에 반영
     private PlayerState playedState; // Animator에 마지막으로 재생을 요청한 상태로, 같은 상태의 재시작을 막는 데 사용
@@ -247,5 +249,10 @@ public sealed class PlayerAnimationController : MonoBehaviour
         float currentWeight = animator.GetLayerWeight(armsLayerIndex);
         float nextWeight = duration > 0f ? Mathf.MoveTowards(currentWeight, targetWeight, Time.deltaTime / duration) : targetWeight;
         animator.SetLayerWeight(armsLayerIndex, nextWeight);
+    }
+
+    public void PlayFootSFX()
+    {
+        footAudoiSource.Play();
     }
 }
