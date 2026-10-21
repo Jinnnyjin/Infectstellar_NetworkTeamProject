@@ -798,6 +798,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseCamp
       objectReference: {fileID: 0}
+    - target: {fileID: 5278924103637695672, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7223673194826300389, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -840,9 +844,63 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6094209711359635894, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1497056440}
+    - targetCorrespondingSourceObject: {fileID: 6094209711359635894, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1106537579}
+    - targetCorrespondingSourceObject: {fileID: 6094209711359635894, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1273922674}
+    - targetCorrespondingSourceObject: {fileID: 6094209711359635894, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1770810683}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9190571599308147601, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1092820045}
   m_SourcePrefab: {fileID: 100100000, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+--- !u!4 &1092820041 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6094209711359635894, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+  m_PrefabInstance: {fileID: 1092820040}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1092820042 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 669099614139558234, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+  m_PrefabInstance: {fileID: 1092820040}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1092820043 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5742711066471470335, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+  m_PrefabInstance: {fileID: 1092820040}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1092820044 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9190571599308147601, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+  m_PrefabInstance: {fileID: 1092820040}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1092820045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092820044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95c11c6f1fd22564ab08077db1afe949, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseCampDoor
+  door42: {fileID: 1092820043}
+  door43: {fileID: 1092820042}
+  door42ClosePoint: {fileID: 1497056440}
+  door42OpenPoint: {fileID: 1106537579}
+  door43ClosePoint: {fileID: 1273922674}
+  door43OpenPoint: {fileID: 1770810683}
+  moveDuration: 1
 --- !u!1 &1103641139
 GameObject:
   m_ObjectHideFlags: 0
@@ -873,6 +931,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1106537578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1106537579}
+  m_Layer: 0
+  m_Name: Door4.2_OpenPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1106537579
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1106537578}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.1855224, y: -0.067892075, z: -0.04031372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1092820041}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1132049451
 GameObject:
@@ -917,6 +1006,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1273922673
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1273922674}
+  m_Layer: 0
+  m_Name: Door4.3_ClosePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1273922674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273922673}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.21447754, y: -0.067892075, z: -0.04031372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1092820041}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1300767129
 GameObject:
@@ -1233,6 +1353,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1497056439
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1497056440}
+  m_Layer: 0
+  m_Name: Door4.2_ClosePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1497056440
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1497056439}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.21447754, y: -0.067892075, z: -0.04031372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1092820041}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1518756113
 GameObject:
   m_ObjectHideFlags: 0
@@ -1529,6 +1680,37 @@ MonoBehaviour:
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: e3ad5bc02576e9a42a92d00dde3bb3b0, type: 2}
   m_BuildHeightMesh: 0
+--- !u!1 &1770810682
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1770810683}
+  m_Layer: 0
+  m_Name: Door4.3_OpenPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1770810683
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770810682}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.6144775, y: -0.067892075, z: -0.04031372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1092820041}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1842329855
 GameObject:
   m_ObjectHideFlags: 0
