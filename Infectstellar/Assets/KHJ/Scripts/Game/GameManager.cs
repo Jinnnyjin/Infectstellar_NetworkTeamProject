@@ -44,6 +44,8 @@ namespace ENZEUN.Runtime
         public Action OnPlayerInfected;
         public Action OnInfectedStateChanged;
         public Action OnGoldChanged;
+        public Action OnFailed;
+        public Action OnEscaped;
 
 
 
