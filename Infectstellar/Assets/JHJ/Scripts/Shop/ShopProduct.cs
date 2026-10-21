@@ -10,6 +10,7 @@ public class ShopProduct : MonoBehaviourPun, IInteractObject
     private string promptText;
 
     public string PromptText => promptText;
+    public string Description => InteractPromptSO.Instance.ShopProductDescription;
     public bool CanInteract => product != null && product.Item != null && shop != null;
 
 

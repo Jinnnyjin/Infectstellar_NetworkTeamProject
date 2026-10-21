@@ -7,6 +7,7 @@ using UnityEngine;
 public interface IInteractObject
 {
     public string PromptText { get; }   // "[E] 상점 열기"
+    public string Description { get; }    
     public bool CanInteract { get; }
     public void Interact();
 }
