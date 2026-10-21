@@ -6,6 +6,7 @@ using Firebase.Database;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Sirenix.OdinInspector;
 
 
 namespace ENZEUN.Runtime
@@ -254,8 +255,15 @@ namespace ENZEUN.Runtime
 
             string json = JsonUtility.ToJson(rankingData);
 
-            // "Rankings" 경로 아래에 유저 UID별로 저장
-            await databaseReference.Child("Rankings").Push().SetRawJsonValueAsync(json);
+
+            try
+            {
+                await databaseReference.Child("Rankings").Push().SetRawJsonValueAsync(json);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("저장 실패");
+            }
 
             Debug.Log("랭킹 점수 등록 완료!");
 
@@ -276,12 +284,14 @@ namespace ENZEUN.Runtime
             {
                 // "Rankings" 경로에서 "score" 필드를 기준으로 정렬하는 쿼리 생성
                 DataSnapshot snapshot = await databaseReference.Child("Rankings")
-                    .OrderByChild("score")
+                    .OrderByChild("earnedGold")
                     .LimitToLast(limit) // 점수가 높은 순으로 뒤에서부터 가져옴 (오름차순 정렬이 기본이므로 LimitToLast 사용)
                     .GetValueAsync();
 
                 if (snapshot.Exists)
                 {
+                    List<RankingData> tempList = new List<RankingData>();
+
                     foreach (var childSnapshot in snapshot.Children)
                     {
                         string json = childSnapshot.GetRawJsonValue();
@@ -290,13 +300,18 @@ namespace ENZEUN.Runtime
 
                         if (data != null)
                         {
-                            rankingList.Add(data);
+                            tempList.Add(data);
                         }
                     }
 
-                    // Firebase의 기본 정렬은 오름차순(낮은 점수 -> 높은 점수)이므로,
-                    // 내림차순(높은 점수 -> 낮은 점수)으로 최종 정렬합니다.
-                    rankingList = rankingList.OrderByDescending(r => r.earnedGold).ToList();
+                    // Firebase의 오름차순 결과를 내림차순(높은 골드 -> 낮은 골드)으로 정렬
+                    var sortedList = tempList.OrderByDescending(r => r.earnedGold).ToList();
+
+                    // 기존 리스트에 안전하게 채워넣기 (UI 바인딩 유지용)
+                    foreach (var item in sortedList)
+                    {
+                        rankingList.Add(item);
+                    }
                 }
 
                 else
@@ -309,7 +324,7 @@ namespace ENZEUN.Runtime
                 }
             }
 
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 if (ErrorPanelManager.Instance != null)
                 {
@@ -351,7 +366,7 @@ namespace ENZEUN.Runtime
                 }
             }
 
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 ErrorPanelManager.Instance.ShowError($"An error occurred while compiling the rankings: {ex.Message}");
                 Debug.LogError($"랭킹 정리 중 에러 발생: {ex.Message}");

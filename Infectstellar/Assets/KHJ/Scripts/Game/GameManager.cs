@@ -15,16 +15,28 @@ namespace ENZEUN.Runtime
     {
 
         //========== 게임 진행 중 필요한 필드 들 =============================
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public int currentGold { get; private set; } // 총 골드
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public bool isInfected { get; private set; } // 감염자 여부
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public Player infectedPlayer { get; private set; } // 감염된 플레이어 레퍼런스
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public bool isGameStarted { get; private set; } = false; // 게임이 정상적으로 시작되었는지
+        [ShowInInspector, ReadOnly]
+        public GameEndType gameEndType = GameEndType.Escaped;
+
+
+        //========== 게임 종료 Enum =============================
+
+        public enum GameEndType
+        {
+            Failed,     // 모두 사망
+            Escaped,    // 탈출 성공
+            InfectedWin // 감염자만 생존
+        }
 
 
         //========== 런타임 이벤트 들 =============================
@@ -32,6 +44,8 @@ namespace ENZEUN.Runtime
         public Action OnPlayerInfected;
         public Action OnInfectedStateChanged;
         public Action OnGoldChanged;
+        public Action OnFailed;
+        public Action OnEscaped;
 
 
 
@@ -333,8 +347,170 @@ namespace ENZEUN.Runtime
         #endregion
 
 
+        //=================== Escaped ===============================================
+
+
+        #region Escaped
+
+
+
+
+        #endregion
+
+
+        //=================== OnFailed ===============================================
+
+        #region OnFailed
+
+
+
+
+        #endregion
+
+
+        //=================== ShowResult ===============================================
+
+
+        #region ShowResult
+
+
+
+
+        #endregion
+
+
+        //=================== Register Ranking ===============================================
+
+        #region Register Ranking
+        [Button, BoxGroup("디버깅")]
+        public void RegisterRanking()
+        {
+
+            if (FirebaseLinkManager.Auth == null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : Firebase 에 연결이 되어있지않아 랭킹등록이 불가능합니다.");
+#endif
+                return;
+            }
+
+            RankingData data = MakeRankingData();
+
+            if (data == null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 랭킹등록이 불가능합니다.");
+#endif
+                return;
+            }
+
+            FirebaseLinkManager.Instance.SaveRankingScoreAsync(data).Forget();
+
+        }
+
+
+        private RankingData MakeRankingData()
+        {
+            if (!PhotonNetwork.InRoom)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 랭킹 데이터 생성이 불가능합니다. - 포톤네트워크 InRoom 이 False 입니다.");
+#endif
+                return null;
+            }
+
+            RankingData data = new RankingData(MakeNickNameData(), GetResultGold());
+
+            return data;
+        }
+
+        private string MakeNickNameData()
+        {
+            string nickNames = string.Empty;
+
+            switch (gameEndType)
+            {
+                case GameEndType.Failed:
+#if UNITY_EDITOR
+                    Debug.Log("[GameManager] : 게임에서 패배하였기 때문에 랭킹 등록이 불가능합니다.");
+#endif
+                    break;
+
+                case GameEndType.Escaped:
+                    foreach (var playerData in playerDataDict.Values)
+                    {
+                        // 감염된 플레이어가 죽었으면, 이름을 등록 안함
+                        if (playerData.isInfected && playerData.isDead)
+                        {
+                            continue;
+                        }
+
+                        nickNames = nickNames + playerData.ownerPlayer.NickName + ",";
+                    }
+                    break;
+
+                case GameEndType.InfectedWin:
+                    if (infectedPlayer == null)
+                    {
+#if UNITY_EDITOR
+                        Debug.Log("[GameManager] : 감염자가 이겼는데 감염된 플레이어가 없습니다.");
+#endif
+                        break;
+                    }
+                    nickNames = infectedPlayer.NickName;
+                    break;
+            }
+            // 마지막에 붙은 쉼표(,) 제거하기 (글자가 비어있지 않은 경우에만)
+
+            if (!string.IsNullOrEmpty(nickNames))
+            {
+                nickNames = nickNames.TrimEnd(',');
+            }
+
+            return nickNames;
+        }
+
+        private int GetResultGold()
+        {
+            int resultGold = currentGold;
+
+            switch (gameEndType)
+            {
+                case GameEndType.Failed:
+#if UNITY_EDITOR
+                    Debug.Log("[GameManager] : 게임에서 패배하였기 골드정산을 스킵합니다.");
+#endif
+                    break;
+
+                case GameEndType.Escaped:
+                    foreach (var playerData in playerDataDict.Values)
+                    {
+                        // 감염된 플레이어가 죽었으면, 보너스 20%
+                        if (playerData.isInfected && playerData.isDead)
+                        {
+                            resultGold = (int)Mathf.Round(resultGold * 1.2f);
+                            continue;
+                        }
+                    }
+                    break;
+
+                case GameEndType.InfectedWin:
+                    // 감염된 플레이어가 이겼으면, 보너스 50%
+                    resultGold = (int)Mathf.Round(resultGold * 1.5f);
+
+                    break;
+            }
+
+            return resultGold;
+        }
+
+
+        #endregion
+
         //============================================================================
         //============================================================================
+
+        #region GamePlayMethods
 
         public void RegisterPlayerData(int ActorNr, PlayerDataObserver playerDataObserver)
         {
@@ -380,12 +556,51 @@ namespace ENZEUN.Runtime
 
             if (allDead)
             {
+                gameEndType = GameEndType.Failed;
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
 
+        public void CheckGameResult()
+        {
+            int countOfAlivedPlayers = 0;
+            bool infectedPlayerAlive = false;
+
+            foreach (var data in playerDataDict.Values)
+            {
+                if (!data.isDead)
+                {
+                    countOfAlivedPlayers++;
+                    if (isInfected)
+                    {
+                        infectedPlayerAlive = true;
+                    }
+                }
+            }
+
+
+            if (countOfAlivedPlayers == 1)
+            {
+                if (infectedPlayerAlive)
+                {
+                    gameEndType = GameEndType.InfectedWin;
+                }
+            }
+            else
+            {
+                gameEndType = GameEndType.Escaped;
+            }
+
+            ChangeGameState(GameStateFSM.Escaped);
+        }
+
+
+
+        #endregion
+
 
         //===================== Photon Callbacks ==============================================
+
         #region Photon Callbacks
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
@@ -507,6 +722,7 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        //============================================================================
 
 
         #region Infect Logic
@@ -641,6 +857,98 @@ namespace ENZEUN.Runtime
             isInfected = hasInfectedPlayer;
             OnInfectedStateChanged?.Invoke();
         }
+
+
+        #endregion
+
+
+        //============================================================================
+
+        #region Esacpe Button
+
+        public Action OnEscapeButtonClicked;
+
+        // 1. 탈출 요청
+        public void RequestEscape()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ExecuteEscape();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestEscapeOnMaster), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestEscapeOnMaster()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ExecuteEscape();
+        }
+
+        private void ExecuteEscape()
+        {
+            photonView.RPC(nameof(RPC_ExecuteEscape), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void RPC_ExecuteEscape()
+        {
+            OnEscapeButtonClicked?.Invoke();
+        }
+
+
+
+        #endregion
+
+        //============================================================================
+
+
+        #region Door Button
+
+        public bool doorIsOpen = false;
+
+        public Action<bool> OnDoorButtonClicked;
+
+        // 1. 문 열기 요청
+        public void RequestToggleDoor()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ToggleDoor();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestToggleDoor), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestToggleDoor()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ToggleDoor();
+        }
+
+        private void ToggleDoor()
+        {
+            doorIsOpen = !doorIsOpen;
+
+            photonView.RPC(nameof(RPC_ToggleDoor), RpcTarget.All, doorIsOpen);
+        }
+
+        [PunRPC]
+        private void RPC_ToggleDoor(bool isOpen)
+        {
+            doorIsOpen = isOpen;
+
+            OnDoorButtonClicked?.Invoke(doorIsOpen);
+        }
+
 
 
         #endregion
