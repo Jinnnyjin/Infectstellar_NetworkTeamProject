@@ -18,8 +18,7 @@ namespace ENZEUN.Runtime
             if (isInitialized)
                 return;
 
-            // 초기화 로직
-            FindFirstObjectByType<BaseCampInfoView>().InitializeBaseCampInfo();
+
 
             isInitialized = true;
         }
@@ -78,36 +77,33 @@ namespace ENZEUN.Runtime
 
             }
 
-
-
-
             // 이전 상태 종료 로직
-            switch (eventType.PreviousState)
-            {
-                case GameStateFSM.None:
-                    break;
+            // switch (eventType.PreviousState)
+            // {
+            //     case GameStateFSM.None:
+            //         break;
 
-                case GameStateFSM.ReadyForStart:
-                    break;
+            //     case GameStateFSM.ReadyForStart:
+            //         break;
 
-                case GameStateFSM.OnGameStart:
-                    break;
+            //     case GameStateFSM.OnGameStart:
+            //         break;
 
-                case GameStateFSM.GameStarted:
-                    break;
+            //     case GameStateFSM.GameStarted:
+            //         break;
 
-                case GameStateFSM.Escaped:
-                    break;
+            //     case GameStateFSM.Escaped:
+            //         break;
 
-                case GameStateFSM.OnFailed:
-                    break;
+            //     case GameStateFSM.OnFailed:
+            //         break;
 
-                case GameStateFSM.ShowResult:
-                    break;
+            //     case GameStateFSM.ShowResult:
+            //         break;
 
-                case GameStateFSM.RegisterRanking:
-                    break;
-            }
+            //     case GameStateFSM.RegisterRanking:
+            //         break;
+            // }
 
         }
 

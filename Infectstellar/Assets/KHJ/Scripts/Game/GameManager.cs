@@ -344,6 +344,39 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+
+        //=================== Escaped ===============================================
+
+
+        #region Escaped
+
+
+
+
+        #endregion
+
+
+        //=================== OnFailed ===============================================
+
+        #region OnFailed
+
+
+
+
+        #endregion
+
+
+        //=================== ShowResult ===============================================
+
+
+        #region ShowResult
+
+
+
+
+        #endregion
+
+
         //=================== Register Ranking ===============================================
 
         #region Register Ranking
@@ -475,6 +508,8 @@ namespace ENZEUN.Runtime
         //============================================================================
         //============================================================================
 
+        #region GamePlayMethods
+
         public void RegisterPlayerData(int ActorNr, PlayerDataObserver playerDataObserver)
         {
             if (playerDataDict.ContainsKey(ActorNr))
@@ -519,16 +554,51 @@ namespace ENZEUN.Runtime
 
             if (allDead)
             {
+                gameEndType = GameEndType.Failed;
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
 
+        public void CheckGameResult()
+        {
+            int countOfAlivedPlayers = 0;
+            bool infectedPlayerAlive = false;
+
+            foreach (var data in playerDataDict.Values)
+            {
+                if (!data.isDead)
+                {
+                    countOfAlivedPlayers++;
+                    if (isInfected)
+                    {
+                        infectedPlayerAlive = true;
+                    }
+                }
+            }
+
+
+            if (countOfAlivedPlayers == 1)
+            {
+                if (infectedPlayerAlive)
+                {
+                    gameEndType = GameEndType.InfectedWin;
+                }
+            }
+            else
+            {
+                gameEndType = GameEndType.Escaped;
+            }
+
+            ChangeGameState(GameStateFSM.Escaped);
+        }
 
 
 
+        #endregion
 
 
         //===================== Photon Callbacks ==============================================
+
         #region Photon Callbacks
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
