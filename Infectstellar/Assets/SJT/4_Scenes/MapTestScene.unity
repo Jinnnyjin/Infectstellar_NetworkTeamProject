@@ -2334,6 +2334,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3899111736913219300, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: heldText
+      value: "[E] \uB193\uAE30\n[\uC88C\uD074\uB9AD] \uB358\uC9C0\uAE30"
+      objectReference: {fileID: 0}
     - target: {fileID: 3916494124619297829, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas

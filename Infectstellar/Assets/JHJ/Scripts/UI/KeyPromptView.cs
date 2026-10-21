@@ -9,7 +9,7 @@ public class KeyPromptView : MonoBehaviour
     // [임시] 입력 방식 확정 시 교체 (던지기는 우클릭 예정)
     [SerializeField] private string grabText = "[E] 잡기";
     [SerializeField] private string cannotGrabText = "잡기 불가";
-    [SerializeField] private string heldText = "[E] 놓기\n[F] 던지기";
+    [SerializeField] private string heldText = "[E] 놓기\n[좌클릭] 던지기";
 
     [SerializeField] private MMF_Player visibleFb;
     private bool isVisible;
