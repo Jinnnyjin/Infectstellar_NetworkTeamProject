@@ -4,27 +4,28 @@ using UnityEngine;
 public class DoorToggleButton : MonoBehaviour, IInteractObject
 {
 
-    // 게임매니저에서 IsDoorOpen 값 가지고 있다면 GameManager.IsDoorOpen으로 수정 예정
     private bool isDoorOpen = false;
     public string PromptText => isDoorOpen ? InteractPromptSO.Instance.DoorClose : InteractPromptSO.Instance.DoorOpen;
 
+    // GameManager 연결시 아래 코드로 수정예정
+    // public string PromptText => GameManager.Instance.IsDoorOpen ? InteractPromptSO.Instance.DoorClose : InteractPromptSO.Instance.DoorOpen;
 
 
-    // 게임 시작상태에서만 되도록 하려면 이 조건이 맞는지 확인 필요
-    public bool CanInteract => GameManager.Instance != null; // && GameManager.Instance.currentGameState == GameManager.GameStateFSM.GameStarted;
+    // 조건 : 게임매니저 O, 게임중
+    public bool CanInteract => GameManager.Instance != null;
 
 
     public void Interact()
     {
         if (!CanInteract)
         {
-            Debug.LogWarning("[DoorTogleButton] 문 상호작용 불가");
+            Debug.LogWarning("[DoorToggleButton] 문 상호작용 불가", this);
             return;
         }
 
         // 문 열림 닫힘 상태에 따라 문 열리거나 닫힘
 
-        Debug.Log("[DoorToggleButton]문 상호작용 성공");
+        Debug.Log("[DoorToggleButton]문 상호작용 성공", this);
 
     }
 }

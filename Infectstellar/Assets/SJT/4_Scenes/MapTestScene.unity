@@ -516,6 +516,71 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd84e9f2c0111fa4ba72dfbfd80b2eb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawnPoint
+--- !u!1001 &327981216
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.728
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.738
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.041
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 270
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1809794926595310173, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2547308687932257230, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 02c424cc17b7ed144a6407da09662e51, type: 2}
+    - target: {fileID: 2756724066747340874, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
+      propertyPath: m_Name
+      value: EscapeButton
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d865a1de915793a409776aac7fcb2a08, type: 3}
 --- !u!1 &398814634
 GameObject:
   m_ObjectHideFlags: 0
@@ -2902,6 +2967,7 @@ SceneRoots:
   - {fileID: 3206750154292872108}
   - {fileID: 589387657}
   - {fileID: 1769438812}
+  - {fileID: 327981216}
   - {fileID: 530370825}
   - {fileID: 828886694741229834}
   - {fileID: 1842329858}

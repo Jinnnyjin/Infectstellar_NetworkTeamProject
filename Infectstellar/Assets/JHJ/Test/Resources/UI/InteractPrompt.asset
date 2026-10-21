@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb7152cc223ea4145bd91bf8719bef0b, type: 3}
   m_Name: InteractPrompt
   m_EditorClassIdentifier: Assembly-CSharp::InteractPromptSO
-  grab: "[E] \uC7A1\uAE30"
-  cannotGrab: "\uC7A1\uAE30 \uBD88\uAC00"
-  held: "[E] \uB193\uAE30\n[\uC88C\uD074\uB9AD] \uB358\uC9C0\uAE30"
-  purchaseFormat: "[E] \uAD6C\uB9E4 {0} ({1} G)"
-  cannotPurchase: "\uAD6C\uB9E4 \uBD88\uAC00"
-  doorOpen: "[E] \uBB38 \uC5F4\uAE30"
-  doorClose: "[E] \uBB38 \uB2EB\uAE30"
-  escape: "[E] \uD0C8\uCD9C"
-  escapeBlocked: "\uBB38\uC744 \uB2EB\uC544\uC57C \uD0C8\uCD9C \uAC00\uB2A5"
+  grab: '[E] Grab'
+  cannotGrab: Can't Grab
+  held: '[E] Drop
+
+    [Left Click] Throw'
+  purchaseFormat: '[E] Buy {0} ({1} G)'
+  cannotPurchase: Can't Buy
+  doorOpen: '[E] Open Door'
+  doorClose: '[E] Close Door'
+  escape: '[E] Escape'
+  escapeBlocked: The door is OPENED!
