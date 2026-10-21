@@ -26,6 +26,11 @@ public class InteractPromptSO : ScriptableObject
     [SerializeField] private string escape = "[E] 탈출";
     [SerializeField] private string escapeBlocked = "문을 닫아야 탈출 가능";
 
+    [Header("설명 (비워두면 정보창 표시 안 함)")]
+    [SerializeField, TextArea] private string shopProductDescription = "Buy an item. It appears at the shop spawn point.";
+    [SerializeField, TextArea] private string doorDescription = "Opens or closes the base camp door.";
+    [SerializeField, TextArea] private string escapeDescription = "Escape the planet. The door must be closed.";
+
     public string Grab => grab;
     public string CannotGrab => cannotGrab;
     public string Held => held;
@@ -34,6 +39,9 @@ public class InteractPromptSO : ScriptableObject
     public string DoorClose => doorClose;
     public string Escape => escape;
     public string EscapeBlocked => escapeBlocked;
+    public string ShopProductDescription => shopProductDescription;
+    public string DoorDescription => doorDescription;
+    public string EscapeDescription => escapeDescription;
 
     public string GetPurchaseText(string itemName, int price)
     {

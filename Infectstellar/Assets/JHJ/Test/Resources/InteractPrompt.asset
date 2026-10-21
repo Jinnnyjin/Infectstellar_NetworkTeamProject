@@ -21,5 +21,11 @@ MonoBehaviour:
   cannotPurchase: Can't Buy
   doorOpen: '[E] Open Door'
   doorClose: '[E] Close Door'
-  escape: '[E] Escape'
+  escape: '[E] Escape (End Game)'
   escapeBlocked: The door is OPENED!
+  shopProductDescription: Buy an item. It appears at the container
+  doorDescription: Open or close the base camp door.
+  escapeDescription: 'WARNING: This ends the game for everyone.
+
+    The door must
+    be closed.'

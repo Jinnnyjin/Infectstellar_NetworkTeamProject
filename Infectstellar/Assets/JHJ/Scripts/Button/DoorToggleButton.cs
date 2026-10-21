@@ -10,6 +10,8 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     // GameManager 연결시 아래 코드로 수정예정
     // public string PromptText => GameManager.Instance.IsDoorOpen ? InteractPromptSO.Instance.DoorClose : InteractPromptSO.Instance.DoorOpen;
 
+    public string Description => InteractPromptSO.Instance.DoorDescription;
+
 
     // 조건 : 게임매니저 O, 게임중
     public bool CanInteract => GameManager.Instance != null;
