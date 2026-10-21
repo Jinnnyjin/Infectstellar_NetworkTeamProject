@@ -132,7 +132,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         isInitialized = true;
         playerController.SetLocalControlActive(IsLocalControlActive);
 
-        int colorIndex = (int)PhotonNetwork.LocalPlayer.CustomProperties[PhotonLinkManager.myColor_Customproperty];
+        int colorIndex = (int)info.Sender.CustomProperties[PhotonLinkManager.myColor_Customproperty];
         Color newColor = PhotonLinkManager.GetIndexedColor(colorIndex);
 
         var block = new MaterialPropertyBlock();

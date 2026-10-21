@@ -72,7 +72,6 @@ public class PlayerGrabber : MonoBehaviour
         if (!isLocal)
             return;
 
-        // [임시] 입력 액션(Interact) 추가 전까지 키 직접 읽기
         if (Input.GetKeyDown(KeyCode.E))
         {
             if (heldItem != null)
@@ -83,7 +82,7 @@ public class PlayerGrabber : MonoBehaviour
                 interactor.CurrentObject.Interact();
         }
 
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetMouseButtonDown(0) && Cursor.lockState == CursorLockMode.Locked)
             TryShoot();
     }
 
