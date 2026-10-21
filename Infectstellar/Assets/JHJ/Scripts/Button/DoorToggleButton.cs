@@ -4,12 +4,9 @@ using UnityEngine;
 public class DoorToggleButton : MonoBehaviour, IInteractObject
 {
 
-    [SerializeField] private string openText = "[E] 문 열기";
-    [SerializeField] private string closeText = "[E] 문 닫기";
-
     // 게임매니저에서 IsDoorOpen 값 가지고 있다면 GameManager.IsDoorOpen으로 수정 예정
     private bool isDoorOpen = false;
-    public string PromptText => isDoorOpen ? closeText : openText;
+    public string PromptText => isDoorOpen ? InteractPromptSO.Instance.DoorClose : InteractPromptSO.Instance.DoorOpen;
 
 
 

@@ -6,11 +6,6 @@ public class KeyPromptView : MonoBehaviour
 {
     [SerializeField] private TMP_Text promptText;
 
-    // [임시] 입력 방식 확정 시 교체 (던지기는 우클릭 예정)
-    [SerializeField] private string grabText = "[E] 잡기";
-    [SerializeField] private string cannotGrabText = "잡기 불가";
-    [SerializeField] private string heldText = "[E] 놓기\n[좌클릭] 던지기";
-
     [SerializeField] private MMF_Player visibleFb;
     private bool isVisible;
 
@@ -74,7 +69,7 @@ public class KeyPromptView : MonoBehaviour
     {
         if(grabber.HeldItem != null)
         {
-            promptText.text = heldText;
+            promptText.text = InteractPromptSO.Instance.Held;
             SetVisible(true);
             return;
         }
@@ -95,7 +90,7 @@ public class KeyPromptView : MonoBehaviour
         }
 
         lastCanGrab = target.CanGrab();
-        promptText.text = lastCanGrab ? grabText : cannotGrabText;
+        promptText.text = lastCanGrab ? InteractPromptSO.Instance.Grab : InteractPromptSO.Instance.CannotGrab;
         SetVisible(true);
     }
 
