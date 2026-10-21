@@ -12,11 +12,12 @@ public class EscapeButton : MonoBehaviour, IInteractObject
 
     // 조건 : 게임매니저 O, 문이 닫혀있을 때, 게임중
     public bool CanInteract => GameManager.Instance != null && !GameManager.Instance.doorIsOpen;
+    public bool isClicked = false;
 
 
     public void Interact()
     {
-        if (!CanInteract)
+        if (!CanInteract && isClicked)
         {
             Debug.LogWarning("[EscapeButton] 탈출버튼 상호작용 불가", this);
             return;
@@ -51,6 +52,8 @@ public class EscapeButton : MonoBehaviour, IInteractObject
 
     public void EscapeButtonClicked()
     {
-
+        if (isClicked)
+            return;
+        isClicked = true;
     }
 }

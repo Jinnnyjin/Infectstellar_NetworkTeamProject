@@ -557,6 +557,9 @@ namespace ENZEUN.Runtime
             if (allDead)
             {
                 gameEndType = GameEndType.Failed;
+
+                OnFailed?.Invoke();
+
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
@@ -590,6 +593,8 @@ namespace ENZEUN.Runtime
             {
                 gameEndType = GameEndType.Escaped;
             }
+
+            OnEscaped?.Invoke();
 
             ChangeGameState(GameStateFSM.Escaped);
         }
@@ -897,15 +902,15 @@ namespace ENZEUN.Runtime
         [PunRPC]
         private void RPC_ExecuteEscape()
         {
+            CheckGameResult();
+
             OnEscapeButtonClicked?.Invoke();
         }
-
 
 
         #endregion
 
         //============================================================================
-
 
         #region Door Button
 

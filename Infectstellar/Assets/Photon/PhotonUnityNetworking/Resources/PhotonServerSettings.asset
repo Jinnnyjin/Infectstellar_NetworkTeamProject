@@ -69,6 +69,10 @@ MonoBehaviour:
   - RpcRequestPurchase
   - RPC_InfectedStateChanged
   - CallMasterImReady
+  - RPC_ExecuteEscape
+  - RPC_RequestEscapeOnMaster
+  - RPC_RequestToggleDoor
+  - RPC_ToggleDoor
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0
