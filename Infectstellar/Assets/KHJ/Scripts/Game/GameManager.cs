@@ -15,16 +15,28 @@ namespace ENZEUN.Runtime
     {
 
         //========== 게임 진행 중 필요한 필드 들 =============================
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public int currentGold { get; private set; } // 총 골드
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public bool isInfected { get; private set; } // 감염자 여부
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public Player infectedPlayer { get; private set; } // 감염된 플레이어 레퍼런스
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         public bool isGameStarted { get; private set; } = false; // 게임이 정상적으로 시작되었는지
+        [ShowInInspector, ReadOnly]
+        public GameEndType gameEndType = GameEndType.Escaped;
+
+
+        //========== 게임 종료 Enum =============================
+
+        public enum GameEndType
+        {
+            Failed,     // 모두 사망
+            Escaped,    // 탈출 성공
+            InfectedWin // 감염자만 생존
+        }
 
 
         //========== 런타임 이벤트 들 =============================
@@ -332,6 +344,133 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        //=================== Register Ranking ===============================================
+
+        #region Register Ranking
+        [Button, BoxGroup("디버깅")]
+        public void RegisterRanking()
+        {
+
+            if (FirebaseLinkManager.Auth == null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : Firebase 에 연결이 되어있지않아 랭킹등록이 불가능합니다.");
+#endif
+                return;
+            }
+
+            RankingData data = MakeRankingData();
+
+            if (data == null)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 랭킹등록이 불가능합니다.");
+#endif
+                return;
+            }
+
+            FirebaseLinkManager.Instance.SaveRankingScoreAsync(data).Forget();
+
+        }
+
+
+        private RankingData MakeRankingData()
+        {
+            if (!PhotonNetwork.InRoom)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 랭킹 데이터 생성이 불가능합니다. - 포톤네트워크 InRoom 이 False 입니다.");
+#endif
+                return null;
+            }
+
+            RankingData data = new RankingData(MakeNickNameData(), GetResultGold());
+
+            return data;
+        }
+
+        private string MakeNickNameData()
+        {
+            string nickNames = string.Empty;
+
+            switch (gameEndType)
+            {
+                case GameEndType.Failed:
+#if UNITY_EDITOR
+                    Debug.Log("[GameManager] : 게임에서 패배하였기 때문에 랭킹 등록이 불가능합니다.");
+#endif
+                    break;
+
+                case GameEndType.Escaped:
+                    foreach (var playerData in playerDataDict.Values)
+                    {
+                        // 감염된 플레이어가 죽었으면, 이름을 등록 안함
+                        if (playerData.isInfected && playerData.isDead)
+                        {
+                            continue;
+                        }
+
+                        nickNames = nickNames + playerData.ownerPlayer.NickName + ",";
+                    }
+                    break;
+
+                case GameEndType.InfectedWin:
+                    if (infectedPlayer == null)
+                    {
+#if UNITY_EDITOR
+                        Debug.Log("[GameManager] : 감염자가 이겼는데 감염된 플레이어가 없습니다.");
+#endif
+                        break;
+                    }
+                    nickNames = infectedPlayer.NickName;
+                    break;
+            }
+            // 마지막에 붙은 쉼표(,) 제거하기 (글자가 비어있지 않은 경우에만)
+
+            if (!string.IsNullOrEmpty(nickNames))
+            {
+                nickNames = nickNames.TrimEnd(',');
+            }
+
+            return nickNames;
+        }
+
+        private int GetResultGold()
+        {
+            int resultGold = currentGold;
+
+            switch (gameEndType)
+            {
+                case GameEndType.Failed:
+#if UNITY_EDITOR
+                    Debug.Log("[GameManager] : 게임에서 패배하였기 골드정산을 스킵합니다.");
+#endif
+                    break;
+
+                case GameEndType.Escaped:
+                    foreach (var playerData in playerDataDict.Values)
+                    {
+                        // 감염된 플레이어가 죽었으면, 보너스 20%
+                        if (playerData.isInfected && playerData.isDead)
+                        {
+                            resultGold = (int)Mathf.Round(resultGold * 1.2f);
+                            continue;
+                        }
+                    }
+                    break;
+
+                case GameEndType.InfectedWin:
+                    // 감염된 플레이어가 이겼으면, 보너스 50%
+                    resultGold = (int)Mathf.Round(resultGold * 1.5f);
+
+                    break;
+            }
+
+            return resultGold;
+        }
+
+
+        #endregion
 
         //============================================================================
         //============================================================================
@@ -383,6 +522,10 @@ namespace ENZEUN.Runtime
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
+
+
+
+
 
 
         //===================== Photon Callbacks ==============================================
