@@ -1,3 +1,4 @@
+using MoreMountains.Feedbacks;
 using System;
 using UnityEngine;
 /// <summary>
@@ -11,6 +12,7 @@ public class ItemHit : MonoBehaviour
     private int attackerActorNumber;
     private bool isLocalThrower;
     private IUsable usable;
+    [SerializeField] MMF_Player hitFeedback;
 
     private Func<Collider, int> getOwnerActorNumber;
     private Action onUsed;
@@ -67,6 +69,9 @@ public class ItemHit : MonoBehaviour
         if (!isActive || isHit)
             return;
 
+        // 이펙트
+        PlayHitFeedback(collision.GetContact(0).point);
+
         // 던진사람 컴퓨터에서만 판정, 나머지 컴퓨터는 물리 반응만
         if (!isLocalThrower)
             return;
@@ -105,5 +110,13 @@ public class ItemHit : MonoBehaviour
 #endif
         }
         #endregion
+    }
+
+    private void PlayHitFeedback(Vector3 point)
+    {
+        if (hitFeedback == null)
+            return;
+
+        hitFeedback.PlayFeedbacks(point);
     }
 }
