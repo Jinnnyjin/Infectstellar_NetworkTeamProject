@@ -1401,8 +1401,7 @@ MonoBehaviour:
   imageFader: {fileID: 3308766890052734552}
   hp_Bar: {fileID: 7844965148378726505}
   loading_Bar: {fileID: 4919209731355957415}
-  failedCanvas: {fileID: 8434225723025942202}
-  escapedCanvas: {fileID: 7113117743528874172}
+
 --- !u!1 &4709775331224448937
 GameObject:
   m_ObjectHideFlags: 0

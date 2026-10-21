@@ -4,6 +4,7 @@ using MoreMountains.Tools;
 using Photon.Pun;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class HUDController : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class HUDController : MonoBehaviour
     [ShowInInspector, ReadOnly] private PlayerDataObserver observer;
     private GameManager gm;
 
+    public UnityEvent OnHpChanged;
     /// <summary>
     /// 내 플레이어 등록 후 호출
     /// </summary>
@@ -95,12 +97,14 @@ public class HUDController : MonoBehaviour
         Debug.Log($"[HUD Controller] : 플레이어 체력변경 이벤트 발생!!! HP:{observer.hp}");
 #endif
         hp_Bar.UpdateBar(observer.hp, 0f, 100f);
+        OnHpChanged?.Invoke();
     }
 
     [Button]
     private void ChangeHpBarTarget(float hp)
     {
         hp_Bar.UpdateBar(hp, 0f, 100f);
+        OnHpChanged?.Invoke();
     }
 
 
