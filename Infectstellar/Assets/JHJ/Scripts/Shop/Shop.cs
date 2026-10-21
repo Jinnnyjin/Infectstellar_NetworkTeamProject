@@ -1,17 +1,18 @@
 using Photon.Pun;
 using UnityEngine;
+using ENZEUN.Runtime;
 
 /// <summary>
 /// 베이스 캠프 상점 / 카탈로그의 아이템을 생성 지점에 방 소속으로 생성
 /// 구매판정 및 생성은 방장만
 /// </summary>
 public class Shop : MonoBehaviourPun
-{ 
+{
     [SerializeField] private Transform spawnPointRoot;
     [SerializeField] private LayerMask itemLayerMask;
     [SerializeField, Tooltip("지점이 비었는지 검사하는 상자의 절반 크기")] private Vector3 spotCheckHalfSize = new Vector3(0.3f, 0.3f, 0.3f);
 
-    
+
 
     /// <summary>
     /// 목록 중 index번 아이템 구매 후 빈 지점에 생성
@@ -44,7 +45,7 @@ public class Shop : MonoBehaviourPun
         }
 
         Quaternion rot = Quaternion.identity;
-        if(!TryFindFreeRootPosition(item, rot, out Vector3 pos))
+        if (!TryFindFreeRootPosition(item, rot, out Vector3 pos))
         {
             Debug.LogWarning($"[Shop] 빈자리 없음", this);
             return false;
@@ -56,8 +57,15 @@ public class Shop : MonoBehaviourPun
         // 구매는 골드가 부족하면 아이템을 생성 되지않도록 결과(bool)를 돌려받는 메서드가 필요합니다.
 
         // 이런식으로 호출하려고 했습니다. 임의로 TrySpendGold
-        //if (!GameManager.Instance.TrySpendGold(entry.BuyPrice))
-            //return false;   // 골드 부족
+        if (GameManager.Instance.currentGold < price)
+        {
+            Debug.LogWarning($"[Shop] 골드 부족", this);
+            return false;
+        }
+        else
+        {
+            GameManager.Instance.RequestAddGold(-price);
+        }
 
         RoomItemSpawnUtil.InstantiateRoomItem(item, pos, rot);
         Debug.Log($"[Shop] 구매 완료, {item.name} {price}");
@@ -73,13 +81,13 @@ public class Shop : MonoBehaviourPun
         rootPos = default;
 
         ItemSpawnPoint[] points = spawnPointRoot.GetComponentsInChildren<ItemSpawnPoint>();
-        if(points.Length == 0)
+        if (points.Length == 0)
         {
             Debug.LogError($"[Shop] 아이템 스폰 포인트 0개", this);
             return false;
         }
 
-        foreach(ItemSpawnPoint point in points)
+        foreach (ItemSpawnPoint point in points)
         {
             Vector3 floor = point.transform.position;
             Vector3 center = floor + Vector3.up * spotCheckHalfSize.y;
