@@ -145,8 +145,8 @@ namespace ENZEUN.Runtime
 
         public void OnRankingBtnClicked()
         {
-            ErrorPanelManager.Instance?.ShowError("Under development");
-            //menuFSM.ChangeState(MenuState.Ranking);
+            //ErrorPanelManager.Instance?.ShowError("Under development");
+            menuFSM.ChangeState(MenuState.Ranking);
         }
 
         public void OnOptionsBtnClicked()

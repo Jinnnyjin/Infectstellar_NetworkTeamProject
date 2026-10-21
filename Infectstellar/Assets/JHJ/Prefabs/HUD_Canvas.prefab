@@ -217,7 +217,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Return to Title in 3 Sec
+  m_text: 'Your Score will uplod on Server!
+
+    Quit Game After 5 Sec'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
   m_sharedMaterial: {fileID: 5192293977591498944, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
@@ -1399,6 +1401,8 @@ MonoBehaviour:
   imageFader: {fileID: 3308766890052734552}
   hp_Bar: {fileID: 7844965148378726505}
   loading_Bar: {fileID: 4919209731355957415}
+  failedCanvas: {fileID: 8434225723025942202}
+  escapedCanvas: {fileID: 7113117743528874172}
 --- !u!1 &4709775331224448937
 GameObject:
   m_ObjectHideFlags: 0
@@ -4354,7 +4358,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Return to Title in 3 Sec
+  m_text: Quit Game After 5 Sec
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}
   m_sharedMaterial: {fileID: 5192293977591498944, guid: 22966ed4b2accbc6dd46dc36d222d833, type: 2}

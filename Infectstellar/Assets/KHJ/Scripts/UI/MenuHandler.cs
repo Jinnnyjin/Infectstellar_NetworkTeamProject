@@ -19,6 +19,8 @@ namespace ENZEUN.Runtime
         [SerializeField] private MMF_Player roomSearchMenuFb;
         [SerializeField] private TextMeshProUGUI userNickname;
         [SerializeField] private MMF_Player roomMenuFb;
+        [SerializeField] private MMF_Player rankingMenuFb;
+        [SerializeField] private TextMeshProUGUI rankingText;
 
 
 
@@ -35,7 +37,9 @@ namespace ENZEUN.Runtime
             {
                 FirebaseLinkManager.Instance.OnNicknameLoadSucceeded -= ChangeNicknameText;
                 FirebaseLinkManager.Instance.OnNicknameSaveSucceeded -= ChangeNicknameText;
+                FirebaseLinkManager.Instance.OnRankingListUpdated -= UpdateRankingBoard;
             }
+
         }
 
         public async UniTaskVoid InitialSettings()
@@ -54,6 +58,7 @@ namespace ENZEUN.Runtime
 
             firebaseLinkManager.OnNicknameLoadSucceeded += ChangeNicknameText;
             firebaseLinkManager.OnNicknameSaveSucceeded += ChangeNicknameText;
+            firebaseLinkManager.OnRankingListUpdated += UpdateRankingBoard;
 
             // 여기서 로딩 연출함. 추가적으로 로직이 필요하면 사이에 넣으면 됨.
             await firebaseLinkManager.ConnectToFirebaseAsync();
@@ -116,6 +121,12 @@ namespace ENZEUN.Runtime
                 case MenuController.MenuState.InRoom:
                     roomMenuFb.PlayFeedbacksTopToBottom();
                     break;
+
+                case MenuController.MenuState.Ranking:
+                    RefreshRankingBoard();
+                    rankingText.SetText("Loading...");
+                    rankingMenuFb.PlayFeedbacksTopToBottom();
+                    break;
             }
 
             // 이전 상태 종료 로직
@@ -148,8 +159,32 @@ namespace ENZEUN.Runtime
                 case MenuController.MenuState.InRoom:
                     roomMenuFb.PlayFeedbacksBottomToTop();
                     break;
+
+                case MenuController.MenuState.Ranking:
+                    rankingMenuFb.PlayFeedbacksBottomToTop();
+                    break;
             }
 
+        }
+
+        public void RefreshRankingBoard()
+        {
+            FirebaseLinkManager.Instance.GetTopRankingsAsync().Forget();
+        }
+        public void UpdateRankingBoard()
+        {
+
+            string final = string.Empty;
+
+            int count = 1;
+
+            foreach (var data in FirebaseLinkManager.Instance.rankingList)
+            {
+                final = final + $"{count}. Players : [{data.nicknames}]\n\tEarned Gold : [{data.earnedGold}]\n";
+                count++;
+            }
+
+            rankingText.text = final;
         }
     }
 }

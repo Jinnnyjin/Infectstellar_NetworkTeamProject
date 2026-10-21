@@ -48,6 +48,8 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
         gameManager = GameManager.Instance;
 
         gameManager.OnDoorButtonClicked += OpenDoor;
+
+        isSubscribed = true;
     }
 
     public void OnDisable()
