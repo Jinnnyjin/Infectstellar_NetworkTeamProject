@@ -167,7 +167,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 0.41, y: 0.7, z: 0.17}
-  m_Center: {x: -1, y: 0.8, z: 0.1}
+  m_Center: {x: -1, y: 0.8, z: 0.16}
 --- !u!114 &8616441930844236856
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,5 +180,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4545dda163465a40bc78ff7d3828f4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorToggleButton
-  openText: '[E] Open Door'
-  closeText: '[E] Close Door'
