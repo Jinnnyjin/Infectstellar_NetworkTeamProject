@@ -11,8 +11,9 @@ public class HUDController : MonoBehaviour
     [SerializeField] private InteractInfoView interactInfoView;
     [SerializeField] private KeyPromptView promptView;
     [SerializeField] private MMF_Player imageFader;
-    [SerializeField] private MMProgressBar Hp_Bar;
-    [ShowInInspector] private PlayerDataObserver observer;
+    [SerializeField] private MMProgressBar hp_Bar;
+    [SerializeField] private MMProgressBar loading_Bar;
+    [ShowInInspector, ReadOnly] private PlayerDataObserver observer;
 
     /// <summary>
     /// 내 플레이어 등록 후 호출
@@ -65,7 +66,6 @@ public class HUDController : MonoBehaviour
         else if (grabber != null && interactor != null)
             promptView.InitialSetting(interactor, grabber);
 
-        FadeDarkImage(false);
     }
 
     private void OnDisable()
@@ -82,18 +82,18 @@ public class HUDController : MonoBehaviour
 #if UNITY_EDITOR
         Debug.Log($"[HUD Controller] : 플레이어 체력변경 이벤트 발생!!! HP:{observer.hp}");
 #endif
-        Hp_Bar.UpdateBar(observer.hp, 0f, 100f);
+        hp_Bar.UpdateBar(observer.hp, 0f, 100f);
     }
 
     [Button]
     private void ChangeHpBarTarget(float hp)
     {
-        Hp_Bar.UpdateBar(hp, 0f, 100f);
+        hp_Bar.UpdateBar(hp, 0f, 100f);
     }
 
 
     [Button]
-    private void FadeDarkImage(bool fadeIn)
+    public void FadeInDarkImage(bool fadeIn)
     {
         if (fadeIn)
         {
@@ -104,5 +104,10 @@ public class HUDController : MonoBehaviour
             imageFader.PlayFeedbacksBottomToTop();
 
         }
+    }
+
+    public void ChangeHUD_LoadingBar(float value)
+    {
+        loading_Bar.UpdateBar(value, 0f, 100f);
     }
 }

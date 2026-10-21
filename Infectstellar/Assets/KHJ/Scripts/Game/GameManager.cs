@@ -223,6 +223,27 @@ namespace ENZEUN.Runtime
 #endif
 
             //============== 초기화 중 =============================================================
+
+            HUDController hUDController = FindFirstObjectByType<HUDController>();
+
+            if (hUDController == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogError("[GameManager] : HUD 를 초기화할 수 없습니다. [HUD Is Null]");
+#endif
+                return;
+            }
+
+            hUDController.InitialSetting();
+
+#if UNITY_EDITOR
+            Debug.Log("[GameManager] : HUD 초기화가 완료되었습니다.");
+#endif
+
+
+            hUDController.ChangeHUD_LoadingBar(20f); // 로딩바 업데이트
+
+            //============== 초기화 중 =============================================================
             BaseCampInfoView baseCampInfo = FindFirstObjectByType<BaseCampInfoView>();
 
 
@@ -239,6 +260,10 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
             Debug.Log("[GameManager] : BaseCampInfo 초기화가 완료되었습니다.");
 #endif
+
+
+            hUDController.ChangeHUD_LoadingBar(40f); // 로딩바 업데이트
+
 
             //============== 초기화 중 =============================================================
 
@@ -258,6 +283,9 @@ namespace ENZEUN.Runtime
             Debug.Log("[GameManager] : Item 스폰이 완료되었습니다.");
 #endif
 
+            hUDController.ChangeHUD_LoadingBar(60f); // 로딩바 업데이트
+
+
             //============== 초기화 중 =============================================================
 
             MonsterSpawner monster = FindFirstObjectByType<MonsterSpawner>();
@@ -276,30 +304,19 @@ namespace ENZEUN.Runtime
             Debug.Log("[GameManager] : Monster 스폰이 완료되었습니다.");
 #endif
 
-            //============== 초기화 중 =============================================================
+            hUDController.ChangeHUD_LoadingBar(100f); // 로딩바 업데이트
 
-            HUDController hUDController = FindFirstObjectByType<HUDController>();
-
-            if (hUDController == null)
-            {
-#if UNITY_EDITOR
-                Debug.LogError("[GameManager] : HUD 를 초기화할 수 없습니다. [HUD Is Null]");
-#endif
-                return;
-            }
-
-            hUDController.InitialSetting();
-
-#if UNITY_EDITOR
-            Debug.Log("[GameManager] : HUD 초기화가 완료되었습니다.");
-#endif
 
             //============== 초기화 중 =============================================================
+
+
 
 
             isGameStarted = true;
 
             InfectTimer().Forget();
+
+            hUDController.FadeInDarkImage(false); // 로딩화면 지우기
 
             ChangeGameState(GameStateFSM.GameStarted);
         }

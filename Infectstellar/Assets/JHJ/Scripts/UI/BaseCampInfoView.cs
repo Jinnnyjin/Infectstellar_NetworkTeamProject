@@ -62,17 +62,6 @@ public class BaseCampInfoView : MonoBehaviour
         gameManagerRef.OnInfectedStateChanged -= ShowInfected;
     }
 
-    public void Start()
-    {
-        if (GameManager.Instance != null)
-        {
-            InitializeBaseCampInfo();
-
-        }
-        else
-            Debug.Log("게임매니저가 초기화되지 않았습니다. 베이스캠프 정보를 불러올 수 없습니다.");
-    }
-
     private void Awake()
     {
         if (goldText == null || noneInfectedText == null || infectedText == null)
