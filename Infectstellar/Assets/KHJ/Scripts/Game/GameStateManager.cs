@@ -1,6 +1,7 @@
 using UnityEngine;
 using MoreMountains.Tools;
 using static ENZEUN.Runtime.GameManager;
+using Cysharp.Threading.Tasks;
 
 namespace ENZEUN.Runtime
 {
@@ -65,9 +66,13 @@ namespace ENZEUN.Runtime
                     break;
 
                 case GameStateFSM.Escaped:
+                    Instance.RegisterRanking();
+                    Instance.GoToTitleAfter3Sec().Forget();
                     break;
 
                 case GameStateFSM.OnFailed:
+                    Instance.GoToTitleAfter3Sec().Forget();
+
                     break;
 
                 case GameStateFSM.ShowResult:

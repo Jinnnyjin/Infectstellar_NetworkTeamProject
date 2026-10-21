@@ -262,7 +262,9 @@ namespace ENZEUN.Runtime
             OnRankingDataUploadSucceeded?.Invoke();
         }
 
-        List<RankingData> rankingList = new List<RankingData>();
+        public List<RankingData> rankingList = new List<RankingData>();
+
+        public Action OnRankingListUpdated;
 
         /// <summary>
         /// 랭킹 데이터를 점수 높은 순(내림차순)으로 불러오기
@@ -317,6 +319,8 @@ namespace ENZEUN.Runtime
                 }
                 Debug.LogError($"랭킹을 불러오는 중 에러 발생: {ex.Message}");
             }
+
+            OnRankingListUpdated?.Invoke();
         }
 
         /// <summary>

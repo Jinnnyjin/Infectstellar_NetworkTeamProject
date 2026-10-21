@@ -10,24 +10,51 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     // GameManager 연결시 아래 코드로 수정예정
     // public string PromptText => GameManager.Instance.IsDoorOpen ? InteractPromptSO.Instance.DoorClose : InteractPromptSO.Instance.DoorOpen;
 
-    public string Description => InteractPromptSO.Instance.DoorDescription;
-
 
     // 조건 : 게임매니저 O, 게임중
     public bool CanInteract => GameManager.Instance != null;
-
 
     public void Interact()
     {
         if (!CanInteract)
         {
-            Debug.LogWarning("[DoorToggleButton] 문 상호작용 불가", this);
+            Debug.LogWarning("[EscapeButton] 탈출버튼 상호작용 불가", this);
             return;
         }
 
-        // 문 열림 닫힘 상태에 따라 문 열리거나 닫힘
+        if (!isSubscribed)
+            SubscribeGM();
 
-        Debug.Log("[DoorToggleButton]문 상호작용 성공", this);
+        gameManager.RequestToggleDoor();
+
+        Debug.Log("[EscapeButton] 탈출 버튼 상호작용 성공", this);
+
+    }
+
+    public void OpenDoor(bool open)
+    {
+        isDoorOpen = open;
+    }
+
+
+    private GameManager gameManager;
+    private bool isSubscribed = false;
+
+    private void SubscribeGM()
+    {
+        if (isSubscribed)
+            return;
+
+        gameManager = GameManager.Instance;
+
+        gameManager.OnDoorButtonClicked += OpenDoor;
+
+        isSubscribed = true;
+    }
+
+    public void OnDisable()
+    {
+        gameManager.OnDoorButtonClicked -= OpenDoor;
 
     }
 }
