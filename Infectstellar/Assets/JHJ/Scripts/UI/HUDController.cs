@@ -13,14 +13,17 @@ public class HUDController : MonoBehaviour
     [SerializeField] private MMF_Player imageFader;
     [SerializeField] private MMProgressBar hp_Bar;
     [SerializeField] private MMProgressBar loading_Bar;
+    [SerializeField] private CanvasGroup failedCanvas;
+    [SerializeField] private CanvasGroup escapedCanvas;
     [ShowInInspector, ReadOnly] private PlayerDataObserver observer;
+    private GameManager gm;
 
     /// <summary>
     /// 내 플레이어 등록 후 호출
     /// </summary>
     public void InitialSetting()
     {
-        GameManager gm = GameManager.Instance;
+        gm = GameManager.Instance;
 
         if (gm == null)
         {
@@ -66,6 +69,10 @@ public class HUDController : MonoBehaviour
         else if (grabber != null && interactor != null)
             promptView.InitialSetting(interactor, grabber);
 
+        gm.OnFailed += ShowFailedUI;
+        gm.OnEscaped += ShowEscapeddUI;
+
+
     }
 
     private void OnDisable()
@@ -74,6 +81,11 @@ public class HUDController : MonoBehaviour
             return;
 
         observer.OnPlayerHpChanged -= ChangeHpBar;
+
+        if (gm == null)
+            return;
+        gm.OnFailed -= ShowFailedUI;
+        gm.OnEscaped -= ShowEscapeddUI;
 
     }
 
@@ -110,4 +122,15 @@ public class HUDController : MonoBehaviour
     {
         loading_Bar.UpdateBar(value, 0f, 100f);
     }
+
+    private void ShowFailedUI()
+    {
+        failedCanvas.gameObject.SetActive(true);
+    }
+
+    private void ShowEscapeddUI()
+    {
+        escapedCanvas.gameObject.SetActive(true);
+    }
+
 }

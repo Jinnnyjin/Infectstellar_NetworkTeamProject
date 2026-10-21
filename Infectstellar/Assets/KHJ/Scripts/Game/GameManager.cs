@@ -44,6 +44,8 @@ namespace ENZEUN.Runtime
         public Action OnPlayerInfected;
         public Action OnInfectedStateChanged;
         public Action OnGoldChanged;
+        public Action OnFailed;
+        public Action OnEscaped;
 
 
 
@@ -344,6 +346,39 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+
+        //=================== Escaped ===============================================
+
+
+        #region Escaped
+
+
+
+
+        #endregion
+
+
+        //=================== OnFailed ===============================================
+
+        #region OnFailed
+
+
+
+
+        #endregion
+
+
+        //=================== ShowResult ===============================================
+
+
+        #region ShowResult
+
+
+
+
+        #endregion
+
+
         //=================== Register Ranking ===============================================
 
         #region Register Ranking
@@ -475,6 +510,8 @@ namespace ENZEUN.Runtime
         //============================================================================
         //============================================================================
 
+        #region GamePlayMethods
+
         public void RegisterPlayerData(int ActorNr, PlayerDataObserver playerDataObserver)
         {
             if (playerDataDict.ContainsKey(ActorNr))
@@ -519,16 +556,51 @@ namespace ENZEUN.Runtime
 
             if (allDead)
             {
+                gameEndType = GameEndType.Failed;
                 ChangeGameState(GameStateFSM.OnFailed);
             }
         }
 
+        public void CheckGameResult()
+        {
+            int countOfAlivedPlayers = 0;
+            bool infectedPlayerAlive = false;
+
+            foreach (var data in playerDataDict.Values)
+            {
+                if (!data.isDead)
+                {
+                    countOfAlivedPlayers++;
+                    if (isInfected)
+                    {
+                        infectedPlayerAlive = true;
+                    }
+                }
+            }
+
+
+            if (countOfAlivedPlayers == 1)
+            {
+                if (infectedPlayerAlive)
+                {
+                    gameEndType = GameEndType.InfectedWin;
+                }
+            }
+            else
+            {
+                gameEndType = GameEndType.Escaped;
+            }
+
+            ChangeGameState(GameStateFSM.Escaped);
+        }
 
 
 
+        #endregion
 
 
         //===================== Photon Callbacks ==============================================
+
         #region Photon Callbacks
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
@@ -650,6 +722,7 @@ namespace ENZEUN.Runtime
 
         #endregion
 
+        //============================================================================
 
 
         #region Infect Logic
@@ -784,6 +857,98 @@ namespace ENZEUN.Runtime
             isInfected = hasInfectedPlayer;
             OnInfectedStateChanged?.Invoke();
         }
+
+
+        #endregion
+
+
+        //============================================================================
+
+        #region Esacpe Button
+
+        public Action OnEscapeButtonClicked;
+
+        // 1. 탈출 요청
+        public void RequestEscape()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ExecuteEscape();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestEscapeOnMaster), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestEscapeOnMaster()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ExecuteEscape();
+        }
+
+        private void ExecuteEscape()
+        {
+            photonView.RPC(nameof(RPC_ExecuteEscape), RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void RPC_ExecuteEscape()
+        {
+            OnEscapeButtonClicked?.Invoke();
+        }
+
+
+
+        #endregion
+
+        //============================================================================
+
+
+        #region Door Button
+
+        public bool doorIsOpen = false;
+
+        public Action<bool> OnDoorButtonClicked;
+
+        // 1. 문 열기 요청
+        public void RequestToggleDoor()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ToggleDoor();
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_RequestToggleDoor), RpcTarget.MasterClient);
+            }
+        }
+
+        [PunRPC]
+        private void RPC_RequestToggleDoor()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            ToggleDoor();
+        }
+
+        private void ToggleDoor()
+        {
+            doorIsOpen = !doorIsOpen;
+
+            photonView.RPC(nameof(RPC_ToggleDoor), RpcTarget.All, doorIsOpen);
+        }
+
+        [PunRPC]
+        private void RPC_ToggleDoor(bool isOpen)
+        {
+            doorIsOpen = isOpen;
+
+            OnDoorButtonClicked?.Invoke(doorIsOpen);
+        }
+
 
 
         #endregion
