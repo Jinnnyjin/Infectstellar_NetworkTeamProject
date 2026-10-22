@@ -116,7 +116,7 @@ Infectstellar/Assets
 | --- | --- |
 | `TitleScene` | 로그인 · 닉네임 · 로비 · 대기방 |
 | `LoadingScene` | 게임 씬 로딩 |
-| `InGameScene` | 메인 게임 맵 |
+| `MainGameScene` | 메인 게임 맵 |
 | `LeaveRoom` | 게임 종료 후 방 나가기 처리 → 타이틀 복귀 |
 
 
