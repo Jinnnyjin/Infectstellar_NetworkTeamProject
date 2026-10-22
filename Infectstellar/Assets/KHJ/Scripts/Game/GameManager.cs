@@ -389,6 +389,13 @@ namespace ENZEUN.Runtime
         [Button, BoxGroup("디버깅")]
         public void RegisterRanking()
         {
+            if (!PhotonNetwork.IsMasterClient)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 마스터만 랭킹을 등록할 수 있습니다.");
+#endif
+                return;
+            }
 
             if (currentGold <= 1000)
             {
@@ -430,8 +437,6 @@ namespace ENZEUN.Runtime
 #endif
                 return null;
             }
-
-            GetResultStringAndChangeGold();
 
             RankingData data = new RankingData(MakeNickNameData(), resultGold);
 
@@ -484,7 +489,7 @@ namespace ENZEUN.Runtime
             return nickNames;
         }
 
-        private GameResultData GetResultStringAndChangeGold()
+        public GameResultData GetResultStringAndChangeGold()
         {
             int originGold = currentGold;
             int killInfectedBonusGold = 0;

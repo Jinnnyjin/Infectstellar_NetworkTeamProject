@@ -1924,77 +1924,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: OnHpChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1530336256}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnHpChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: PlayFeedback
-      objectReference: {fileID: 0}
     - target: {fileID: 2633830399743228476, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3141631464708307303, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3141631464708307303, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3141631464708307303, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3745515380074177402, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5235742178980026711, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -88.34
       objectReference: {fileID: 0}
     - target: {fileID: 5430754891459293471, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Pivot.x
@@ -2075,66 +2011,6 @@ PrefabInstance:
     - target: {fileID: 5430754891459293471, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5799089485607892759, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6145284690306489715, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6663253504220822091, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8138957082304300871, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_text
-      value: The game will end in 5 seconds.
-      objectReference: {fileID: 0}
-    - target: {fileID: 8347247258497619410, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8347247258497619410, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8347247258497619410, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8347247258497619410, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9163436057693816536, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_text
-      value: 'Your Team Score Will Upload On Server
-
-
-        The game will end in
-        5 seconds.'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

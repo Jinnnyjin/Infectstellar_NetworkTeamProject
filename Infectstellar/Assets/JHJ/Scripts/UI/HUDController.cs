@@ -5,6 +5,7 @@ using Photon.Pun;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class HUDController : MonoBehaviour
 {
@@ -130,18 +131,28 @@ public class HUDController : MonoBehaviour
 
     private void ShowFailedUI()
     {
+        ShowMouse();
         failedCanvas.gameObject.SetActive(true);
     }
 
     private void ShowEscapeddUI()
     {
-        resultView.Show(resultData);
+        ShowMouse();
+        resultView.Show(gm.GetResultStringAndChangeGold());
+
+        gm.RegisterRanking();
     }
-    //==========================================================================
 
-    public GameResultDatar resultData = new ();
+    public void GoToTitle()
+    {
+        SceneManager.LoadScene("LeaveRoom");
+    }
 
-
+    public void ShowMouse()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
 
 
 }
