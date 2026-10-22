@@ -918,7 +918,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 34a5ff4cfb61c8241b2edc6993cef619, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.715
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -1203,8 +1203,8 @@ MonoBehaviour:
         - {fileID: 8300000, guid: f190194915926564c880bfb82fccbf45, type: 3}
         - {fileID: 8300000, guid: 62b983c0d1d7d0947aff8f18ae713c67, type: 3}
         - {fileID: 8300000, guid: a2bc95225e4eb29499e2b99ce1167546, type: 3}
-        MinVolume: 1
-        MaxVolume: 1
+        MinVolume: 0.6
+        MaxVolume: 0.8
         MinPitch: 1
         MaxPitch: 1
         SfxAudioMixerGroup: {fileID: -3165942800488051908, guid: 7e984f512e89b60468e829489e8883e3, type: 2}
