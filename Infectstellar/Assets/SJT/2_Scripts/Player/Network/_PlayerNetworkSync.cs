@@ -23,7 +23,6 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 
     [SerializeField, Tooltip("StateMachine에 연결한 것과 같은 모델의 애니메이션 컴포넌트")]
     private PlayerAnimationController animationController;
-    [SerializeField] private GameObject mineModel;
     [SerializeField] private Renderer playerRenderer;
 
     [SerializeField] private GameObject pointOfView;
@@ -38,7 +37,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     public bool IsLocalControlActive => isInitialized && isActiveAndEnabled && PhotonNetwork.InRoom && IsMine && photonView.ControllerActorNr == actorNumber;
     /// <summary>이 플레이어의 현재 생존 여부를 반환합니다.</summary>
     public bool IsAlive => stateMachine != null && stateMachine.IsAlive;
-    public GameObject MineModel => mineModel;
+    public Renderer PlayerRenderer => playerRenderer;
     public GameObject PointOfView => pointOfView;
     public GameObject ThirdPersonView => thirdPersonView;
 
@@ -143,8 +142,8 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         // 기존 모델 처리 유지
         if (IsMine)
         {
-            if (mineModel != null)
-                mineModel.SetActive(false);
+            if (playerRenderer != null)
+                playerRenderer.enabled = false;
         }
 
         RegisterPlayer();
