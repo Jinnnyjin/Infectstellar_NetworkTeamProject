@@ -3456,89 +3456,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 361917502602627465, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: OnHpChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 643781159}
     - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnHpChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: PlayFeedbacks
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 600701936}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: PlayFeedbacks
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnHpChanged.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: MoreMountains.Feedbacks.MMF_Player, MoreMountains.Tools
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: MoreMountains.Feedbacks.MMF_Player, MoreMountains.Tools
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993472337850714099, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: OnPlayerInfected.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
     - target: {fileID: 2633830399743228476, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2785522563812862796, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5430754891459293471, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Pivot.x
