@@ -37,10 +37,10 @@ public class PlayerDataObserver : MonoBehaviourPun
         InitializePlayerDataObserver();
 
 #if UNITY_EDITOR
-        Debug.Log("[PlayerDataObserver] : 초기화가 완료되었습니다. 2 초 뒤 커스텀프로퍼티를 업데이트 합니다.");
+        Debug.Log("[PlayerDataObserver] : 초기화가 완료되었습니다. 1 초 뒤 커스텀프로퍼티를 업데이트 합니다.");
 #endif
 
-        await UniTask.Delay(TimeSpan.FromSeconds(2));
+        await UniTask.Delay(TimeSpan.FromSeconds(1));
 
         GameManager.Instance.SetGameReadyState(true);
     }

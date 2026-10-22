@@ -246,7 +246,6 @@ namespace ENZEUN.Runtime
         public override void OnLeftRoom()
         {
             base.OnLeftRoom();
-            ResetRoomCustomProperty();
         }
 
         // 로비에 있을 때 방 목록이 변경될 때마다 자동 호출됨 (방 찾기 목록용)
@@ -379,7 +378,7 @@ namespace ENZEUN.Runtime
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
-        public void ResetRoomCustomProperty()
+        public void ResetPlayerCustomProperty()
         {
             Hashtable props = new Hashtable()
             {
