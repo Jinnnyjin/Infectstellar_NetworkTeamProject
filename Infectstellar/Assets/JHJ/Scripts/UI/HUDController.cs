@@ -22,6 +22,8 @@ public class HUDController : MonoBehaviour
     private GameManager gm;
 
     public UnityEvent OnHpChanged;
+    public UnityEvent OnPlayerInfected;
+
     /// <summary>
     /// 내 플레이어 등록 후 호출
     /// </summary>
@@ -44,6 +46,7 @@ public class HUDController : MonoBehaviour
         }
 
         observer.OnPlayerHpChanged += ChangeHpBar;
+        observer.OnPlayerInfected += ShowInfectedFb;
 
         GameObject player = observer.gameObject;
 
@@ -85,6 +88,8 @@ public class HUDController : MonoBehaviour
             return;
 
         observer.OnPlayerHpChanged -= ChangeHpBar;
+        observer.OnPlayerInfected -= ShowInfectedFb;
+
 
         if (gm == null)
             return;
@@ -154,5 +159,9 @@ public class HUDController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
+    public void ShowInfectedFb()
+    {
+
+    }
 
 }
