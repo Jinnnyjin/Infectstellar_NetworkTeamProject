@@ -14,8 +14,17 @@ public class BaseCampDoor : MonoBehaviour
     [SerializeField] private Transform door43OpenPoint;
     [SerializeField, Min(0f), Tooltip("호출 시 현재 위치에서 목표 지점까지 이동하는 시간(초)")]
     private float moveDuration = 1f;
+    [SerializeField] private AudioClip openSound;
+    [SerializeField] private AudioClip closeSound;
 
     private Sequence moveSequence;
+
+    private AudioSource audioSource;
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     /// <summary>
     /// 객체 파괴 시 진행 중인 문 이동을 정리합니다.
@@ -31,6 +40,7 @@ public class BaseCampDoor : MonoBehaviour
     [ContextMenu("오픈")]
     public void Open()
     {
+        audioSource.PlayOneShot(openSound);
         MoveDoors(door42OpenPoint, door43OpenPoint);
     }
 
@@ -40,6 +50,7 @@ public class BaseCampDoor : MonoBehaviour
     [ContextMenu("클로즈")]
     public void Close()
     {
+        audioSource.PlayOneShot(closeSound);
         MoveDoors(door42ClosePoint, door43ClosePoint);
     }
 
