@@ -16,6 +16,8 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     // 조건 : 게임매니저 O, 게임중
     public bool CanInteract => GameManager.Instance != null;
 
+
+
     public void Interact()
     {
         if (!CanInteract)
@@ -33,9 +35,24 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
 
     }
 
+    [SerializeField]
+    private BaseCampDoor doorObject;
     public void OpenDoor(bool open)
     {
         isDoorOpen = open;
+
+        switch (open)
+        {
+            case true:
+                doorObject.Open();
+                break;
+
+            case false:
+                doorObject.Close();
+                break;
+
+        }
+
     }
 
 
