@@ -800,7 +800,7 @@ namespace ENZEUN.Runtime
         #region Infect Logic
 
         // 분 단위
-        private int minInfectionTime = 1; // 최초 감염 발생 시간
+        private int minInfectionTime = 3; // 최초 감염 발생 시간
         private int InfectionInterval = 1; // 감염 발생 Term
         private float IntectionChance = 20f; // 감염 확률 
 
