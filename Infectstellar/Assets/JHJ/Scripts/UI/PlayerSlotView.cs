@@ -18,7 +18,7 @@ public class PlayerSlotView : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float downMixRatio = 0.6f;
 
     public Player player;
-    public PlayerDataObserver playerDataObserverobserver;
+    public PlayerDataObserver playerDataObserver;
     private Color myColor;
 
 
@@ -32,19 +32,19 @@ public class PlayerSlotView : MonoBehaviour
 
     public void OnDisable()
     {
-        if (playerDataObserverobserver != null)
+        if (playerDataObserver != null)
         {
-            playerDataObserverobserver.OnPlayerDie -= RefreshColor;
+            playerDataObserver.OnPlayerDie -= RefreshColor;
         }
     }
 
 
     public void SetInfo(PlayerDataObserver info)
     {
-        playerDataObserverobserver = info;
+        playerDataObserver = info;
         player = info.ownerPlayer;
 
-        playerDataObserverobserver.OnPlayerDie += RefreshColor;
+        playerDataObserver.OnPlayerDie += RefreshColor;
 
         gameObject.SetActive(true);
         playerNickname.text = player.NickName;
@@ -68,8 +68,8 @@ public class PlayerSlotView : MonoBehaviour
 
     public void RefreshColor()
     {
-        playerIcon.color = playerDataObserverobserver.isDead ? Color.Lerp(myColor, downMixColor, downMixRatio) : myColor;
-        playerNickname.color = playerDataObserverobserver.isDead ? downColor : aliveColor;
+        playerIcon.color = playerDataObserver.isDead ? Color.Lerp(myColor, downMixColor, downMixRatio) : myColor;
+        playerNickname.color = playerDataObserver.isDead ? downColor : aliveColor;
     }
 
     public void Clear()

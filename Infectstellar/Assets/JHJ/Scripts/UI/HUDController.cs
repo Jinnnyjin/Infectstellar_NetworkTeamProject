@@ -77,7 +77,7 @@ public class HUDController : MonoBehaviour
             promptView.InitialSetting(interactor, grabber);
 
         gm.OnFailed += ShowFailedUI;
-        gm.OnEscaped += ShowEscapeddUI;
+        gm.OnEscaped += ShowEscapedUI;
 
 
     }
@@ -94,7 +94,7 @@ public class HUDController : MonoBehaviour
         if (gm == null)
             return;
         gm.OnFailed -= ShowFailedUI;
-        gm.OnEscaped -= ShowEscapeddUI;
+        gm.OnEscaped -= ShowEscapedUI;
 
     }
 
@@ -140,7 +140,7 @@ public class HUDController : MonoBehaviour
         failedCanvas.gameObject.SetActive(true);
     }
 
-    private void ShowEscapeddUI()
+    private void ShowEscapedUI()
     {
         ShowMouse();
         resultView.Show(gm.GetResultStringAndChangeGold());
