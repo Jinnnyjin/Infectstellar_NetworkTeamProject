@@ -11,6 +11,7 @@ public class HUDController : MonoBehaviour
     [SerializeField] private HeldItemView heldItemView;
     [SerializeField] private InteractInfoView interactInfoView;
     [SerializeField] private KeyPromptView promptView;
+    [SerializeField] private ResultView resultView;
     [SerializeField] private MMF_Player imageFader;
     [SerializeField] private MMProgressBar hp_Bar;
     [SerializeField] private MMProgressBar loading_Bar;
@@ -134,7 +135,13 @@ public class HUDController : MonoBehaviour
 
     private void ShowEscapeddUI()
     {
-        escapedCanvas.gameObject.SetActive(true);
+        resultView.Show(resultData);
     }
+    //==========================================================================
+
+    public GameResultDatar resultData = new ();
+
+
+
 
 }
