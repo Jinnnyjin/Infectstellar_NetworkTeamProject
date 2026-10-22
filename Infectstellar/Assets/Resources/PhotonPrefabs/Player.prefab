@@ -680,6 +680,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a80c9bca16123741871b42971db1a4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
+  isPlayer: 1
   KHJ_OnDie:
     m_PersistentCalls:
       m_Calls:
@@ -736,7 +737,6 @@ MonoBehaviour:
   playerMotor: {fileID: 6138360425593812354}
   body: {fileID: 3556861022553636256}
   animationController: {fileID: 5538048699541995334}
-  mineModel: {fileID: 2474721882481375467}
   playerRenderer: {fileID: 7248641861433818222}
   pointOfView: {fileID: 3151569999027386306}
   thirdPersonView: {fileID: 5751516181697759411}

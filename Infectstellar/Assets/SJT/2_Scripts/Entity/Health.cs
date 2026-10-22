@@ -6,10 +6,11 @@ using UnityEngine.Events;
 public class Health : MonoBehaviour, IDamageable
 {
     private float maxHP;
-    private float hp = 100f;
+    private float hp = 40f;
 
     /// <summary>현재 체력입니다.</summary>
     public float HP => hp;
+    public bool isPlayer = false;
 
     /// <summary>TakeDamage로 피해가 실제 적용된 뒤 알립니다.</summary>
     public event Action<DamageInfo> D_DamageApplied;
@@ -28,7 +29,12 @@ public class Health : MonoBehaviour, IDamageable
     {
         if (maxHP <= 0f)
         {
-            Initialize(100f);
+            if (isPlayer)
+                Initialize(40f);
+            else
+                Initialize(100f);
+
+            Debug.Log(maxHP);
         }
     }
 
