@@ -388,6 +388,14 @@ namespace ENZEUN.Runtime
         public void RegisterRanking()
         {
 
+            if (currentGold <= 1000)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 점수가 너무 낮아 점수 등록을 스킵합니다.");
+#endif
+                return;
+            }
+
             if (FirebaseLinkManager.Auth == null)
             {
 #if UNITY_EDITOR
@@ -480,15 +488,21 @@ namespace ENZEUN.Runtime
             {
                 case GameEndType.Failed:
 #if UNITY_EDITOR
-                    Debug.Log("[GameManager] : 게임에서 패배하였기 골드정산을 스킵합니다.");
+                    Debug.Log("[GameManager] : 게임에서 패배하였기에 골드정산을 스킵합니다.");
 #endif
                     break;
 
                 case GameEndType.Escaped:
                     foreach (var playerData in playerDataDict.Values)
                     {
-                        // 감염된 플레이어가 죽었으면, 보너스 20%
+                        // 감염된 플레이어가 죽었으면, 보너스 30%
                         if (playerData.isInfected && playerData.isDead)
+                        {
+                            resultGold = (int)Mathf.Round(resultGold * 1.3f);
+                            continue;
+                        }
+                        // 플레이어가 사망하면 -20%
+                        else if (!playerData.isInfected && playerData.isDead)
                         {
                             resultGold = (int)Mathf.Round(resultGold * 1.2f);
                             continue;
@@ -604,15 +618,17 @@ namespace ENZEUN.Runtime
 
         public async UniTask GoToTitleAfter3Sec()
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(5));
+            await UniTask.Delay(TimeSpan.FromSeconds(3));
 
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
+            // #if UNITY_EDITOR
+            //             UnityEditor.EditorApplication.isPlaying = false;
+            // #endif
 
-            Application.Quit();
+            //Application.Quit();
 
             //SceneManager.LoadScene("TitleScene");
+
+            SceneManager.LoadScene("LeaveRoom");
         }
 
 
