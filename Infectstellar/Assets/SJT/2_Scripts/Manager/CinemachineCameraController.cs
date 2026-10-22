@@ -66,9 +66,9 @@ public sealed class CinemachineCameraController : MonoBehaviour
 
         SwitchView(localPlayer.PointOfView);
 
-        if (localPlayer.MineModel.activeSelf)
+        if (localPlayer.PlayerRenderer.enabled)
         {
-            localPlayer.MineModel.SetActive(false);
+            localPlayer.PlayerRenderer.enabled = false;
         }
     }
 
@@ -115,9 +115,9 @@ public sealed class CinemachineCameraController : MonoBehaviour
 
         SwitchView(nextPlayer.ThirdPersonView);
 
-        if (!localPlayer.MineModel.activeSelf)
+        if (!localPlayer.PlayerRenderer.enabled)
         {
-            localPlayer.MineModel.SetActive(true);
+            localPlayer.PlayerRenderer.enabled = true;
         }
     }
 
