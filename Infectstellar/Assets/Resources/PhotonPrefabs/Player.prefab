@@ -902,6 +902,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
   settings: {fileID: 11400000, guid: 3980b85f5846dd84486b494956f9a4d5, type: 2}
   animator: {fileID: 7058907873316949242}
+  footAudoiSource: {fileID: 1751267478096900498}
 --- !u!82 &1751267478096900498
 AudioSource:
   m_ObjectHideFlags: 0
