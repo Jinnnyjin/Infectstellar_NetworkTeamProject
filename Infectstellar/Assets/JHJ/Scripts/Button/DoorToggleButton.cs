@@ -95,7 +95,11 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
 
     public void OnDisable()
     {
-        gameManager.OnDoorButtonClicked -= OpenDoor;
+        // 구독 전(GameManager 없음, 대기 포기)이면 해제할 것 없음
+        if (!isSubscribed || gameManager == null)
+            return;
 
+        gameManager.OnDoorButtonClicked -= OpenDoor;
+        isSubscribed = false;
     }
 }
