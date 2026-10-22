@@ -246,6 +246,8 @@ namespace ENZEUN.Runtime
         public override void OnLeftRoom()
         {
             base.OnLeftRoom();
+
+            ResetPlayerCustomProperty();
         }
 
         // 로비에 있을 때 방 목록이 변경될 때마다 자동 호출됨 (방 찾기 목록용)
@@ -295,13 +297,16 @@ namespace ENZEUN.Runtime
                 if (tryCount >= 10)
                 {
                     Debug.Log($"연결 실패. 인터넷 환경을 확인하세요");
+
                     ErrorPanelManager.Instance?.ShowError("Connect Failed. Please Check Internet");
+
                     return;
                 }
                 tryCount++;
-                Debug.Log($"연결 재시도");
-                PhotonNetwork.ConnectUsingSettings();
 
+                Debug.Log($"연결 재시도");
+
+                PhotonNetwork.ConnectUsingSettings();
             }
         }
 
