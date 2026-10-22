@@ -40,7 +40,7 @@ public class ItemNetwork : MonoBehaviourPun
 
         if (onStopReceived == null)
         {
-            Debug.LogError("[ItemNetwork] Init 안 됨, Shoot 수신 처리 불가", this);
+            Debug.LogError("[ItemNetwork] Init 안 됨, Stop 수신 처리 불가", this);
             return;
         }
 

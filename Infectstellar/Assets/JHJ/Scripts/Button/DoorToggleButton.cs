@@ -43,7 +43,7 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     {
         if (!CanInteract)
         {
-            Debug.LogWarning("[EscapeButton] 탈출버튼 상호작용 불가", this);
+            Debug.LogWarning("[DoorToggleButton] 문 버튼 상호작용 불가", this);
             return;
         }
 
@@ -52,7 +52,7 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
 
         gameManager.RequestToggleDoor();
 
-        Debug.Log("[EscapeButton] 탈출 버튼 상호작용 성공", this);
+        Debug.Log("[DoorToggleButton] 문 버튼 상호작용 성공", this);
 
     }
 
@@ -95,7 +95,11 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
 
     public void OnDisable()
     {
-        gameManager.OnDoorButtonClicked -= OpenDoor;
+        // 구독 전(GameManager 없음, 대기 포기)이면 해제할 것 없음
+        if (!isSubscribed || gameManager == null)
+            return;
 
+        gameManager.OnDoorButtonClicked -= OpenDoor;
+        isSubscribed = false;
     }
 }

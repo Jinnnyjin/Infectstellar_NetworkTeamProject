@@ -57,6 +57,10 @@ public class BaseCampInfoView : MonoBehaviour
 
     public void OnDisable()
     {
+        // InitializeBaseCampInfo 호출 전이면 구독한 것 없음
+        if (gameManagerRef == null)
+            return;
+
         gameManagerRef.OnGoldChanged -= ShowGold;
         gameManagerRef.OnPlayerInfected -= ShowInfected;
         gameManagerRef.OnInfectedStateChanged -= ShowInfected;

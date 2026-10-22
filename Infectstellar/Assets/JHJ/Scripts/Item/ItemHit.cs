@@ -63,7 +63,9 @@ public class ItemHit : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+#if UNITY_EDITOR
         Debug.Log($"collision : {collision.gameObject.name}"); // [임시]
+#endif
 
         // 활성화 상태 아니거나 이미 맞은 경우 무시
         if (!isActive || isHit)
