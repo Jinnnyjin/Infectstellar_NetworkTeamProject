@@ -20,6 +20,8 @@ namespace ENZEUN.Runtime
         [ShowInInspector, ReadOnly]
         public int currentGold { get; private set; } // 총 골드
         [ShowInInspector, ReadOnly]
+        public int resultGold { get; private set; } // 총 골드
+        [ShowInInspector, ReadOnly]
         public bool isInfected { get; private set; } // 감염자 여부
         [ShowInInspector, ReadOnly]
         public Dictionary<int, PlayerDataObserver> playerDataDict { get; private set; } = new();
@@ -429,7 +431,9 @@ namespace ENZEUN.Runtime
                 return null;
             }
 
-            RankingData data = new RankingData(MakeNickNameData(), GetResultGold());
+            GetResultStringAndChangeGold();
+
+            RankingData data = new RankingData(MakeNickNameData(), resultGold);
 
             return data;
         }
@@ -480,9 +484,13 @@ namespace ENZEUN.Runtime
             return nickNames;
         }
 
-        private int GetResultGold()
+        private GameResultData GetResultStringAndChangeGold()
         {
-            int resultGold = currentGold;
+            int originGold = currentGold;
+            int killInfectedBonusGold = 0;
+            int infectedWinBonus = 0;
+            int DeadPenaltyGold = 0;
+            int LastGold = currentGold;
 
             switch (gameEndType)
             {
@@ -490,34 +498,56 @@ namespace ENZEUN.Runtime
 #if UNITY_EDITOR
                     Debug.Log("[GameManager] : 게임에서 패배하였기에 골드정산을 스킵합니다.");
 #endif
+
                     break;
 
+                // 생존자 팀 승리 경우
                 case GameEndType.Escaped:
+
+                    int deadCount = 0;
                     foreach (var playerData in playerDataDict.Values)
                     {
                         // 감염된 플레이어가 죽었으면, 보너스 30%
                         if (playerData.isInfected && playerData.isDead)
                         {
-                            resultGold = (int)Mathf.Round(resultGold * 1.3f);
+                            killInfectedBonusGold = (int)Mathf.Round(originGold * 0.4f);
                             continue;
                         }
                         // 플레이어가 사망하면 -20%
                         else if (!playerData.isInfected && playerData.isDead)
                         {
-                            resultGold = (int)Mathf.Round(resultGold * 1.2f);
+                            deadCount++;
                             continue;
                         }
                     }
+
+                    DeadPenaltyGold = -(((int)Mathf.Round(originGold * 0.2f)) * deadCount);
+
+                    LastGold = originGold + killInfectedBonusGold + DeadPenaltyGold;
+
                     break;
 
+                // 감염자 혼자 살아남은 경우
                 case GameEndType.InfectedWin:
                     // 감염된 플레이어가 이겼으면, 보너스 50%
-                    resultGold = (int)Mathf.Round(resultGold * 1.5f);
+                    infectedWinBonus = (int)Mathf.Round(originGold * 0.5f); DeadPenaltyGold = 0;
+                    LastGold = originGold + infectedWinBonus;
 
                     break;
             }
 
-            return resultGold;
+            resultGold = LastGold;
+
+            GameResultData gameResult = new()
+            {
+                earnedGold = originGold.ToString(),
+                killInfectedBonus = killInfectedBonusGold.ToString(),
+                infectedWinBonus = infectedWinBonus.ToString(),
+                DeadPenalty = DeadPenaltyGold.ToString(),
+                resultGold = LastGold.ToString()
+            };
+
+            return gameResult;
         }
 
 
@@ -765,9 +795,9 @@ namespace ENZEUN.Runtime
         #region Infect Logic
 
         // 분 단위
-        private int minInfectionTime = 5;
-        private int InfectionInterval = 1;
-        private float IntectionChance = 20f;
+        private int minInfectionTime = 1; // 최초 감염 발생 시간
+        private int InfectionInterval = 1; // 감염 발생 Term
+        private float IntectionChance = 20f; // 감염 확률 
 
 
         // 0. 각자 컴퓨터에서 감염 조건(시간) 초기화 후 실행.

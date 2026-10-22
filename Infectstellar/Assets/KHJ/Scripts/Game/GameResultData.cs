@@ -1,11 +1,12 @@
-using UnityEngine;
-
-public class GameResultDatar
+namespace ENZEUN.Runtime
 {
-    public string earnedGold;
-    public string killInfectedBonus;
-    public string infectedWinBonus;
-    public string DeadPenalty;
-    public string resultGold;
 
+    public class GameResultData
+    {
+        public string earnedGold;
+        public string killInfectedBonus;
+        public string infectedWinBonus;
+        public string DeadPenalty;
+        public string resultGold;
+    }
 }
