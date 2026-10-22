@@ -1,4 +1,5 @@
 using System;
+using MoreMountains.Feedbacks;
 using UnityEngine;
 
 /// <summary>
@@ -253,6 +254,10 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
     public void PlayFootSFX()
     {
-        footAudoiSource.Play();
+        //footAudoiSource.Play();
+        footstepPlayer.PlayFeedbacks();
     }
+
+    [SerializeField] private MMF_Player footstepPlayer;
+
 }
