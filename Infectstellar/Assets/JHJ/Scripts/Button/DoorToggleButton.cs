@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using ENZEUN.Runtime;
 using UnityEngine;
 
@@ -17,6 +19,25 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     public bool CanInteract => GameManager.Instance != null;
 
 
+    public async void Start()
+    {
+        int count = 0;
+        while (GameManager.Instance == null)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            if (this == null) return;
+
+            count++;
+
+            if (count >= 15)
+            {
+                return;
+            }
+        }
+
+
+        SubscribeGM();
+    }
 
     public void Interact()
     {
@@ -50,9 +71,7 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
             case false:
                 doorObject.Close();
                 break;
-
         }
-
     }
 
 
@@ -62,6 +81,9 @@ public class DoorToggleButton : MonoBehaviour, IInteractObject
     private void SubscribeGM()
     {
         if (isSubscribed)
+            return;
+
+        if (GameManager.Instance == null)
             return;
 
         gameManager = GameManager.Instance;
