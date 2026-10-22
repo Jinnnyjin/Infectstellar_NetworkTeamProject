@@ -96,14 +96,14 @@ public class HUDController : MonoBehaviour
 #if UNITY_EDITOR
         Debug.Log($"[HUD Controller] : 플레이어 체력변경 이벤트 발생!!! HP:{observer.hp}");
 #endif
-        hp_Bar.UpdateBar(observer.hp, 0f, 100f);
+        hp_Bar.UpdateBar(observer.hp, 0f, 40f);
         OnHpChanged?.Invoke();
     }
 
     [Button]
     private void ChangeHpBarTarget(float hp)
     {
-        hp_Bar.UpdateBar(hp, 0f, 100f);
+        hp_Bar.UpdateBar(hp, 0f, 40f);
         OnHpChanged?.Invoke();
     }
 
