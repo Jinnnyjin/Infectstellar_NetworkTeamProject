@@ -230,7 +230,8 @@ public sealed class PlayerInputReader : MonoBehaviour
         {
             shouldBlockJumpUntilRelease = true;
             shouldBlockFlashUntilRelease = true;
-            SetCursorLocked(false);
+
+            SetCursorLocked(!lockCursor);
             return true;
         }
 
@@ -244,7 +245,6 @@ public sealed class PlayerInputReader : MonoBehaviour
             {
                 shouldBlockJumpUntilRelease = IsButtonHeld(jumpAction);
                 shouldBlockFlashUntilRelease = IsButtonHeld(flashAction);
-                SetCursorLocked(true);
             }
 
             // 재잠금한 프레임도 일반 입력을 전달하지 않습니다.
@@ -341,9 +341,12 @@ public sealed class PlayerInputReader : MonoBehaviour
     /// 커서 잠금과 표시를 같은 정책으로 설정
     /// </summary>
     /// <param name="isLocked">커서를 잠글지 여부</param>
+
+    private bool lockCursor = false;
     private void SetCursorLocked(bool isLocked)
     {
         Cursor.lockState = isLocked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !isLocked;
+        lockCursor = isLocked;
     }
 }
