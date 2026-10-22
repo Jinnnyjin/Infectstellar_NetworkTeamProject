@@ -27,7 +27,9 @@ public class Item : MonoBehaviour, IInteractable
     private float requiredStopDuration = 0.2f; // 기준
     private int shooterActorNumber;
     private bool isLocalReleaser;
+#if UNITY_EDITOR
     private float shootStartTime; // [임시] 측정용: 출발 시각, 정지 시 비행 시간 계산
+#endif
     private bool isRemoved;
 
 
@@ -111,7 +113,9 @@ public class Item : MonoBehaviour, IInteractable
                 physics.SetPhysics(false);
                 physics.SetColliders(true); // 레이캐스트 대상
                 hit.Deactivate(); // 히트박스 꺼짐
+#if UNITY_EDITOR
                 Debug.Log($"[Item] {data.ItemName} 정지: 비행 {Time.time - shootStartTime:F2}초, 위치 {transform.position:F3}, 회전 {transform.eulerAngles:F1}", this);
+#endif
                 break;
 
             case State.Grabbed:
@@ -139,7 +143,9 @@ public class Item : MonoBehaviour, IInteractable
                 break;
         }
 
+#if UNITY_EDITOR
         Debug.Log($"[Item] {data.ItemName}: {prevState} → {newState}", this);
+#endif
     }
 
     // =============================================================
@@ -171,11 +177,15 @@ public class Item : MonoBehaviour, IInteractable
         // Thrown으로 상태 바꿔야 물리 켜짐. 순서 : 상태전환 -> Launch
         ChangeState(State.Thrown);
 
+#if UNITY_EDITOR
         Debug.Log($"[Item] {data.ItemName} Shoot: 던진 사람 {shooterActorNumber}, 시작 {startPos}, 시작 회전 {transform.eulerAngles:F1}, 힘 {force}, 무게 {data.Weight}", this);
+#endif
         physics.Launch(force);
 
+#if UNITY_EDITOR
         // 출발 시각 기록 ([임시] 측정용)
         shootStartTime = Time.time;
+#endif
     }
 
     // =============================================================
