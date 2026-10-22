@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerMovementSettings
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementSettings
   walkSpeed: 2
-  runSpeed: 36.29
+  runSpeed: 3.5
   crouchSpeed: 1
   jumpHeight: 1.2
   gravity: 20
