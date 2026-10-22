@@ -611,6 +611,8 @@ namespace ENZEUN.Runtime
 #endif
 
             Application.Quit();
+
+            //SceneManager.LoadScene("TitleScene");
         }
 
 

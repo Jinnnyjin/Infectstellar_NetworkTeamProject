@@ -687,6 +687,34 @@ PrefabInstance:
       propertyPath: m_Name
       value: BaseCamp
       objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.193
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.399
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3.892
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099859810197509559, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5278924103637695672, guid: 95fe7524a38129145a5e9b8a98b4eedc, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -1649,6 +1677,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4545dda163465a40bc78ff7d3828f4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorToggleButton
+  doorObject: {fileID: 1092820045}
 --- !u!65 &1795905195
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1766,6 +1795,14 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3745515380074177402, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5235742178980026711, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -88.34
+      objectReference: {fileID: 0}
     - target: {fileID: 5430754891459293471, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -1846,9 +1883,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6145284690306489715, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6663253504220822091, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8138957082304300871, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: m_text
+      value: The game will end in 5 seconds.
+      objectReference: {fileID: 0}
+    - target: {fileID: 9163436057693816536, guid: 13c8882794b2cc143a13e8989db5131f, type: 3}
+      propertyPath: m_text
+      value: 'Your Team Score Will Upload On Server
+
+
+        The game will end in
+        5 seconds.'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
