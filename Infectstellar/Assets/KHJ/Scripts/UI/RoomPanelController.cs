@@ -201,6 +201,14 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
         players = PhotonNetwork.PlayerListOthers;
 
+        //#if UNITY_EDITOR
+        if (players.Length == 0)
+        {
+            gameStartBtn.interactable = true;
+            return;
+        }
+        //#endif
+
         bool allReady = true;
 
         if (players == null || players.Length <= 0)
@@ -227,10 +235,7 @@ public class RoomPanelController : MonoBehaviourPunCallbacks
 
         gameStartBtn.interactable = allReady;
 
-#if UNITY_EDITOR
-        if (players.Length == 0)
-            gameStartBtn.interactable = true;
-#endif
+
     }
 
     public void GameStartBtnClicked()
