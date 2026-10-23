@@ -136,7 +136,7 @@ public class Health : MonoBehaviour, IDamageable
         }
 
         hp = maxHP;
-        KHJ_PlayerDataObserver?.SetPlayerCurrentHp(HP);
+        KHJ_PlayerDataObserver?.PlayerRevived();
         D_Revived?.Invoke();
         return true;
     }

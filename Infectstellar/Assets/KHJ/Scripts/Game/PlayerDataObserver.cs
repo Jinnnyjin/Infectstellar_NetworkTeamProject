@@ -17,6 +17,7 @@ public class PlayerDataObserver : MonoBehaviourPun
     /// 플레이어가 죽었을 때 발동 / bool : 감염자인지
     /// </summary>
     public Action OnPlayerDie;
+    public Action OnPlayerRevive;
     public Action OnPlayerInfected;
     public Action OnPlayerHpChanged;
 
@@ -93,5 +94,10 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void PlayerDied()
     {
         OnPlayerDie?.Invoke();
+    }
+
+    public void PlayerRevived()
+    {
+        OnPlayerRevive?.Invoke();
     }
 }

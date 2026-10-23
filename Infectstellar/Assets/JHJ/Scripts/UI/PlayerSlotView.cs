@@ -35,6 +35,7 @@ public class PlayerSlotView : MonoBehaviour
         if (playerDataObserver != null)
         {
             playerDataObserver.OnPlayerDie -= RefreshColor;
+            playerDataObserver.OnPlayerRevive -= RefreshColor;
         }
     }
 
@@ -45,6 +46,7 @@ public class PlayerSlotView : MonoBehaviour
         player = info.ownerPlayer;
 
         playerDataObserver.OnPlayerDie += RefreshColor;
+        playerDataObserver.OnPlayerRevive += RefreshColor;
 
         gameObject.SetActive(true);
         playerNickname.text = player.NickName;
