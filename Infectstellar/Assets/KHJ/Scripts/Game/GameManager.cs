@@ -574,7 +574,7 @@ namespace ENZEUN.Runtime
             {
                 playerDataDict.Add(ActorNr, playerDataObserver);
                 playerDataObserver.OnPlayerDie -= CheckAllPlayerDied;
-                playerDataObserver.OnPlayerRevive = PlayerRevived;
+                playerDataObserver.OnPlayerRevive -= PlayerRevived;
 
                 playerDataObserver.OnPlayerDie += CheckAllPlayerDied;
                 playerDataObserver.OnPlayerRevive += PlayerRevived;
