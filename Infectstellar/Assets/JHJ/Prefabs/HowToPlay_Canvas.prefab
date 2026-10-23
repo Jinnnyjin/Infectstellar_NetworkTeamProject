@@ -148,7 +148,6 @@ GameObject:
   - component: {fileID: 950060214769826380}
   - component: {fileID: 4399566290395474659}
   - component: {fileID: 5135164411302298157}
-  - component: {fileID: 7500542270799606183}
   m_Layer: 5
   m_Name: HowToPlay_Canvas
   m_TagString: Untagged
@@ -222,28 +221,6 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
---- !u!114 &7500542270799606183
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1580503187716992623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 305109045d95ecb4db7daca5852384d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BaseCampInfoView
-  goldText: {fileID: 5899735654537070283}
-  playerSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  noneInfectedText: {fileID: 0}
-  infectedText: {fileID: 0}
-  goldFb: {fileID: 0}
-  infectFb: {fileID: 0}
 --- !u!1 &2096879667143379763
 GameObject:
   m_ObjectHideFlags: 0
