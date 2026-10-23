@@ -161,7 +161,7 @@ public class HUDController : MonoBehaviour
 
     public void ShowInfectedFb()
     {
-
+        OnPlayerInfected?.Invoke();
     }
 
 }
