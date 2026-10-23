@@ -2826,38 +2826,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: HowToPlay_Canvas
       objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: goldFb
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: infectFb
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: infectedText
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: noneInfectedText
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: 'playerSlots.Array.data[0]'
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: 'playerSlots.Array.data[1]'
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: 'playerSlots.Array.data[2]'
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500542270799606183, guid: b3f7fd86ecf561646b20ae2d302fe897, type: 3}
-      propertyPath: 'playerSlots.Array.data[3]'
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

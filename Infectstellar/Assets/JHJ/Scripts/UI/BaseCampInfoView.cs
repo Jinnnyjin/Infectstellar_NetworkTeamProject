@@ -35,13 +35,26 @@ public class BaseCampInfoView : MonoBehaviour
 
         foreach (var pair in gameManagerRef.playerDataDict.Values)
         {
+            if (count >= playerSlots.Length)
+            {
+                Debug.LogError($"[BaseCampInfoView] 플레이어 수가 슬롯 수({playerSlots.Length})보다 많음: {name}", this);
+                break;
+            }
+
+            if (playerSlots[count] == null)
+            {
+                Debug.LogError($"[BaseCampInfoView] 플레이어 슬롯 {count}번 비어 있음: {name}", this);
+                count++;
+                continue;
+            }
+
             playerSlots[count].SetInfo(pair);
             count++;
         }
 
         foreach (var slot in playerSlots)
         {
-            if (slot.player == null)
+            if (slot != null && slot.player == null)
             {
                 slot.Clear();
             }
