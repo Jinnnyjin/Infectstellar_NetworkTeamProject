@@ -1,4 +1,5 @@
 using System;
+using ENZEUN.Runtime;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -136,8 +137,13 @@ public class Health : MonoBehaviour, IDamageable
         }
 
         hp = maxHP;
-        KHJ_PlayerDataObserver?.PlayerRevived();
+
         D_Revived?.Invoke();
+
+        KHJ_PlayerDataObserver.SetPlayerCurrentHp(HP);
+
+        GameManager.Instance.CheckAllPlayerDied();
+
         return true;
     }
 

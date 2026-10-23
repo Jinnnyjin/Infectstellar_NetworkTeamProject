@@ -9,6 +9,7 @@ using Photon.Realtime;
 using ExitGames.Client.Photon;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 
 namespace ENZEUN.Runtime
@@ -90,7 +91,6 @@ namespace ENZEUN.Runtime
             foreach (var data in playerDataDict.Values)
             {
                 data.OnPlayerDie -= CheckAllPlayerDied;
-                data.OnPlayerRevive -= PlayerRevived;
             }
         }
 
@@ -401,7 +401,7 @@ namespace ENZEUN.Runtime
             if (currentGold <= 1000)
             {
 #if UNITY_EDITOR
-                Debug.Log("[GameManager] : 점수가 너무 낮아 점수 등록을 스킵합니다.");
+                Debug.Log("[GameManager] : 점수가 너무 낮아 점수 등록을 스킵합니다. 1000점 이하임");
 #endif
                 return;
             }
@@ -410,6 +410,14 @@ namespace ENZEUN.Runtime
             {
 #if UNITY_EDITOR
                 Debug.Log("[GameManager] : Firebase 에 연결이 되어있지않아 랭킹등록이 불가능합니다.");
+#endif
+                return;
+            }
+
+            if (FirebaseLinkManager.Instance.rankingList.Last<RankingData>().earnedGold >= currentGold)
+            {
+#if UNITY_EDITOR
+                Debug.Log("[GameManager] : 점수가 너무 낮아 점수 등록을 스킵합니다. : 마지막 랭킹점수보다 낮음");
 #endif
                 return;
             }
@@ -574,10 +582,8 @@ namespace ENZEUN.Runtime
             {
                 playerDataDict.Add(ActorNr, playerDataObserver);
                 playerDataObserver.OnPlayerDie -= CheckAllPlayerDied;
-                playerDataObserver.OnPlayerRevive -= PlayerRevived;
 
                 playerDataObserver.OnPlayerDie += CheckAllPlayerDied;
-                playerDataObserver.OnPlayerRevive += PlayerRevived;
             }
         }
 

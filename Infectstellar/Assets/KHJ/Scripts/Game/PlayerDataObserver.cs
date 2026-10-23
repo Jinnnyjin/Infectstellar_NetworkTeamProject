@@ -64,14 +64,28 @@ public class PlayerDataObserver : MonoBehaviourPun
 #if UNITY_EDITOR
         Debug.Log($"[PlayerDataObserver] : 플레이어({ownerPlayer.NickName})의 체력이 변경되었습니다. 현재 체력 : [{hp}]");
 #endif
+
+        // 안죽었을 때
+        if (!isDead)
+        {
+            if (hp <= 0)
+            {
+                PlayerDied();
+            }
+        }
+        // 죽었을 때
+        else
+        {
+            if (hp > 0)
+            {
+                PlayerRevived();
+            }
+        }
+
         this.hp = hp;
 
         OnPlayerHpChanged?.Invoke();
 
-        if (this.hp <= 0)
-        {
-            PlayerDied();
-        }
     }
 
     /// <summary>
