@@ -91,6 +91,7 @@ namespace ENZEUN.Runtime
             foreach (var data in playerDataDict.Values)
             {
                 data.OnPlayerDie -= CheckAllPlayerDied;
+                data.OnPlayerRevive -= CheckAllPlayerDied;
             }
         }
 
@@ -582,15 +583,11 @@ namespace ENZEUN.Runtime
             {
                 playerDataDict.Add(ActorNr, playerDataObserver);
                 playerDataObserver.OnPlayerDie -= CheckAllPlayerDied;
+                playerDataObserver.OnPlayerRevive -= CheckAllPlayerDied;
 
                 playerDataObserver.OnPlayerDie += CheckAllPlayerDied;
+                playerDataObserver.OnPlayerRevive += CheckAllPlayerDied;
             }
-        }
-
-        public void PlayerRevived()
-        {
-            // 부활했을때, 감염 체크 하고 동기화하도록 수정
-            CheckAllPlayerDied();
         }
 
 

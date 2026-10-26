@@ -65,6 +65,10 @@ public class PlayerDataObserver : MonoBehaviourPun
         Debug.Log($"[PlayerDataObserver] : 플레이어({ownerPlayer.NickName})의 체력이 변경되었습니다. 현재 체력 : [{hp}]");
 #endif
 
+        this.hp = hp;
+
+        OnPlayerHpChanged?.Invoke();
+
         // 안죽었을 때
         if (!isDead)
         {
@@ -73,19 +77,15 @@ public class PlayerDataObserver : MonoBehaviourPun
                 PlayerDied();
             }
         }
-        // 죽었을 때
+        // 죽은 상태일 때
         else
         {
             if (hp > 0)
             {
                 PlayerRevived();
+
             }
         }
-
-        this.hp = hp;
-
-        OnPlayerHpChanged?.Invoke();
-
     }
 
     /// <summary>
@@ -113,5 +113,11 @@ public class PlayerDataObserver : MonoBehaviourPun
     public void PlayerRevived()
     {
         OnPlayerRevive?.Invoke();
+
+        if (isInfected)
+        {
+            if (ownerPlayer.IsLocal)
+                OnPlayerInfected?.Invoke();
+        }
     }
 }

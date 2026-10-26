@@ -21,7 +21,6 @@ public class Health : MonoBehaviour, IDamageable
     public event Action D_ReviveApplied;
     public event Action D_Revived;
 
-    public UnityEvent KHJ_OnDie;
     [SerializeField]
     private PlayerDataObserver KHJ_PlayerDataObserver;
 
@@ -98,8 +97,6 @@ public class Health : MonoBehaviour, IDamageable
             D_Died?.Invoke(damageInfo);
         }
 
-        // 로컬에서만 실행되는 현준님 이벤트
-        KHJ_OnDie?.Invoke();
 
         if (KHJ_PlayerDataObserver == null)
         {
@@ -141,6 +138,8 @@ public class Health : MonoBehaviour, IDamageable
         D_Revived?.Invoke();
 
         KHJ_PlayerDataObserver.SetPlayerCurrentHp(HP);
+
+        KHJ_PlayerDataObserver.PlayerRevived();
 
         GameManager.Instance.CheckAllPlayerDied();
 
