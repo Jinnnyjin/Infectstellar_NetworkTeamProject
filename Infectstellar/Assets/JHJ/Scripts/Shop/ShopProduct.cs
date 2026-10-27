@@ -1,11 +1,13 @@
 using Photon.Pun;
 using UnityEngine;
+using MoreMountains.Feedbacks;
 
 [RequireComponent(typeof(PhotonView))]
 public class ShopProduct : MonoBehaviourPun, IInteractObject
 {
     [SerializeField] private ShopProductSO product;
     [SerializeField, Tooltip("비어있으면 씬에서 찾음 (프리팹은 씬 오브젝트를 참조할 수 없음)")] private Shop shop;
+    [SerializeField] private MMF_Player purchaseFb;
 
     private string promptText;
 
@@ -62,8 +64,21 @@ public class ShopProduct : MonoBehaviourPun, IInteractObject
         }
 
         bool isSuccess = shop.TryPurchase(product.Item, product.BuyPrice);
+        
+        if(isSuccess)
+            photonView.RPC(nameof(RpcPlayPurchaseFeedback), RpcTarget.All);
+        
         Debug.Log($"[ShopProduct] 구매 요청한 사람 : {info.Sender.NickName} 구매물품 {product.name}, 성공여부 {isSuccess}", this);
 
         // 실패 시 요청한 사람에게 알림? / 골드 부족, 빈자리없음?
+    }
+
+    [PunRPC]
+    private void RpcPlayPurchaseFeedback()
+    {
+        if (purchaseFb == null)
+            return;
+
+        purchaseFb.PlayFeedbacks();
     }
 }
