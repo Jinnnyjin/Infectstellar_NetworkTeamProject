@@ -2,14 +2,17 @@ using ENZEUN.Runtime;
 using Photon.Pun;
 using System;
 using UnityEngine;
+using MoreMountains.Feedbacks;
 
 /// <summary>
 /// 판매 구역. 들어온 아이템을 Master가 판매 처리
 /// BoxCollider: Is Trigger, Exclude Layers는 Item 외 전부
 /// </summary>
 [RequireComponent(typeof(BoxCollider))]
-public class ItemSellZone : MonoBehaviour
+public class ItemSellZone : MonoBehaviourPun
 {
+    [SerializeField] private MMF_Player sellFb;
+
     // [임시] 현재는 금액만 넘김, 필요한 정보 있으면 추가 예정
     // 판매될 때 금액만 전달합니다. 게임 매니저에서 구독하는 방식으로 이루어져 있습니다.
     // Master에서만 발생합니다.
@@ -37,6 +40,16 @@ public class ItemSellZone : MonoBehaviour
         GameManager.Instance?.RequestAddGold(price);
         ItemSold?.Invoke(price);
         Debug.Log($"[ItemSellZone] {item.name} {price} 판매완료");
+        photonView.RPC(nameof(RpcPlaySellFeedback), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RpcPlaySellFeedback()
+    {
+        if (sellFb == null)
+            return;
+
+        sellFb.PlayFeedbacks();
     }
 
     private void OnDrawGizmos()

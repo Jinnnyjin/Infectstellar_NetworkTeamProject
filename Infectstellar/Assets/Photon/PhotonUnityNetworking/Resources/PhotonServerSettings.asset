@@ -73,6 +73,8 @@ MonoBehaviour:
   - RPC_RequestEscapeOnMaster
   - RPC_RequestToggleDoor
   - RPC_ToggleDoor
+  - RpcPlayPurchaseFeedback
+  - RpcPlaySellFeedback
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0
