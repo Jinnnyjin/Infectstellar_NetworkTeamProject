@@ -63,7 +63,7 @@ public static class ColliderBoundsUtil
 
     /// <summary>
     /// 콜라이더 자기 좌표계 기준 상자.
-    /// 현재는 mesh만 지원, 지원하지 않는 종류는 false
+    /// Mesh(Convex 방식), Box(Box 방식) 지원, 지원하지 않는 종류는 false
     /// </summary>
     private static bool TryGetLocalBox(Collider col, out Bounds localBounds )
     {
@@ -75,8 +75,14 @@ public static class ColliderBoundsUtil
             return true;
         }
 
-        // 메쉬만
-        // 추후 Box, Sphere, Capsule 등 필요해지면 추가
+        // ItemColliderFitter Box 방식으로 만든 콜라이더
+        if (col is BoxCollider boxCollider)
+        {
+            localBounds = new Bounds(boxCollider.center, boxCollider.size);
+            return true;
+        }
+
+        // 추후 Sphere, Capsule 등 필요해지면 추가
         return false;
     }
 }
