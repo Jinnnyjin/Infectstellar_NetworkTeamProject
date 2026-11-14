@@ -5,7 +5,7 @@ internal static class PlayerSnapshotCodec
 {
     public const int PayloadSize = 41;
 
-    public static byte[] Encode(_PlayerSnapShot snapshot)
+    public static byte[] Encode(PlayerSnapShot snapshot)
     {
         var payload = new byte[PayloadSize];
         Span<byte> bytes = payload;
@@ -20,14 +20,13 @@ internal static class PlayerSnapshotCodec
         BitConverter.TryWriteBytes(bytes.Slice(32, 4), snapshot.Velocity.y);
         BitConverter.TryWriteBytes(bytes.Slice(36, 4), snapshot.Velocity.z);
 
-        var movement = new MovementState(
-            snapshot.State, snapshot.IsCrouching, snapshot.MoveDirection);
+        var movement = new MovementPacket(snapshot.State, snapshot.IsCrouching, snapshot.MoveDirection);
         payload[40] = movement.Pack();
 
         return payload;
     }
 
-    public static _PlayerSnapShot Decode(byte[] payload)
+    public static PlayerSnapShot Decode(byte[] payload)
     {
         double time = BitConverter.ToDouble(payload, 0);
         var position = new Vector3(
@@ -40,49 +39,10 @@ internal static class PlayerSnapshotCodec
             BitConverter.ToSingle(payload, 28),
             BitConverter.ToSingle(payload, 32),
             BitConverter.ToSingle(payload, 36));
-        MovementState movement = MovementState.Unpack(payload[40]);
+        MovementPacket movementPacket = MovementPacket.Unpack(payload[40]);
 
-        return new _PlayerSnapShot(
+        return new PlayerSnapShot(
             time, position, yRotation, viewPitch,
-            movement.State, movement.Direction, movement.IsCrouching, velocity);
-    }
-
-    private readonly struct MovementState
-    {
-        public readonly PlayerState State;
-        public readonly bool IsCrouching;
-        public readonly Vector2 Direction;
-
-        public MovementState(PlayerState state, bool isCrouching, Vector2 direction)
-        {
-            State = state;
-            IsCrouching = isCrouching;
-            Direction = direction;
-        }
-
-        public byte Pack()
-        {
-            // WASD의 정지와 8방향을 3×3 칸의 번호 0~8로 바꿉니다.
-            int x = Mathf.RoundToInt(Direction.x);
-            int y = Mathf.RoundToInt(Direction.y);
-            int directionCode = (y + 1) * 3 + (x + 1);
-            int crouching = IsCrouching ? 1 : 0;
-
-            // 비트 7~4는 방향, 비트 3은 웅크림, 비트 2~0은 상태입니다.
-            return (byte)((directionCode << 4) | (crouching << 3) | (int)State);
-        }
-
-        public static MovementState Unpack(byte packed)
-        {
-            var state = (PlayerState)(packed & 0b0111);
-            bool isCrouching = (packed & 0b1000) != 0;
-            int directionCode = packed >> 4;
-            int x = directionCode % 3 - 1;
-            int y = directionCode / 3 - 1;
-
-            // 대각선은 기존 WASD 입력과 같은 정규화 벡터로 복원합니다.
-            Vector2 direction = new Vector2(x, y).normalized;
-            return new MovementState(state, isCrouching, direction);
-        }
+            movementPacket.State, movementPacket.Direction, movementPacket.IsCrouching, velocity);
     }
 }

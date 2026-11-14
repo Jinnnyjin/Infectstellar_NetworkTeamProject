@@ -6,7 +6,7 @@ using UnityEngine;
 public sealed class PlayerNetworkRpc : MonoBehaviour
 {
     private PhotonView photonView;
-    private _PlayerNetworkSync networkSync;
+    private PlayerNetworkSync networkSync;
     private FlashlightController flashlightController;
     private PlayerGrabber playerGrabber;
     private Health health;
@@ -16,7 +16,7 @@ public sealed class PlayerNetworkRpc : MonoBehaviour
     private void Awake()
     {
         photonView = GetComponent<PhotonView>();
-        networkSync = GetComponent<_PlayerNetworkSync>();
+        networkSync = GetComponent<PlayerNetworkSync>();
         flashlightController = GetComponent<FlashlightController>();
         playerGrabber = GetComponent<PlayerGrabber>();
         health = GetComponent<Health>();

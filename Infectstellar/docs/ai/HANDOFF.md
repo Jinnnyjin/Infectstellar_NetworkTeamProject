@@ -5,6 +5,7 @@
 ## 플레이어 스냅샷 바이너리 패킹
 
 - 플레이어 스냅샷을 41바이트 배열 한 항목으로 송수신한다. 함께 접속하는 클라이언트는 새 포맷을 사용하는 빌드로 맞춘다. 포맷과 코드 위치는 [프로젝트 설명](PROJECT.md#새-플레이어-스냅샷-동기화)을 따른다.
+- 현재 타입과 파일 이름은 `PlayerNetworkSync`, `PlayerSnapShotPlayback`, `PlayerSnapShot`이다. 각 스크립트의 기존 GUID를 유지한다.
 
 ## MainGameMap 살점 장식
 

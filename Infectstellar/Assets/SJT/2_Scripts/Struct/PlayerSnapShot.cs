@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>같은 네트워크 시각에 기록한 플레이어의 위치·회전·이동 상태입니다.</summary>
-public readonly struct _PlayerSnapShot
+public readonly struct PlayerSnapShot
 {
     public readonly double Time; // 이 상태를 기록한 네트워크 시각(초).
 
@@ -16,7 +16,7 @@ public readonly struct _PlayerSnapShot
     public readonly Vector3 Velocity; // 실제 월드 이동 속도(m/s).
 
     /// <summary>한 시점의 자세·이동 상태와 실제 속도를 저장합니다.</summary>
-    public _PlayerSnapShot(double time,
+    public PlayerSnapShot(double time,
     Vector3 position, float yRotation, float viewPitch,
     PlayerState state, Vector2 moveDirection, bool isCrouching,
     Vector3 velocity)

@@ -6,10 +6,10 @@ using ENZEUN.Runtime;
 /// 스냅샷 송수신을 받은 주체
 /// 스냅샷을 수신 후 받은 기록을 Playback에 전달
 /// </summary>
-public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
+public class PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
 {
     [SerializeField] private float bufferDelay = 0.1f;
-    private _PlayerSnapShotPlayback playerSnapShotPlayback; // 전달받은 스냅샷을 전달하여 보간/외삽을 진행할 컴포넌트
+    private PlayerSnapShotPlayback playerSnapShotPlayback; // 전달받은 스냅샷을 전달하여 보간/외삽을 진행할 컴포넌트
     private bool isInitialized;
     private int actorNumber;
     private PlayerNetworkSyncManager registeredManager;
@@ -56,7 +56,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             || animationController == null)
         {
 #if UNITY_EDITOR
-            Debug.LogError("[_PlayerNetworkSync] 이동·상태·애니메이션의 필수 참조가 없습니다.", this);
+            Debug.LogError("[PlayerNetworkSync] 이동·상태·애니메이션의 필수 참조가 없습니다.", this);
 #endif
             enabled = false;
             return;
@@ -74,11 +74,11 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 #if UNITY_EDITOR
         if (pointOfView == null || thirdPersonView == null || pointOfView == thirdPersonView)
         {
-            Debug.LogWarning("[_PlayerNetworkSync] 본인 시점과 삼인칭 시점에 서로 다른 카메라를 연결해야 합니다. 삼인칭 카메라가 없으면 관전 대상에서 제외합니다.", this);
+            Debug.LogWarning("[PlayerNetworkSync] 본인 시점과 삼인칭 시점에 서로 다른 카메라를 연결해야 합니다. 삼인칭 카메라가 없으면 관전 대상에서 제외합니다.", this);
         }
 #endif
 
-        playerSnapShotPlayback = new _PlayerSnapShotPlayback(bufferDelay);
+        playerSnapShotPlayback = new PlayerSnapShotPlayback(bufferDelay);
     }
 
     /// <summary>재활성화 시 현재 권한에 맞춰 로컬 입력을 설정합니다.</summary>
@@ -111,7 +111,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
             return;
         }
 
-        _PlayerSnapShot? result = playerSnapShotPlayback.GetPlaybackSnapShot(PhotonNetwork.Time);
+        PlayerSnapShot? result = playerSnapShotPlayback.GetPlaybackSnapShot(PhotonNetwork.Time);
         if (result.HasValue)
         {
             ApplySnapShot(result.Value);
@@ -161,7 +161,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         if (registeredManager == null)
         {
 #if UNITY_EDITOR
-            Debug.LogError("[_PlayerNetworkSync] PlayerNetworkSyncManager가 없습니다.", this);
+            Debug.LogError("[PlayerNetworkSync] PlayerNetworkSyncManager가 없습니다.", this);
 #endif
             return;
         }
@@ -179,7 +179,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
 
         if (stream.IsWriting)
         {
-            _PlayerSnapShot sendSnapShot = new _PlayerSnapShot(
+            PlayerSnapShot sendSnapShot = new PlayerSnapShot(
                 PhotonNetwork.Time,
                 body.position, body.eulerAngles.y, playerLook.PitchDegrees,
                 stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching,
@@ -196,7 +196,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
     }
 
     /// <summary>재생 시각에 맞춘 위치·회전·이동 상태를 원격 플레이어에 적용합니다.</summary>
-    private void ApplySnapShot(_PlayerSnapShot snapShot)
+    private void ApplySnapShot(PlayerSnapShot snapShot)
     {
         body.SetPositionAndRotation(
             snapShot.Position,

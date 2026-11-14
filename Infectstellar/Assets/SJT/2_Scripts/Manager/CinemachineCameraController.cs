@@ -53,7 +53,7 @@ public sealed class CinemachineCameraController : MonoBehaviour
     /// <summary>본인 시점으로 복귀합니다.</summary>
     public void ShowLocalPointOfView()
     {
-        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
         if (localPlayer == null || !localPlayer.IsLocalControlActive)
         {
             return;
@@ -73,7 +73,7 @@ public sealed class CinemachineCameraController : MonoBehaviour
     }
 
     /// <summary>집중 대상에 맞춰 생존 중 일인칭 또는 사망 중 삼인칭을 적용합니다.</summary>
-    public void ShowNextThirdPersonView(_PlayerNetworkSync nextPlayer)
+    public void ShowNextThirdPersonView(PlayerNetworkSync nextPlayer)
     {
         if (nextPlayer == null)
         {
@@ -86,7 +86,7 @@ public sealed class CinemachineCameraController : MonoBehaviour
             return;
         }
 
-        _PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
+        PlayerNetworkSync localPlayer = playerNetworkSyncManager.LocalPlayerSync;
         if (localPlayer == null || !localPlayer.IsLocalControlActive)
         {
             return;

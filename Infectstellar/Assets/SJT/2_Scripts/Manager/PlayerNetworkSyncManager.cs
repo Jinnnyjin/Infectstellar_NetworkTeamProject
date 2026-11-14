@@ -7,18 +7,18 @@ public class PlayerNetworkSyncManager : MonoBehaviour
     private static PlayerNetworkSyncManager instance;
     public static PlayerNetworkSyncManager Instance => instance;
 
-    private Dictionary<int, _PlayerNetworkSync> playerNetworkSyncDic;
-    private _PlayerNetworkSync localPlayerSync;
-    private _PlayerNetworkSync focusedPlayerSync;
+    private Dictionary<int, PlayerNetworkSync> playerNetworkSyncDic;
+    private PlayerNetworkSync localPlayerSync;
+    private PlayerNetworkSync focusedPlayerSync;
 
-    public event Action<_PlayerNetworkSync> D_Registered;
-    public event Action<_PlayerNetworkSync> D_UnRegistered;
-    public event Action<_PlayerNetworkSync> D_FocusedPlayerChanged;
+    public event Action<PlayerNetworkSync> D_Registered;
+    public event Action<PlayerNetworkSync> D_UnRegistered;
+    public event Action<PlayerNetworkSync> D_FocusedPlayerChanged;
 
-    public _PlayerNetworkSync LocalPlayerSync => localPlayerSync;
+    public PlayerNetworkSync LocalPlayerSync => localPlayerSync;
 
     /// <summary>현재 집중 중인 플레이어를 반환합니다.</summary>
-    public _PlayerNetworkSync FocusedPlayerSync => focusedPlayerSync;
+    public PlayerNetworkSync FocusedPlayerSync => focusedPlayerSync;
 
     /// <summary>현재 등록된 플레이어 수를 반환합니다.</summary>
     public int UserCount => playerNetworkSyncDic.Count;
@@ -39,7 +39,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
         instance = this;
     }
 
-    public void Register(_PlayerNetworkSync playerNetworkSync)
+    public void Register(PlayerNetworkSync playerNetworkSync)
     {
         if (instance != this || !isActiveAndEnabled
             || playerNetworkSync == null || !playerNetworkSync.isActiveAndEnabled
@@ -95,7 +95,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
     }
 
     /// <summary>등록된 본인을 목록에서 제거하고 퇴장을 알립니다.</summary>
-    public void UnRegister(_PlayerNetworkSync playerNetworkSync)
+    public void UnRegister(PlayerNetworkSync playerNetworkSync)
     {
         if (playerNetworkSync == null)
         {
@@ -103,7 +103,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
         }
 
         int actorNumber = playerNetworkSync.ActorNumber;
-        if (!playerNetworkSyncDic.TryGetValue(actorNumber, out _PlayerNetworkSync player) || player != playerNetworkSync)
+        if (!playerNetworkSyncDic.TryGetValue(actorNumber, out PlayerNetworkSync player) || player != playerNetworkSync)
         {
             return;
         }
@@ -130,7 +130,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
     }
 
     /// <summary>집중 대상을 변경하고 실제로 달라졌을 때만 알립니다.</summary>
-    public void SetFocusedPlayer(_PlayerNetworkSync player)
+    public void SetFocusedPlayer(PlayerNetworkSync player)
     {
         if (focusedPlayerSync == player)
         {
@@ -156,20 +156,20 @@ public class PlayerNetworkSyncManager : MonoBehaviour
         }
 
         int currentActorNumber = focusedPlayerSync != null ? focusedPlayerSync.ActorNumber : 0;
-        _PlayerNetworkSync nextPlayer = GetNextSpectateTarget(currentActorNumber);
+        PlayerNetworkSync nextPlayer = GetNextSpectateTarget(currentActorNumber);
 
         SetFocusedPlayer(nextPlayer != null ? nextPlayer : localPlayerSync);
     }
 
     /// <summary>본인을 포함해 ActorNumber 순서로 다음 관전 대상을 반환합니다.</summary>
-    public _PlayerNetworkSync GetNextSpectateTarget(int currentActorNumber)
+    public PlayerNetworkSync GetNextSpectateTarget(int currentActorNumber)
     {
-        _PlayerNetworkSync firstPlayer = null;
-        _PlayerNetworkSync nextPlayer = null;
+        PlayerNetworkSync firstPlayer = null;
+        PlayerNetworkSync nextPlayer = null;
 
-        foreach (KeyValuePair<int, _PlayerNetworkSync> entry in playerNetworkSyncDic)
+        foreach (KeyValuePair<int, PlayerNetworkSync> entry in playerNetworkSyncDic)
         {
-            _PlayerNetworkSync player = entry.Value;
+            PlayerNetworkSync player = entry.Value;
             if (player == null || !player.isActiveAndEnabled || player.ThirdPersonView == null)
             {
                 continue;
@@ -190,7 +190,7 @@ public class PlayerNetworkSyncManager : MonoBehaviour
     }
 
     /// <summary>ActorNumber에 해당하는 등록된 플레이어가 있으면 반환합니다.</summary>
-    public bool TryGetPlayer(int actorNumber, out _PlayerNetworkSync player)
+    public bool TryGetPlayer(int actorNumber, out PlayerNetworkSync player)
     {
         return playerNetworkSyncDic.TryGetValue(actorNumber, out player) && player != null;
     }

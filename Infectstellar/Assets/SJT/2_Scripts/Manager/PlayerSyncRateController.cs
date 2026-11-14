@@ -118,7 +118,7 @@ public sealed class PlayerSyncRateController : MonoBehaviour
     }
 
     /// <summary>다음 Update에서 집중 대상을 공유하고 거리를 다시 판단하도록 예약합니다.</summary>
-    private void HandleFocusedPlayerChanged(_PlayerNetworkSync player)
+    private void HandleFocusedPlayerChanged(PlayerNetworkSync player)
     {
         // 대상 참조는 Manager에서 읽으므로 여기서는 공유와 검사 시점만 갱신합니다.
         lastRequestedViewActor = -1;
@@ -134,8 +134,8 @@ public sealed class PlayerSyncRateController : MonoBehaviour
             return;
         }
 
-        _PlayerNetworkSync localPlayer = syncManager.LocalPlayerSync;
-        _PlayerNetworkSync focusedPlayer = syncManager.FocusedPlayerSync;
+        PlayerNetworkSync localPlayer = syncManager.LocalPlayerSync;
+        PlayerNetworkSync focusedPlayer = syncManager.FocusedPlayerSync;
 
         bool canPublishTarget = localPlayer != null && localPlayer.IsLocalControlActive && focusedPlayer != null && focusedPlayer.isActiveAndEnabled;
         int viewActor = canPublishTarget ? focusedPlayer.ActorNumber : 0;
@@ -234,7 +234,7 @@ public sealed class PlayerSyncRateController : MonoBehaviour
 #endif
 
     /// <summary>다른 사용자의 집중 대상과의 거리로 빈도를 결정하고 한 번만 적용합니다.</summary>
-    private void UpdateSerializationRate(_PlayerNetworkSync localPlayer)
+    private void UpdateSerializationRate(PlayerNetworkSync localPlayer)
     {
         bool shouldUseFarRate = false;
         if (localPlayer != null && localPlayer.IsLocalControlActive)
@@ -253,7 +253,7 @@ public sealed class PlayerSyncRateController : MonoBehaviour
                 }
 
                 hasOtherViewer = true;
-                if (viewer.CustomProperties[c_viewActorKey] is not int viewActor || viewActor <= 0 || !syncManager.TryGetPlayer(viewActor, out _PlayerNetworkSync viewedPlayer) || !viewedPlayer.isActiveAndEnabled)
+                if (viewer.CustomProperties[c_viewActorKey] is not int viewActor || viewActor <= 0 || !syncManager.TryGetPlayer(viewActor, out PlayerNetworkSync viewedPlayer) || !viewedPlayer.isActiveAndEnabled)
                 {
                     allViewersFar = false;
                     break;
