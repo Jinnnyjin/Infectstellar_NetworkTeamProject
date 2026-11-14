@@ -169,7 +169,7 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
         registeredManager.Register(this);
     }
 
-    /// <summary>자세·이동 상태와 외삽에 사용할 실제 속도를 송수신합니다.</summary>
+    /// <summary>자세·이동 상태와 실제 속도를 41바이트 스냅샷으로 송수신합니다.</summary>
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (!isActiveAndEnabled || playerSnapShotPlayback == null)
@@ -185,27 +185,13 @@ public class _PlayerNetworkSync : MonoBehaviour, IPunObservable, IPunInstantiate
                 stateMachine.CurrentState, playerController.MoveDirection, playerMotor.IsCrouching,
                 playerMotor.Velocity);
 
-            stream.SendNext(sendSnapShot.Time);
-
-            stream.SendNext(sendSnapShot.Position);
-            stream.SendNext(sendSnapShot.YRotation);
-            stream.SendNext(sendSnapShot.ViewPitch);
-
-            stream.SendNext((int)sendSnapShot.State);
-            stream.SendNext(sendSnapShot.MoveDirection);
-            stream.SendNext(sendSnapShot.IsCrouching);
-
-            stream.SendNext(sendSnapShot.Velocity);
+            stream.SendNext(PlayerSnapshotCodec.Encode(sendSnapShot));
+            return;
         }
-        else
-        {
-            _PlayerSnapShot receiveSnapShot = new _PlayerSnapShot(
-                (double)stream.ReceiveNext(),
-                (Vector3)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext(),
-                (PlayerState)(int)stream.ReceiveNext(), (Vector2)stream.ReceiveNext(), (bool)stream.ReceiveNext(),
-                (Vector3)stream.ReceiveNext());
 
-            playerSnapShotPlayback.PushSnapShot(receiveSnapShot);
+        if (stream.ReceiveNext() is byte[] payload && payload.Length == PlayerSnapshotCodec.PayloadSize)
+        {
+            playerSnapShotPlayback.PushSnapShot(PlayerSnapshotCodec.Decode(payload));
         }
     }
 
